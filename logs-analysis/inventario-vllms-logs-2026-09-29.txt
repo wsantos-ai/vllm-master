@@ -1,0 +1,744 @@
+[root@sabdiia03 utec]# {
+  echo "### llama31-8b: log da última execução que caiu"
+  kubectl logs -n vllms deploy/vllm-llama31-8b --previous --tail=300
+  echo "### llama31-8b: estado do contêiner e eventos"
+  kubectl describe pod -n vllms -l app=vllm-llama31-8b | sed -n '/^Containers:/,$p'
+  echo "### deepseek-33b: última queda (18 reinícios)"
+  kubectl logs -n vllms deploy/vllm-deepseek-33b --previous --tail=80
+  echo "### deepseek-33b: arranque, até o servidor subir"
+  kubectl logs -n vllms deploy/vllm-deepseek-33b | sed -n '1,/Uvicorn running/p' | head -400
+  echo "### deepseek-33b: modelos e versão"
+  curl -s --max-time 10 http://192.168.50.160:8001/v1/models; echo
+  curl -s --max-time 10 http://192.168.50.160:8001/version; echo
+  echo "### deepseek-33b: métricas do vLLM"
+  curl -s --max-time 10 http://192.168.50.160:8001/metrics | grep -E '^vllm:' | head -80
+} 2>&1 | tee inventario-vllms-logs-$(date +%F-%H%M).log
+### llama31-8b: log da última execução que caiu
+(APIServer pid=1) INFO 09-29 05:04:28 [api_server.py:1772] vLLM API server version 0.12.0
+(APIServer pid=1) INFO 09-29 05:04:28 [utils.py:253] non-default args: {'model_tag': 'meta-llama/Llama-3.1-8B-Instruct', 'host': '0.0.0.0', 'port': 8002, 'model': 'meta-llama/Llama-3.1-8B-Instruct', 'dtype': 'float16', 'max_model_len': 8192, 'gpu_memory_utilization': 0.92, 'max_num_batched_tokens': 8192, 'max_num_seqs': 8}
+(APIServer pid=1) Traceback (most recent call last):
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/huggingface_hub/utils/_http.py", line 402, in hf_raise_for_status
+(APIServer pid=1)     response.raise_for_status()
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/requests/models.py", line 1026, in raise_for_status
+(APIServer pid=1)     raise HTTPError(http_error_msg, response=self)
+(APIServer pid=1) requests.exceptions.HTTPError: 401 Client Error: Unauthorized for url: https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/config.json
+(APIServer pid=1)
+(APIServer pid=1) The above exception was the direct cause of the following exception:
+(APIServer pid=1)
+(APIServer pid=1) Traceback (most recent call last):
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/transformers/utils/hub.py", line 479, in cached_files
+(APIServer pid=1)     hf_hub_download(
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/huggingface_hub/utils/_validators.py", line 114, in _inner_fn
+(APIServer pid=1)     return fn(*args, **kwargs)
+(APIServer pid=1)            ^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/huggingface_hub/file_download.py", line 1007, in hf_hub_download
+(APIServer pid=1)     return _hf_hub_download_to_cache_dir(
+(APIServer pid=1)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/huggingface_hub/file_download.py", line 1114, in _hf_hub_download_to_cache_dir
+(APIServer pid=1)     _raise_on_head_call_error(head_call_error, force_download, local_files_only)
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/huggingface_hub/file_download.py", line 1655, in _raise_on_head_call_error
+(APIServer pid=1)     raise head_call_error
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/huggingface_hub/file_download.py", line 1543, in _get_metadata_or_catch_error
+(APIServer pid=1)     metadata = get_hf_file_metadata(
+(APIServer pid=1)                ^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/huggingface_hub/utils/_validators.py", line 114, in _inner_fn
+(APIServer pid=1)     return fn(*args, **kwargs)
+(APIServer pid=1)            ^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/huggingface_hub/file_download.py", line 1460, in get_hf_file_metadata
+(APIServer pid=1)     r = _request_wrapper(
+(APIServer pid=1)         ^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/huggingface_hub/file_download.py", line 283, in _request_wrapper
+(APIServer pid=1)     response = _request_wrapper(
+(APIServer pid=1)                ^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/huggingface_hub/file_download.py", line 307, in _request_wrapper
+(APIServer pid=1)     hf_raise_for_status(response)
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/huggingface_hub/utils/_http.py", line 419, in hf_raise_for_status
+(APIServer pid=1)     raise _format(GatedRepoError, message, response) from e
+(APIServer pid=1) huggingface_hub.errors.GatedRepoError: 401 Client Error. (Request ID: Root=1-6abba94c-2e34d90819566d65048b2568;6d65206c-6f4d-4b91-b846-44aba67d38f5)
+(APIServer pid=1)
+(APIServer pid=1) Cannot access gated repo for url https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/config.json.
+(APIServer pid=1) Access to model meta-llama/Llama-3.1-8B-Instruct is restricted. You must have access to it and be authenticated to access it. Please log in.
+(APIServer pid=1)
+(APIServer pid=1) The above exception was the direct cause of the following exception:
+(APIServer pid=1)
+(APIServer pid=1) Traceback (most recent call last):
+(APIServer pid=1)   File "/usr/local/bin/vllm", line 10, in <module>
+(APIServer pid=1)     sys.exit(main())
+(APIServer pid=1)              ^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/vllm/entrypoints/cli/main.py", line 73, in main
+(APIServer pid=1)     args.dispatch_function(args)
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/vllm/entrypoints/cli/serve.py", line 60, in cmd
+(APIServer pid=1)     uvloop.run(run_server(args))
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/uvloop/__init__.py", line 96, in run
+(APIServer pid=1)     return __asyncio.run(
+(APIServer pid=1)            ^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/lib/python3.12/asyncio/runners.py", line 195, in run
+(APIServer pid=1)     return runner.run(main)
+(APIServer pid=1)            ^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/lib/python3.12/asyncio/runners.py", line 118, in run
+(APIServer pid=1)     return self._loop.run_until_complete(task)
+(APIServer pid=1)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/uvloop/__init__.py", line 48, in wrapper
+(APIServer pid=1)     return await main
+(APIServer pid=1)            ^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/vllm/entrypoints/openai/api_server.py", line 1819, in run_server
+(APIServer pid=1)     await run_server_worker(listen_address, sock, args, **uvicorn_kwargs)
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/vllm/entrypoints/openai/api_server.py", line 1838, in run_server_worker
+(APIServer pid=1)     async with build_async_engine_client(
+(APIServer pid=1)                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/lib/python3.12/contextlib.py", line 210, in __aenter__
+(APIServer pid=1)     return await anext(self.gen)
+(APIServer pid=1)            ^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/vllm/entrypoints/openai/api_server.py", line 183, in build_async_engine_client
+(APIServer pid=1)     async with build_async_engine_client_from_engine_args(
+(APIServer pid=1)                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/lib/python3.12/contextlib.py", line 210, in __aenter__
+(APIServer pid=1)     return await anext(self.gen)
+(APIServer pid=1)            ^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/vllm/entrypoints/openai/api_server.py", line 209, in build_async_engine_client_from_engine_args
+(APIServer pid=1)     vllm_config = engine_args.create_engine_config(usage_context=usage_context)
+(APIServer pid=1)                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/vllm/engine/arg_utils.py", line 1356, in create_engine_config
+(APIServer pid=1)     maybe_override_with_speculators(
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/vllm/transformers_utils/config.py", line 477, in maybe_override_with_speculators
+(APIServer pid=1)     config_dict, _ = PretrainedConfig.get_config_dict(
+(APIServer pid=1)                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/transformers/configuration_utils.py", line 662, in get_config_dict
+(APIServer pid=1)     config_dict, kwargs = cls._get_config_dict(pretrained_model_name_or_path, **kwargs)
+(APIServer pid=1)                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/transformers/configuration_utils.py", line 721, in _get_config_dict
+(APIServer pid=1)     resolved_config_file = cached_file(
+(APIServer pid=1)                            ^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/transformers/utils/hub.py", line 322, in cached_file
+(APIServer pid=1)     file = cached_files(path_or_repo_id=path_or_repo_id, filenames=[filename], **kwargs)
+(APIServer pid=1)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/transformers/utils/hub.py", line 543, in cached_files
+(APIServer pid=1)     raise OSError(
+(APIServer pid=1) OSError: You are trying to access a gated repo.
+(APIServer pid=1) Make sure to have access to it at https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct.
+(APIServer pid=1) 401 Client Error. (Request ID: Root=1-6abba94c-2e34d90819566d65048b2568;6d65206c-6f4d-4b91-b846-44aba67d38f5)
+(APIServer pid=1)
+(APIServer pid=1) Cannot access gated repo for url https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/resolve/main/config.json.
+(APIServer pid=1) Access to model meta-llama/Llama-3.1-8B-Instruct is restricted. You must have access to it and be authenticated to access it. Please log in.
+### llama31-8b: estado do contêiner e eventos
+Containers:
+  vllm:
+    Container ID:  containerd://fd404b6a6c7c80802d74e960685c534d7ded1f3d3c02f526fc54039fc3a28033
+    Image:         vllm/vllm-openai:v0.12.0
+    Image ID:      docker.io/vllm/vllm-openai@sha256:6766ce0c459e24b76f3e9ba14ffc0442131ef4248c904efdcbf0d89e38be01fe
+    Port:          8002/TCP (http)
+    Host Port:     0/TCP (http)
+    Command:
+      vllm
+      serve
+    Args:
+      meta-llama/Llama-3.1-8B-Instruct
+      --host
+      0.0.0.0
+      --port
+      8002
+      --dtype
+      float16
+      --gpu-memory-utilization
+      0.92
+      --max-model-len
+      8192
+      --max-num-seqs
+      8
+      --max-num-batched-tokens
+      8192
+    State:          Waiting
+      Reason:       CrashLoopBackOff
+    Last State:     Terminated
+      Reason:       Error
+      Exit Code:    1
+      Started:      Tue, 29 Sep 2026 09:04:09 -0300
+      Finished:     Tue, 29 Sep 2026 09:04:30 -0300
+    Ready:          False
+    Restart Count:  2017
+    Limits:
+      cpu:             12
+      memory:          64Gi
+      nvidia.com/gpu:  1
+    Requests:
+      cpu:             4
+      memory:          32Gi
+      nvidia.com/gpu:  1
+    Liveness:          http-get http://:8002/health delay=0s timeout=5s period=30s successThreshold=1 failureThreshold=3
+    Readiness:         http-get http://:8002/health delay=0s timeout=5s period=10s successThreshold=1 failureThreshold=6
+    Startup:           http-get http://:8002/health delay=0s timeout=5s period=10s successThreshold=1 failureThreshold=120
+    Environment:
+      HF_TOKEN:  <set to the key 'HF_TOKEN' in secret 'hf-secret'>  Optional: false
+      HF_HOME:   /root/.cache/huggingface
+    Mounts:
+      /dev/shm from shm (rw)
+      /root/.cache/huggingface from hf-cache (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-49l2z (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True
+  Initialized                 True
+  Ready                       False
+  ContainersReady             False
+  PodScheduled                True
+Volumes:
+  hf-cache:
+    Type:       PersistentVolumeClaim (a reference to a PersistentVolumeClaim in the same namespace)
+    ClaimName:  hf-cache
+    ReadOnly:   false
+  shm:
+    Type:       EmptyDir (a temporary directory that shares a pod's lifetime)
+    Medium:     Memory
+    SizeLimit:  8Gi
+  kube-api-access-49l2z:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   Burstable
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type     Reason     Age                        From     Message
+  ----     ------     ----                       ----     -------
+  Normal   Created    30m (x2012 over 7d14h)     kubelet  spec.containers{vllm}: Container created
+  Warning  Unhealthy  24m (x4310 over 7d14h)     kubelet  spec.containers{vllm}: Startup probe failed: Get "http://10.244.179.80:8002/health": dial tcp 10.244.179.80:8002: connect: connection refused
+  Warning  BackOff    4m28s (x11906 over 7d14h)  kubelet  spec.containers{vllm}: Back-off restarting failed container vllm in pod vllm-llama31-8b-7ff775c756-f6lr4_vllms(2ef1a5b4-95d8-44a9-bd3d-fc6a5d42bd8b)
+  Normal   Pulled     113s (x2016 over 7d14h)    kubelet  spec.containers{vllm}: Container image "vllm/vllm-openai:v0.12.0" already present on machine and can be accessed by the pod
+### deepseek-33b: última queda (18 reinícios)
+INFO 09-18 13:13:22 api_server.py:585] vLLM API server version 0.6.4
+INFO 09-18 13:13:22 api_server.py:586] args: Namespace(host='0.0.0.0', port=8001, uvicorn_log_level='info', allow_credentials=False, allowed_origins=['*'], allowed_methods=['*'], allowed_headers=['*'], api_key=None, lora_modules=None, prompt_adapters=None, chat_template=None, response_role='assistant', ssl_keyfile=None, ssl_certfile=None, ssl_ca_certs=None, ssl_cert_reqs=0, root_path=None, middleware=[], return_tokens_as_token_ids=False, disable_frontend_multiprocessing=False, enable_auto_tool_choice=False, tool_call_parser=None, tool_parser_plugin='', model='TheBloke/deepseek-coder-33B-instruct-GPTQ', task='auto', tokenizer=None, skip_tokenizer_init=False, revision=None, code_revision=None, tokenizer_revision=None, tokenizer_mode='auto', chat_template_text_format='string', trust_remote_code=False, allowed_local_media_path=None, download_dir=None, load_format='auto', config_format=<ConfigFormat.AUTO: 'auto'>, dtype='float16', kv_cache_dtype='auto', quantization_param_path=None, max_model_len=8192, guided_decoding_backend='outlines', distributed_executor_backend=None, worker_use_ray=False, pipeline_parallel_size=1, tensor_parallel_size=1, max_parallel_loading_workers=None, ray_workers_use_nsight=False, block_size=16, enable_prefix_caching=False, disable_sliding_window=False, use_v2_block_manager=False, num_lookahead_slots=0, seed=0, swap_space=4, cpu_offload_gb=0, gpu_memory_utilization=0.9, num_gpu_blocks_override=None, max_num_batched_tokens=None, max_num_seqs=4, max_logprobs=20, disable_log_stats=False, quantization='gptq', rope_scaling=None, rope_theta=None, hf_overrides=None, enforce_eager=True, max_seq_len_to_capture=8192, disable_custom_all_reduce=False, tokenizer_pool_size=0, tokenizer_pool_type='ray', tokenizer_pool_extra_config=None, limit_mm_per_prompt=None, mm_processor_kwargs=None, enable_lora=False, enable_lora_bias=False, max_loras=1, max_lora_rank=16, lora_extra_vocab_size=256, lora_dtype='auto', long_lora_scaling_factors=None, max_cpu_loras=None, fully_sharded_loras=False, enable_prompt_adapter=False, max_prompt_adapters=1, max_prompt_adapter_token=0, device='auto', num_scheduler_steps=1, multi_step_stream_outputs=True, scheduler_delay_factor=0.0, enable_chunked_prefill=None, speculative_model=None, speculative_model_quantization=None, num_speculative_tokens=None, speculative_disable_mqa_scorer=False, speculative_draft_tensor_parallel_size=None, speculative_max_model_len=None, speculative_disable_by_batch_size=None, ngram_prompt_lookup_max=None, ngram_prompt_lookup_min=None, spec_decoding_acceptance_method='rejection_sampler', typical_acceptance_sampler_posterior_threshold=None, typical_acceptance_sampler_posterior_alpha=None, disable_logprobs_during_spec_decoding=None, model_loader_extra_config=None, ignore_patterns=[], preemption_mode=None, served_model_name=None, qlora_adapter_name_or_path=None, otlp_traces_endpoint=None, collect_detailed_traces=None, disable_async_output_proc=False, scheduling_policy='fcfs', override_neuron_config=None, override_pooler_config=None, disable_log_requests=False, max_log_len=None, disable_fastapi_docs=False, enable_prompt_tokens_details=False)
+INFO 09-18 13:13:22 api_server.py:175] Multiprocessing frontend to use ipc:///tmp/c48cd5f2-f44a-4744-a557-b1327ec8e939 for IPC Path.
+INFO 09-18 13:13:22 api_server.py:194] Started engine process with PID 96
+WARNING 09-18 13:13:23 config.py:1865] Casting torch.bfloat16 to torch.float16.
+INFO 09-18 13:13:30 config.py:350] This model supports multiple tasks: {'generate', 'embedding'}. Defaulting to 'generate'.
+WARNING 09-18 13:13:30 config.py:428] gptq quantization is not fully optimized yet. The speed can be slower than non-quantized models.
+WARNING 09-18 13:13:30 arg_utils.py:1075] [DEPRECATED] Block manager v1 has been removed, and setting --use-v2-block-manager to True or False has no effect on vLLM behavior. Please remove --use-v2-block-manager in your engine argument. If your use case is not supported by SelfAttnBlockSpaceManager (i.e. block manager v2), please file an issue with detailed information.
+WARNING 09-18 13:13:30 config.py:503] To see benefits of async output processing, enable CUDA graph. Since, enforce-eager is enabled, async output processor cannot be used
+WARNING 09-18 13:13:35 config.py:1865] Casting torch.bfloat16 to torch.float16.
+INFO 09-18 13:13:43 config.py:350] This model supports multiple tasks: {'embedding', 'generate'}. Defaulting to 'generate'.
+WARNING 09-18 13:13:43 config.py:428] gptq quantization is not fully optimized yet. The speed can be slower than non-quantized models.
+WARNING 09-18 13:13:43 arg_utils.py:1075] [DEPRECATED] Block manager v1 has been removed, and setting --use-v2-block-manager to True or False has no effect on vLLM behavior. Please remove --use-v2-block-manager in your engine argument. If your use case is not supported by SelfAttnBlockSpaceManager (i.e. block manager v2), please file an issue with detailed information.
+WARNING 09-18 13:13:43 config.py:503] To see benefits of async output processing, enable CUDA graph. Since, enforce-eager is enabled, async output processor cannot be used
+INFO 09-18 13:13:43 llm_engine.py:249] Initializing an LLM engine (v0.6.4) with config: model='TheBloke/deepseek-coder-33B-instruct-GPTQ', speculative_config=None, tokenizer='TheBloke/deepseek-coder-33B-instruct-GPTQ', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, override_neuron_config=None, tokenizer_revision=None, trust_remote_code=False, dtype=torch.float16, max_seq_len=8192, download_dir=None, load_format=LoadFormat.AUTO, tensor_parallel_size=1, pipeline_parallel_size=1, disable_custom_all_reduce=False, quantization=gptq, enforce_eager=True, kv_cache_dtype=auto, quantization_param_path=None, device_config=cuda, decoding_config=DecodingConfig(guided_decoding_backend='outlines'), observability_config=ObservabilityConfig(otlp_traces_endpoint=None, collect_model_forward_time=False, collect_model_execute_time=False), seed=0, served_model_name=TheBloke/deepseek-coder-33B-instruct-GPTQ, num_scheduler_steps=1, chunked_prefill_enabled=False multi_step_stream_outputs=True, enable_prefix_caching=False, use_async_output_proc=False, use_cached_outputs=True, chat_template_text_format=string, mm_processor_kwargs=None, pooler_config=None)
+INFO 09-18 13:13:44 selector.py:261] Cannot use FlashAttention-2 backend for Volta and Turing GPUs.
+INFO 09-18 13:13:44 selector.py:144] Using XFormers backend.
+INFO 09-18 13:13:45 model_runner.py:1072] Starting to load model TheBloke/deepseek-coder-33B-instruct-GPTQ...
+INFO 09-18 13:13:46 weight_utils.py:243] Using model weights format ['*.safetensors']
+INFO 09-18 13:16:40 weight_utils.py:288] No model.safetensors.index.json found in remote.
+Loading safetensors checkpoint shards:   0% Completed | 0/1 [00:00<?, ?it/s]
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/usr/local/lib/python3.12/dist-packages/vllm/entrypoints/openai/api_server.py", line 643, in <module>
+    uvloop.run(run_server(args))
+  File "/usr/local/lib/python3.12/dist-packages/uvloop/__init__.py", line 109, in run
+    return __asyncio.run(
+           ^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/runners.py", line 194, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "uvloop/loop.pyx", line 1512, in uvloop.loop.Loop.run_until_complete
+  File "uvloop/loop.pyx", line 1505, in uvloop.loop.Loop.run_until_complete
+  File "uvloop/loop.pyx", line 1379, in uvloop.loop.Loop.run_forever
+  File "uvloop/loop.pyx", line 557, in uvloop.loop.Loop._run
+  File "uvloop/handles/poll.pyx", line 216, in uvloop.loop.__on_uvpoll_event
+  File "uvloop/cbhandles.pyx", line 83, in uvloop.loop.Handle._run
+  File "uvloop/cbhandles.pyx", line 66, in uvloop.loop.Handle._run
+  File "uvloop/loop.pyx", line 399, in uvloop.loop.Loop._read_from_self
+  File "uvloop/loop.pyx", line 404, in uvloop.loop.Loop._invoke_signals
+  File "uvloop/loop.pyx", line 379, in uvloop.loop.Loop._ceval_process_signals
+  File "/usr/local/lib/python3.12/dist-packages/vllm/entrypoints/openai/api_server.py", line 605, in signal_handler
+    raise KeyboardInterrupt("terminated")
+KeyboardInterrupt: terminated
+### deepseek-33b: arranque, até o servidor subir
+INFO 09-27 12:43:46 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:44768 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:43:56 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:37226 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:44:06 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:49314 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:49320 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:44:16 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:38406 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:44:26 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:38338 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:44:36 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:43648 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:43662 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:44:46 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:45006 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:44:56 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:39618 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:45:06 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:36970 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:36982 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:45:16 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:42326 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:45:26 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:51184 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:45:36 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:59180 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:59192 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:45:46 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:35936 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:45:56 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:34416 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:46:06 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:35512 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:35528 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:46:16 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:54242 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:46:26 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:58152 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:46:36 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:36996 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:36998 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:46:46 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:37464 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:46:56 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:45124 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:47:06 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:54994 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:55008 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:47:16 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:45198 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:47:26 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:49828 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:47:36 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:40698 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:40710 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:47:46 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:43232 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:47:56 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:42780 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:48:06 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:59132 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:59148 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:48:16 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:57280 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:48:26 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:51912 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:48:36 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:41212 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:41220 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:48:46 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:43808 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:48:56 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:58032 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:49:06 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:33962 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:33968 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:49:16 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:47392 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:49:26 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:53354 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:49:36 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:51094 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:51102 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:49:46 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:43036 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:49:56 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:45842 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:50:06 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:38644 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:38652 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:50:16 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:38158 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:50:26 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:53958 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:50:36 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:58112 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:58124 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:50:46 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:36134 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:50:56 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:43172 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:51:06 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:51054 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:51058 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:51:16 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:60872 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:51:26 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:34314 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:51:36 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:39084 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:39100 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:51:46 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:40880 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:51:56 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:60812 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:52:06 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:49762 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:49766 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:52:16 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:54018 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:52:26 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:46480 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:52:36 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:57874 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:57890 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:52:46 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:37494 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:52:56 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:32774 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:53:06 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:57370 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:57382 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:53:16 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:40898 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:53:26 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:38276 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:53:36 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:38122 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:38126 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:53:46 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:56838 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:53:56 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:50286 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:54:06 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:37176 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:37184 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:54:16 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:32848 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:54:26 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:50228 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:54:36 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:57080 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:57086 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:54:46 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:45324 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:54:56 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:53936 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:55:06 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:36408 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:36424 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:55:17 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:57816 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:55:27 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:36620 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:55:37 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:48292 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:48298 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:55:47 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:35122 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:55:57 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:51920 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:56:07 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:33216 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:33224 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:56:17 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:60918 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:56:27 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:35356 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:56:37 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:47968 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:47982 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:56:47 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:58230 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:56:57 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:37758 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:57:07 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:45850 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:45864 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:57:17 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:49314 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:57:27 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:35980 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:57:37 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:47666 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:47678 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:57:47 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:40486 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:57:57 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:51290 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:58:07 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:42578 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:42582 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:58:17 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:34700 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:58:27 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:49258 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:58:37 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:43632 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:43644 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:58:47 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:60842 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:58:57 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:60588 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:59:07 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:54264 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:54278 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:59:17 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:39008 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:59:27 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:55202 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:59:37 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:57902 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:57906 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:59:47 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:59936 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 12:59:57 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:37884 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:00:07 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:58952 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:58966 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:00:17 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:45500 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:00:27 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:54294 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:00:37 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:48446 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:48456 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:00:47 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:33276 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:00:57 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:34074 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:01:07 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:38366 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:38378 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:01:17 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:44394 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:01:27 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:37804 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:01:37 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:38528 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:38542 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:01:47 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:57636 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:01:57 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:56348 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:02:07 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:46646 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:46652 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:02:17 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:59858 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:02:27 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:35800 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:02:37 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:58662 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:58676 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:02:47 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:55522 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:02:57 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:35516 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:03:07 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:38166 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:38178 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:03:17 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:47704 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:03:27 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:48792 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:03:37 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:41176 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:41182 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:03:47 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:51252 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:03:57 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:40582 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:04:07 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:53684 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:53692 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:04:17 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:54840 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:04:27 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:42884 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:04:37 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:49658 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:49664 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:04:47 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:38402 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:04:57 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:38986 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:05:07 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:49168 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:49184 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:05:17 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:55788 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:05:27 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:59650 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:05:37 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:55516 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:55530 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:05:47 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:35488 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:05:57 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:50384 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:06:07 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:36536 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:36544 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:06:17 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:37144 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:06:27 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:48472 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:06:37 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:42478 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:42492 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:06:47 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:34554 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:06:57 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:44000 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:07:07 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:42124 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:42138 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:07:17 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:60376 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:07:27 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:55222 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:07:37 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:51700 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:51714 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:07:47 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:40198 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:07:57 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:34542 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:08:07 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:43908 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:43914 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:08:17 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:47370 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:08:27 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:42016 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:08:37 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:60494 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:60510 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:08:47 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:57778 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:08:57 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:50636 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:09:07 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:59806 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:59818 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:09:17 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:59726 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:09:27 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:55614 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:09:37 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:44064 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:44074 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:09:47 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:60140 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:09:57 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:49454 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:10:07 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:32820 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:32830 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:10:17 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:44970 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:10:27 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:33720 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:10:37 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:48992 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:49002 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:10:47 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:40486 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:10:57 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:42314 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:11:07 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:55442 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:55444 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:11:17 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:38674 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:11:27 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:56166 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:48278 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:48294 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:11:37 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:57926 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:11:47 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:33452 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:11:57 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:45342 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.50.150:45354 - "GET /health HTTP/1.1" 200 OK
+INFO 09-27 13:12:07 metrics.py:449] Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.
+INFO:     192.168.50.150:57928 - "GET /health HTTP/1.1" 200 OK
+### deepseek-33b: modelos e versão
+{"object":"list","data":[{"id":"TheBloke/deepseek-coder-33B-instruct-GPTQ","object":"model","created":1790683540,"owned_by":"vllm","root":"TheBloke/deepseek-coder-33B-instruct-GPTQ","parent":null,"max_model_len":8192,"permission":[{"id":"modelperm-0b90e824e7154881897c68c1760df9d5","object":"model_permission","created":1790683540,"allow_create_engine":false,"allow_sampling":true,"allow_logprobs":true,"allow_search_indices":false,"allow_view":true,"allow_fine_tuning":false,"organization":"*","group":null,"is_blocking":false}]}]}
+{"version":"0.6.4"}
+### deepseek-33b: métricas do vLLM
+vllm:cache_config_info{block_size="16",cache_dtype="auto",cpu_offload_gb="0",enable_prefix_caching="False",gpu_memory_utilization="0.9",is_attention_free="False",num_cpu_blocks="1057",num_gpu_blocks="2725",num_gpu_blocks_override="None",sliding_window="None",swap_space_bytes="4294967296"} 1.0
+vllm:num_requests_running{model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:num_requests_swapped{model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:num_requests_waiting{model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:gpu_cache_usage_perc{model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:cpu_cache_usage_perc{model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:cpu_prefix_cache_hit_rate{model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} -1.0
+vllm:gpu_prefix_cache_hit_rate{model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} -1.0
+vllm:avg_prompt_throughput_toks_per_s{model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:avg_generation_throughput_toks_per_s{model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:lora_requests_info{max_lora="0",running_lora_adapters="",waiting_lora_adapters=""} 1.7906835312694283e+09
+vllm:num_preemptions_total{model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:prompt_tokens_total{model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 75.0
+vllm:generation_tokens_total{model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 158.0
+vllm:request_success_total{finished_reason="stop",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 1.0
+vllm:iteration_tokens_total_sum{model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 233.0
+vllm:iteration_tokens_total_bucket{le="1.0",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 92135.0
+vllm:iteration_tokens_total_bucket{le="8.0",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 92135.0
+vllm:iteration_tokens_total_bucket{le="16.0",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 92135.0
+vllm:iteration_tokens_total_bucket{le="32.0",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 92135.0
+vllm:iteration_tokens_total_bucket{le="64.0",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 92135.0
+vllm:iteration_tokens_total_bucket{le="128.0",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 92136.0
+vllm:iteration_tokens_total_bucket{le="256.0",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 92136.0
+vllm:iteration_tokens_total_bucket{le="512.0",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 92136.0
+vllm:iteration_tokens_total_bucket{le="1024.0",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 92136.0
+vllm:iteration_tokens_total_bucket{le="2048.0",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 92136.0
+vllm:iteration_tokens_total_bucket{le="4096.0",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 92136.0
+vllm:iteration_tokens_total_bucket{le="8096.0",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 92136.0
+vllm:iteration_tokens_total_bucket{le="+Inf",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 92136.0
+vllm:iteration_tokens_total_count{model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 92136.0
+vllm:time_to_first_token_seconds_sum{model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.4844019412994385
+vllm:time_to_first_token_seconds_bucket{le="0.001",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:time_to_first_token_seconds_bucket{le="0.005",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:time_to_first_token_seconds_bucket{le="0.01",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:time_to_first_token_seconds_bucket{le="0.02",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:time_to_first_token_seconds_bucket{le="0.04",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:time_to_first_token_seconds_bucket{le="0.06",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:time_to_first_token_seconds_bucket{le="0.08",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:time_to_first_token_seconds_bucket{le="0.1",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:time_to_first_token_seconds_bucket{le="0.25",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:time_to_first_token_seconds_bucket{le="0.5",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 1.0
+vllm:time_to_first_token_seconds_bucket{le="0.75",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 1.0
+vllm:time_to_first_token_seconds_bucket{le="1.0",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 1.0
+vllm:time_to_first_token_seconds_bucket{le="2.5",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 1.0
+vllm:time_to_first_token_seconds_bucket{le="5.0",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 1.0
+vllm:time_to_first_token_seconds_bucket{le="7.5",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 1.0
+vllm:time_to_first_token_seconds_bucket{le="10.0",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 1.0
+vllm:time_to_first_token_seconds_bucket{le="+Inf",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 1.0
+vllm:time_to_first_token_seconds_count{model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 1.0
+vllm:time_per_output_token_seconds_sum{model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 7.79239296913147
+vllm:time_per_output_token_seconds_bucket{le="0.01",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:time_per_output_token_seconds_bucket{le="0.025",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:time_per_output_token_seconds_bucket{le="0.05",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 144.0
+vllm:time_per_output_token_seconds_bucket{le="0.075",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 151.0
+vllm:time_per_output_token_seconds_bucket{le="0.1",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 151.0
+vllm:time_per_output_token_seconds_bucket{le="0.15",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 156.0
+vllm:time_per_output_token_seconds_bucket{le="0.2",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 156.0
+vllm:time_per_output_token_seconds_bucket{le="0.3",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 157.0
+vllm:time_per_output_token_seconds_bucket{le="0.4",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 157.0
+vllm:time_per_output_token_seconds_bucket{le="0.5",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 157.0
+vllm:time_per_output_token_seconds_bucket{le="0.75",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 157.0
+vllm:time_per_output_token_seconds_bucket{le="1.0",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 157.0
+vllm:time_per_output_token_seconds_bucket{le="2.5",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 157.0
+vllm:time_per_output_token_seconds_bucket{le="+Inf",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 157.0
+vllm:time_per_output_token_seconds_count{model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 157.0
+vllm:e2e_request_latency_seconds_sum{model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 8.276794910430908
+vllm:e2e_request_latency_seconds_bucket{le="0.3",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:e2e_request_latency_seconds_bucket{le="0.5",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:e2e_request_latency_seconds_bucket{le="0.8",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:e2e_request_latency_seconds_bucket{le="1.0",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:e2e_request_latency_seconds_bucket{le="1.5",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:e2e_request_latency_seconds_bucket{le="2.0",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:e2e_request_latency_seconds_bucket{le="2.5",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:e2e_request_latency_seconds_bucket{le="5.0",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 0.0
+vllm:e2e_request_latency_seconds_bucket{le="10.0",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 1.0
+vllm:e2e_request_latency_seconds_bucket{le="15.0",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 1.0
+vllm:e2e_request_latency_seconds_bucket{le="20.0",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 1.0
+vllm:e2e_request_latency_seconds_bucket{le="30.0",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 1.0
+vllm:e2e_request_latency_seconds_bucket{le="40.0",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 1.0
+vllm:e2e_request_latency_seconds_bucket{le="50.0",model_name="TheBloke/deepseek-coder-33B-instruct-GPTQ"} 1.0

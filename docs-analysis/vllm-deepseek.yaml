@@ -1,0 +1,121 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: vllm-deepseek-33b
+  namespace: vllms
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: vllm-deepseek-33b
+
+  template:
+    metadata:
+      labels:
+        app: vllm-deepseek-33b
+
+    spec:
+      containers:
+        - name: vllm
+
+          # IMPORTANTE:
+          # não utilizar :latest numa V100.
+          # Use uma imagem/versionamento do vLLM compatível
+          # com Volta (SM 7.0).
+          image: vllm/vllm-openai:v0.6.4
+
+          command:
+            - python3
+            - -m
+            - vllm.entrypoints.openai.api_server
+
+          args:
+            - --model
+            - TheBloke/deepseek-coder-33B-instruct-GPTQ
+
+            - --quantization
+            - gptq
+
+            - --dtype
+            - float16
+
+            - --host
+            - 0.0.0.0
+
+            - --port
+            - "8001"
+
+            - --gpu-memory-utilization
+            - "0.90"
+
+            - --max-model-len
+            - "8192"
+
+            - --max-num-seqs
+            - "4"
+
+            - --enforce-eager
+
+          env:
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hf-secret
+                  key: HF_TOKEN
+
+          ports:
+            - name: http
+              containerPort: 8001
+              protocol: TCP
+
+          resources:
+            requests:
+              nvidia.com/gpu: 1
+              memory: "16Gi"
+              cpu: "4"
+
+            limits:
+              nvidia.com/gpu: 1
+              memory: "32Gi"
+              cpu: "8"
+
+          volumeMounts:
+            - name: hf-cache
+              mountPath: /root/.cache/huggingface
+
+            - name: shm
+              mountPath: /dev/shm
+
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            failureThreshold: 60
+            periodSeconds: 10
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            initialDelaySeconds: 30
+            periodSeconds: 30
+
+      volumes:
+        - name: hf-cache
+          persistentVolumeClaim:
+            claimName: hf-cache
+
+        - name: shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: "4Gi"

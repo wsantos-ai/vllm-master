@@ -1,0 +1,43 @@
+### 2026-10-14 16:25:05
+NAME          READY   STATUS    RESTARTS   AGE   IP              NODE        NOMINATED NODE   READINESS GATES
+vllm-qwen38   1/1     Running   0          12d   10.244.179.76   sabdiia01   <none>           <none>
+### o template de chat do modelo usa enable_thinking?
+/hf-cache/hub/models--Qwen--Qwen3.8-27B/snapshots/1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0/chat_template.jinja
+/hf-cache/hub/models--Qwen--Qwen3.8-27B/snapshots/1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0/tokenizer_config.json
+### resposta com o raciocínio desligado (100 tokens)
+{"id":"chatcmpl-a53e2478763e9f73","object":"chat.completion","created":1792005930,"model":"Qwen/Qwen3.8-27B","choices":[{"index":0,"message":{"role":"assistant","content":"Um servidor de inferência de LLM é um sistema computacional especializado que recebe solicitações de texto e utiliza um modelo de linguagem pré-treinado para gerar respostas ou previsões. Ele executa o processo de inferência, que consiste em aplicar o modelo aos dados de entrada para produzir a saída final, sem realizar o treinamento do modelo. Esse servidor é otimizado para lidar com a alta demanda de processamento e garantir baixa latência, permitindo que aplicações utilizem as capacidades do LLM de","refusal":null,"annotations":null,"audio":null,"function_call":null,"tool_calls":[],"reasoning":null},"logprobs":null,"finish_reason":"length","stop_reason":null,"token_ids":null}],"service_tier":null,"system_fingerprint":null,"usage":{"prompt_tokens":29,"total_tokens":129,"completion_tokens":100,"prompt_tokens_details":null},"prompt_logprobs":null,"prompt_token_ids":null,"kv_transfer_params":null}
+### tempo: 18.737935 s
+### concorrência: N requisições simultâneas de 100 tokens, raciocínio desligado
+### N | tokens gerados | segundos | tokens/s total | tokens/s por usuário
+1 | 100 | 18.7 | 5.35 | 5.35
+4 | 400 | 145.6 | 2.75 | 0.69
+8 | 800 | 210.1 | 3.81 | 0.48
+### métricas do vLLM ao final
+vllm:num_preemptions_total{engine="0",model_name="Qwen/Qwen3.8-27B"} 0.0
+vllm:generation_tokens_total{engine="0",model_name="Qwen/Qwen3.8-27B"} 1600.0
+vllm:request_success_total{engine="0",finished_reason="stop",model_name="Qwen/Qwen3.8-27B"} 0.0
+vllm:request_success_total{engine="0",finished_reason="length",model_name="Qwen/Qwen3.8-27B"} 15.0
+vllm:request_success_total{engine="0",finished_reason="abort",model_name="Qwen/Qwen3.8-27B"} 0.0
+vllm:request_success_total{engine="0",finished_reason="error",model_name="Qwen/Qwen3.8-27B"} 0.0
+vllm:request_success_total{engine="0",finished_reason="repetition",model_name="Qwen/Qwen3.8-27B"} 0.0
+### linhas do motor durante o teste
+(APIServer pid=1) INFO 10-14 19:28:45 [loggers.py:259] Engine 000: Avg prompt throughput: 9.9 tokens/s, Avg generation throughput: 0.3 tokens/s, Running: 8 reqs, Waiting: 0 reqs, GPU KV cache usage: 31.1%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO 10-14 19:28:55 [loggers.py:259] Engine 000: Avg prompt throughput: 16.5 tokens/s, Avg generation throughput: 4.0 tokens/s, Running: 8 reqs, Waiting: 0 reqs, GPU KV cache usage: 31.1%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO 10-14 19:29:05 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 4.8 tokens/s, Running: 8 reqs, Waiting: 0 reqs, GPU KV cache usage: 31.1%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO 10-14 19:29:15 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 4.8 tokens/s, Running: 8 reqs, Waiting: 0 reqs, GPU KV cache usage: 31.1%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO 10-14 19:29:25 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 4.0 tokens/s, Running: 8 reqs, Waiting: 0 reqs, GPU KV cache usage: 31.1%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO 10-14 19:29:35 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 4.0 tokens/s, Running: 8 reqs, Waiting: 0 reqs, GPU KV cache usage: 31.1%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO 10-14 19:29:45 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 4.0 tokens/s, Running: 8 reqs, Waiting: 0 reqs, GPU KV cache usage: 31.1%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO 10-14 19:29:55 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 4.0 tokens/s, Running: 8 reqs, Waiting: 0 reqs, GPU KV cache usage: 31.1%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO 10-14 19:30:05 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 4.0 tokens/s, Running: 8 reqs, Waiting: 0 reqs, GPU KV cache usage: 31.1%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO 10-14 19:30:15 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 4.0 tokens/s, Running: 8 reqs, Waiting: 0 reqs, GPU KV cache usage: 31.1%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO 10-14 19:30:25 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 3.2 tokens/s, Running: 8 reqs, Waiting: 0 reqs, GPU KV cache usage: 31.1%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO 10-14 19:30:35 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 4.0 tokens/s, Running: 8 reqs, Waiting: 0 reqs, GPU KV cache usage: 31.1%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO 10-14 19:30:45 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 4.0 tokens/s, Running: 8 reqs, Waiting: 0 reqs, GPU KV cache usage: 31.1%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO 10-14 19:30:55 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 4.0 tokens/s, Running: 8 reqs, Waiting: 0 reqs, GPU KV cache usage: 31.1%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO 10-14 19:31:05 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 4.0 tokens/s, Running: 8 reqs, Waiting: 0 reqs, GPU KV cache usage: 31.1%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO 10-14 19:31:15 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 4.0 tokens/s, Running: 8 reqs, Waiting: 0 reqs, GPU KV cache usage: 31.1%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO 10-14 19:31:25 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 3.2 tokens/s, Running: 8 reqs, Waiting: 0 reqs, GPU KV cache usage: 31.1%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO 10-14 19:31:35 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 4.0 tokens/s, Running: 8 reqs, Waiting: 0 reqs, GPU KV cache usage: 31.1%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO 10-14 19:31:45 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 4.0 tokens/s, Running: 8 reqs, Waiting: 0 reqs, GPU KV cache usage: 31.1%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO 10-14 19:31:55 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 4.0 tokens/s, Running: 8 reqs, Waiting: 0 reqs, GPU KV cache usage: 31.1%, Prefix cache hit rate: 0.0%

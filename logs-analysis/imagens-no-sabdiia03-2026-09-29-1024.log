@@ -1,0 +1,39 @@
+### host
+sabdiia03
+### espaço em /
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/ol-root   70G   44G   27G  63% /
+### diretório do containerd
+20G	/var/lib/containerd
+### imagens no nó
+time="2026-09-29T10:24:38-03:00" level=warning msg="Config \"/etc/crictl.yaml\" does not exist, trying next: \"/usr/bin/crictl.yaml\""
+IMAGE                                                    TAG                      IMAGE ID            SIZE
+docker.io/calico/cni                                     v3.30.0                  15f996c472622       71.8MB
+docker.io/calico/node                                    v3.30.0                  d12dae9bc0999       156MB
+docker.io/kong/kubernetes-ingress-controller             3.5                      6494a7a1e6912       22.3MB
+docker.io/library/kong                                   3.9                      3546d07351157       120MB
+docker.io/vllm/vllm-openai                               v0.6.4                   13c224cdc000d       5.62GB
+nvcr.io/nvidia/gpu-operator                              v25.10.1                 9f1aa463536f9       171MB
+nvcr.io/nvidia/k8s-device-plugin                         v0.18.1                  bd8c83846643c       54.2MB
+nvcr.io/nvidia/k8s/container-toolkit                     v1.18.1                  c616b8d4ded88       52MB
+nvcr.io/nvidia/k8s/dcgm-exporter                         4.4.2-4.7.0-distroless   a1bcd4bb2a83e       65.6MB
+quay.io/metallb/controller                               v0.14.9                  48c6a3e363a25       29.2MB
+quay.io/metallb/speaker                                  v0.14.9                  dacabb789863d       55.2MB
+quay.io/prometheus-operator/prometheus-config-reloader   v0.94.0                  cd49a3383f443       14.9MB
+quay.io/prometheus/alertmanager                          v0.34.0                  c4e1c067b29ef       40.7MB
+quay.io/prometheus/node-exporter                         v1.12.1-distroless       6ce127b25a483       13.1MB
+quay.io/prometheus/prometheus                            v3.14.0-distroless       b7256d9c7ab77       109MB
+registry.k8s.io/coredns/coredns                          v1.14.6                  520212b8b0fcd       23.8MB
+registry.k8s.io/etcd                                     3.7.0-0                  270fbeb697171       22.3MB
+registry.k8s.io/kube-apiserver                           v1.37.0                  bec5f0e1e2eeb       31.2MB
+registry.k8s.io/kube-controller-manager                  v1.37.0                  364b3c3d9ec19       27.3MB
+registry.k8s.io/kube-proxy                               v1.37.0                  d6a28daf3e6b0       30.2MB
+registry.k8s.io/kube-scheduler                           v1.37.0                  1fabf80a1273a       20.8MB
+registry.k8s.io/kube-state-metrics/kube-state-metrics    v2.20.0                  a635e3d8e1a4f       19.3MB
+registry.k8s.io/metrics-server/metrics-server            v0.9.0                   d7b01abacd67f       23.3MB
+registry.k8s.io/nfd/node-feature-discovery               v0.18.2                  6a744d4448cbe       84MB
+registry.k8s.io/pause                                    3.10.2                   4a83b15d3ecfe       321kB
+registry.k8s.io/sig-storage/csi-node-driver-registrar    v2.17.0                  905ecc40d0b09       14.6MB
+registry.k8s.io/sig-storage/livenessprobe                v2.19.0                  b6d35c6d5906d       14.8MB
+registry.k8s.io/sig-storage/nfsplugin                    v4.13.4                  a446e1a2756a2       55.5MB
+### limiares do kubelet

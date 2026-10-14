@@ -1,0 +1,129 @@
+### nó: sabdiia01   2026-10-02 12:39:15
+### bond0: modo, política de hash e cada porta
+Bonding Mode: IEEE 802.3ad Dynamic link aggregation
+Transmit Hash Policy: layer2 (0)
+MII Status: up
+	Aggregator ID: 2
+Slave Interface: eno1
+MII Status: up
+Speed: 1000 Mbps
+Duplex: full
+Link Failure Count: 0
+Aggregator ID: 2
+Slave Interface: eno2
+MII Status: up
+Speed: 1000 Mbps
+Duplex: full
+Link Failure Count: 0
+Aggregator ID: 2
+Slave Interface: eno3
+MII Status: up
+Speed: 1000 Mbps
+Duplex: full
+Link Failure Count: 0
+Aggregator ID: 2
+Slave Interface: eno4
+MII Status: up
+Speed: 1000 Mbps
+Duplex: full
+Link Failure Count: 0
+Aggregator ID: 2
+Slave Interface: enp65s0f0
+MII Status: up
+Speed: 1000 Mbps
+Duplex: full
+Link Failure Count: 0
+Aggregator ID: 2
+Slave Interface: enp65s0f1
+MII Status: up
+Speed: 100 Mbps
+Duplex: full
+Link Failure Count: 0
+Aggregator ID: 1
+### porta suspeita: negociação com o switch
+Settings for enp65s0f1:
+	Supported ports: [ TP ]
+	Supported link modes:   10baseT/Half 10baseT/Full
+	                        100baseT/Half 100baseT/Full
+	                        1000baseT/Full
+	Supported pause frame use: Symmetric Receive-only
+	Supports auto-negotiation: Yes
+	Supported FEC modes: Not reported
+	Advertised link modes:  10baseT/Half 10baseT/Full
+	                        100baseT/Half 100baseT/Full
+	                        1000baseT/Full
+	Advertised pause frame use: Symmetric Receive-only
+	Advertised auto-negotiation: Yes
+	Advertised FEC modes: Not reported
+	Link partner advertised link modes:  10baseT/Half 10baseT/Full
+	                                     100baseT/Half 100baseT/Full
+	                                     1000baseT/Full
+	Link partner advertised pause frame use: Symmetric Receive-only
+	Link partner advertised auto-negotiation: Yes
+	Link partner advertised FEC modes: Not reported
+	Speed: 100Mb/s
+	Duplex: Full
+	Auto-negotiation: on
+	Port: Twisted Pair
+	PHYAD: 1
+	Transceiver: internal
+	MDI-X: off (auto)
+	Supports Wake-on: d
+	Wake-on: d
+        Current message level: 0x00000007 (7)
+                               drv probe link
+	Link detected: yes
+### porta vizinha, para comparar
+Settings for enp65s0f0:
+	Supported ports: [ TP ]
+	Supported link modes:   10baseT/Half 10baseT/Full
+	                        100baseT/Half 100baseT/Full
+	                        1000baseT/Full
+	Supported pause frame use: Symmetric Receive-only
+	Supports auto-negotiation: Yes
+	Supported FEC modes: Not reported
+	Advertised link modes:  10baseT/Half 10baseT/Full
+	                        100baseT/Half 100baseT/Full
+	                        1000baseT/Full
+	Advertised pause frame use: Symmetric Receive-only
+	Advertised auto-negotiation: Yes
+	Advertised FEC modes: Not reported
+	Link partner advertised link modes:  10baseT/Half 10baseT/Full
+	                                     100baseT/Half 100baseT/Full
+	                                     1000baseT/Full
+	Link partner advertised pause frame use: Symmetric Receive-only
+	Link partner advertised auto-negotiation: Yes
+	Link partner advertised FEC modes: Not reported
+	Speed: 1000Mb/s
+	Duplex: Full
+	Auto-negotiation: on
+	Port: Twisted Pair
+	PHYAD: 1
+	Transceiver: internal
+	MDI-X: on (auto)
+	Supports Wake-on: pumbg
+	Wake-on: d
+        Current message level: 0x00000007 (7)
+                               drv probe link
+	Link detected: yes
+### erros e descartes nas duas portas
+8: enp65s0f1: <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> mtu 1500 qdisc fq_codel master bond0 state UP mode DEFAULT group default qlen 1000
+    link/ether c8:1f:66:fa:fe:55 brd ff:ff:ff:ff:ff:ff permaddr 00:15:17:94:b1:53
+    RX:  bytes packets errors dropped  missed   mcast           
+     158330240 1236959      0       0       0 1236959 
+    TX:  bytes packets errors dropped carrier collsns           
+     278324864 2174491      0       0       0       0 
+6: enp65s0f0: <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> mtu 1500 qdisc fq_codel master bond0 state UP mode DEFAULT group default qlen 1000
+    link/ether c8:1f:66:fa:fe:55 brd ff:ff:ff:ff:ff:ff permaddr 00:15:17:94:b1:52
+    RX:   bytes  packets errors dropped  missed   mcast           
+    20933996507 36025805      0       0       0  148350 
+    TX:   bytes  packets errors dropped carrier collsns           
+        5589982    43689      0       0       0       0 
+### contadores de erro do driver
+### histórico de link no kernel
+[Mon Sep 21 13:30:58 2026] bond0.500: entered promiscuous mode
+[Mon Sep 21 13:30:58 2026] bond0: entered promiscuous mode
+[Mon Sep 21 13:30:58 2026] e1000e 0000:41:00.1 enp65s0f1: entered promiscuous mode
+[Mon Sep 21 13:31:02 2026] bond0.500: left promiscuous mode
+[Mon Sep 21 13:31:02 2026] bond0: left promiscuous mode
+[Mon Sep 21 13:31:02 2026] e1000e 0000:41:00.1 enp65s0f1: left promiscuous mode

@@ -1,0 +1,14 @@
+### 2026-10-02 12:53:46 antes: 20G livres
+33G	/var/lib/containerd
+### digest: sha256:6766ce0c459e24b76f3e9ba14ffc0442131ef4248c904efdcbf0d89e38be01fe
+### removendo todas as referências com esse digest
+docker.io/vllm/vllm-openai:v0.12.0
+docker.io/vllm/vllm-openai@sha256:6766ce0c459e24b76f3e9ba14ffc0442131ef4248c904efdcbf0d89e38be01fe
+sha256:0c19f07f0c8601d5b77e5a95e188115c17e5d9ddab105462be4951c92f4ebdbb
+### depois: 47G livres (liberou 27G)
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/ol-root   70G   24G   47G  34% /
+5.8G	/var/lib/containerd
+### imagens de vLLM restantes
+REF                                                                                                                           TYPE                                                      DIGEST                                                                  SIZE      PLATFORMS                                                                                  LABELS                                                          
+### OK: há espaço para o Passo 4

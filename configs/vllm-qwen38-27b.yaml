@@ -1,0 +1,147 @@
+# vLLM v0.19.1 + Qwen/Qwen3.8-27B (bitsandbytes 4 bits) — TESTE, ainda não executado
+#
+# Ambiente: ficha F3 do ESTUDO-DE-CASO.md (sabdiia01, 1 x Tesla V100S-PCIE-32GB, sm_70).
+# Estado em 2026-10-02: a imagem v0.19.1 já está em sabdiia01 e roda na V100S (AC-13).
+#   O modelo subiu num Pod avulso em 2026-10-02 (runbooks/teste-qwen38-27b-bnb.md, AC-14):
+#   18,06 GiB de GPU, KV cache de 20.384 tokens, ~3 tokens/s, 12 min de arranque.
+#   Este Deployment ainda não foi aplicado. Antes: apague o Pod vllm-qwen38 (ele ocupa a
+#   GPU) e decida se a velocidade serve (PD-18).
+# Exposição: nenhuma fora do cluster (Service ClusterIP em vllm-qwen38-27b-service.yaml).
+# Diferenças em relação ao vllm-deepseek.yaml do administrador:
+#   - namespace próprio (vllm-estudo), nada em vllms;
+#   - sem HF_TOKEN: o token do hf-secret é inválido e o modelo é público (AC-07, AC-12);
+#   - strategy Recreate: com 1 GPU por nó, RollingUpdate deixa o pod novo sem GPU;
+#   - startupProbe de 60 min: são 55,6 GB de weights a baixar e quantizar (AC-12);
+#   - cache do modelo em /home do nó (755 G livres), não no NFS de 1 GbE (AC-08, AC-09);
+#   - nodeSelector em sabdiia01, o nó de testes, que já tem a imagem v0.19.1 (D-02).
+# Flags conferidas na v0.19.1 em 2026-10-02: --quantization bitsandbytes (F-013),
+#   --dtype float16 obrigatório em sm_70 (F-006). Não verificado: se a imagem traz o
+#   pacote bitsandbytes e se ele funciona com este modelo multimodal (PD-16).
+apiVersion: v1
+kind: Namespace
+
+metadata:
+  name: vllm-estudo
+
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: vllm-qwen38-27b
+  namespace: vllm-estudo
+
+spec:
+  replicas: 1
+
+  strategy:
+    type: Recreate
+
+  selector:
+    matchLabels:
+      app: vllm-qwen38-27b
+
+  template:
+    metadata:
+      labels:
+        app: vllm-qwen38-27b
+
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: sabdiia01
+
+      containers:
+        - name: vllm
+
+          # Última versão do vLLM com sm_70 no Dockerfile (AC-11).
+          # v0.20.0 em diante usa CUDA 13 e não roda em Volta.
+          image: vllm/vllm-openai:v0.19.1
+
+          command:
+            - vllm
+            - serve
+
+          args:
+            - Qwen/Qwen3.8-27B
+
+            - --quantization
+            - bitsandbytes
+
+            - --dtype
+            - float16
+
+            - --host
+            - 0.0.0.0
+
+            - --port
+            - "8000"
+
+            - --gpu-memory-utilization
+            - "0.90"
+
+            - --max-model-len
+            - "8192"
+
+            - --max-num-seqs
+            - "4"
+
+            # Obrigatório para este modelo em 32 GB: sem ele o arranque cai por
+            # CUDA out of memory ao medir os CUDA graphs (AC-14).
+            - --enforce-eager
+
+          env:
+            - name: HF_HOME
+              value: /hf-cache
+
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+
+          resources:
+            requests:
+              nvidia.com/gpu: 1
+              memory: "32Gi"
+              cpu: "4"
+
+            limits:
+              nvidia.com/gpu: 1
+              memory: "96Gi"
+              cpu: "8"
+
+          volumeMounts:
+            - name: hf-cache
+              mountPath: /hf-cache
+
+            - name: shm
+              mountPath: /dev/shm
+
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            failureThreshold: 360
+            periodSeconds: 10
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 30
+
+      volumes:
+        - name: hf-cache
+          hostPath:
+            path: /home/utec/vllm-estudo/hf-cache
+            type: DirectoryOrCreate
+
+        - name: shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: "4Gi"

@@ -1,0 +1,23 @@
+### 2026-10-02 12:50:20 antes
+NAME                                READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                               SELECTOR
+deployment.apps/open-webui          0/1     1            0           10d   open-webui   ghcr.io/open-webui/open-webui:main   app=open-webui
+deployment.apps/vllm-deepseek-33b   1/1     1            1           13d   vllm         vllm/vllm-openai:v0.6.4              app=vllm-deepseek-33b
+deployment.apps/vllm-llama31-8b     0/1     1            0           10d   vllm         vllm/vllm-openai:v0.12.0             app=vllm-llama31-8b
+
+NAME                                     READY   STATUS                       RESTARTS           AGE   IP               NODE        NOMINATED NODE   READINESS GATES
+pod/open-webui-566c8b6bd7-9r5nj          0/1     CreateContainerConfigError   0                  10d   10.244.182.189   sabdiia02   <none>           <none>
+pod/vllm-deepseek-33b-67754f4465-hn6q9   1/1     Running                      18 (13d ago)       13d   10.244.50.138    sabdiia03   <none>           <none>
+pod/vllm-llama31-8b-7ff775c756-f6lr4     0/1     CrashLoopBackOff             2853 (2m52s ago)   10d   10.244.179.80    sabdiia01   <none>           <none>
+deployment.apps/vllm-llama31-8b scaled
+pod/vllm-llama31-8b-7ff775c756-f6lr4 condition met
+### depois
+NAME                                READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                               SELECTOR
+deployment.apps/open-webui          0/1     1            0           10d   open-webui   ghcr.io/open-webui/open-webui:main   app=open-webui
+deployment.apps/vllm-deepseek-33b   1/1     1            1           13d   vllm         vllm/vllm-openai:v0.6.4              app=vllm-deepseek-33b
+deployment.apps/vllm-llama31-8b     0/0     0            0           10d   vllm         vllm/vllm-openai:v0.12.0             app=vllm-llama31-8b
+
+NAME                                     READY   STATUS                       RESTARTS       AGE   IP               NODE        NOMINATED NODE   READINESS GATES
+pod/open-webui-566c8b6bd7-9r5nj          0/1     CreateContainerConfigError   0              10d   10.244.182.189   sabdiia02   <none>           <none>
+pod/vllm-deepseek-33b-67754f4465-hn6q9   1/1     Running                      18 (13d ago)   13d   10.244.50.138    sabdiia03   <none>           <none>
+### GPU reservada em sabdiia01 (espera-se 0 0)
+  nvidia.com/gpu     0           0

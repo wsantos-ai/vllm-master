@@ -1,0 +1,10 @@
+### host
+sabdiia02
+### espaço em /
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/ol-root   70G   43G   28G  61% /
+### diretório do containerd
+25G	/var/lib/containerd
+### imagens no nó
+bash: crictl: command not found
+### limiares do kubelet

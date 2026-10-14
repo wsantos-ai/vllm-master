@@ -1,0 +1,247 @@
+### nó: sabdiia01   início: 2026-10-02 15:09:05   livres em /: 16G
+### /home
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/ol-home  761G   59G  703G   8% /home
+### liberando a GPU: apagando o pod de teste anterior
+pod "vllm-qwen38" deleted from vllm-estudo namespace
+pod/vllm-qwen38 created
+### linha do tempo (a cada 15 s): hora | G livres em / | cache do modelo | GPU MiB | fase | ready
+15:09:05 | 16G | 53G | 0 | Pending | false
+15:09:21 | 16G | 53G | 0 | Running | false
+15:09:36 | 16G | 53G | 4 | Running | false
+15:09:51 | 16G | 53G | 4 | Running | false
+15:10:06 | 17G | 53G | 4 | Running | false
+15:10:21 | 17G | 53G | 412 | Running | false
+15:10:37 | 17G | 53G | 18054 | Running | false
+15:10:52 | 17G | 53G | 19136 | Running | false
+15:11:07 | 17G | 53G | 21914 | Running | false
+15:11:22 | 17G | 53G | 21914 | Running | false
+15:11:37 | 17G | 53G | 21914 | Running | false
+15:11:52 | 17G | 53G | 23684 | Running | false
+15:12:08 | 17G | 53G | 23686 | Running | false
+15:12:23 | 17G | 53G | 23686 | Running | false
+15:12:38 | 17G | 53G | 25206 | Running | false
+15:12:53 | 17G | 53G | 25206 | Running | false
+15:13:08 | 17G | 53G | 25206 | Running | false
+15:13:23 | 17G | 53G | 25208 | Running | false
+15:13:39 | 17G | 53G | 25208 | Running | false
+15:13:54 | 17G | 53G | 25208 | Running | false
+15:14:09 | 17G | 53G | 25210 | Running | false
+15:14:24 | 17G | 53G | 25210 | Running | false
+15:14:39 | 17G | 53G | 25210 | Running | false
+15:14:55 | 17G | 53G | 25212 | Running | false
+15:15:10 | 17G | 53G | 25212 | Running | false
+15:15:25 | 17G | 53G | 25214 | Running | false
+15:15:40 | 17G | 53G | 25214 | Running | false
+15:15:55 | 17G | 53G | 25214 | Running | false
+15:16:10 | 17G | 53G | 25216 | Running | false
+15:16:26 | 17G | 53G | 25216 | Running | false
+15:16:41 | 17G | 53G | 25216 | Running | false
+15:16:56 | 17G | 53G | 25218 | Running | false
+15:17:11 | 17G | 53G | 25218 | Running | false
+15:17:26 | 17G | 53G | 25218 | Running | false
+15:17:41 | 17G | 53G | 25220 | Running | false
+15:17:57 | 17G | 53G | 25220 | Running | false
+15:18:12 | 17G | 53G | 25222 | Running | false
+15:18:27 | 17G | 53G | 25222 | Running | false
+15:18:42 | 17G | 53G | 25224 | Running | false
+15:18:57 | 17G | 53G | 25224 | Running | false
+15:19:13 | 17G | 53G | 25226 | Running | false
+15:19:28 | 17G | 53G | 25226 | Running | false
+15:19:43 | 17G | 53G | 25228 | Running | false
+15:19:58 | 17G | 53G | 23632 | Running | false
+15:20:13 | 17G | 53G | 23632 | Running | false
+15:20:28 | 17G | 53G | 23632 | Running | false
+15:20:44 | 17G | 53G | 23632 | Running | false
+15:20:59 | 17G | 53G | 28728 | Running | false
+15:21:14 | 17G | 53G | 28728 | Running | false
+15:21:29 | 17G | 53G | 28728 | Running | true
+### PARADA: pod Ready   em 2026-10-02 15:21:29
+### estado e eventos
+NAME          READY   STATUS    RESTARTS   AGE   IP              NODE        NOMINATED NODE   READINESS GATES
+vllm-qwen38   1/1     Running   0          12m   10.244.179.76   sabdiia01   <none>           <none>
+Events:
+  Type     Reason     Age                   From               Message
+  ----     ------     ----                  ----               -------
+  Normal   Scheduled  12m                   default-scheduler  Successfully assigned vllm-estudo/vllm-qwen38 to sabdiia01
+  Normal   Pulled     12m                   kubelet            spec.containers{vllm}: Container image "vllm/vllm-openai:v0.19.1" already present on machine and can be accessed by the pod
+  Normal   Created    12m                   kubelet            spec.containers{vllm}: Container created
+  Normal   Started    12m                   kubelet            spec.containers{vllm}: Container started
+  Warning  Unhealthy  2m14s (x67 over 12m)  kubelet            spec.containers{vllm}: Readiness probe failed: Get "http://10.244.179.76:8000/health": dial tcp 10.244.179.76:8000: connect: connection refused
+### estado do contêiner (código de saída, OOMKilled)
+{"running":{"startedAt":"2026-10-02T18:09:06Z"}}
+{}
+### disco e cache
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/ol-root   70G   54G   17G  78% /
+/dev/mapper/ol-home  761G   59G  703G   8% /home
+53G	/home/utec/vllm-estudo/hf-cache
+### GPU
+memory.used [MiB], memory.total [MiB], utilization.gpu [%]
+28728 MiB, 32768 MiB, 0 %
+### teste de geração (chat, 200 tokens, tempo total no fim)
+{"object":"list","data":[{"id":"Qwen/Qwen3.8-27B","object":"model","created":1790965292,"owned_by":"vllm","root":"Qwen/Qwen3.8-27B","parent":null,"max_model_len":8192,"permission":[{"id":"modelperm-aa8a6e5c1b54aabe","object":"model_permission","created":1790965292,"allow_create_engine":false,"allow_sampling":true,"allow_logprobs":true,"allow_search_indices":false,"allow_view":true,"allow_fine_tuning":false,"organization":"*","group":null,"is_blocking":false}]}]}
+{"id":"chatcmpl-b340328a026efd8a","object":"chat.completion","created":1790965292,"model":"Qwen/Qwen3.8-27B","choices":[{"index":0,"message":{"role":"assistant","content":"O usuário pede em português: \"Explique em três frases o que é um servidor de inferência de LLM.\" Preciso responder exatamente em três frases, em português. Preciso garantir que sejam três frases. Pode ser: \"Um servidor de inferência de LLM é um sistema que hospeda e executa modelos de linguagem grandes para gerar respostas a partir de prompts.\" \"Ele recebe requisições, prepara os dados e usa o modelo para produzir texto, classificações ou outras saídas.\" \"Seu objetivo é oferecer acesso rápido, escalável e confiável ao modelo, sem que o usuário precise gerenciar a infraestrutura de treinamento ou execução.\" Contar frases: 1 termina em prompts. 2 termina em saídas. 3 termina em execução. Bom.\n</think>\n\nUm servidor de inferência de LLM é um sistema que hospeda e executa modelos de linguagem grandes para gerar respostas a partir de prompts. Ele recebe requisições, prepara os dados e","refusal":null,"annotations":null,"audio":null,"function_call":null,"tool_calls":[],"reasoning":null},"logprobs":null,"finish_reason":"length","stop_reason":null,"token_ids":null}],"service_tier":null,"system_fingerprint":null,"usage":{"prompt_tokens":69,"total_tokens":269,"completion_tokens":200,"prompt_tokens_details":null},"prompt_logprobs":null,"prompt_token_ids":null,"kv_transfer_params":null}
+### tempo total da requisição: 71.091192 s
+### métricas do vLLM depois da requisição
+vllm:prompt_tokens_total{engine="0",model_name="Qwen/Qwen3.8-27B"} 69.0
+vllm:generation_tokens_total{engine="0",model_name="Qwen/Qwen3.8-27B"} 200.0
+vllm:time_to_first_token_seconds_sum{engine="0",model_name="Qwen/Qwen3.8-27B"} 13.508248567581177
+vllm:e2e_request_latency_seconds_sum{engine="0",model_name="Qwen/Qwen3.8-27B"} 71.0829553604126
+### GPU depois da geração
+memory.used [MiB], memory.total [MiB]
+28730 MiB, 32768 MiB
+### linhas-chave do arranque
+(APIServer pid=1) INFO 10-02 18:09:26 [utils.py:299]  ▄▄ ▄█ █     █     █ ▀▄▀ █  version 0.19.1
+(APIServer pid=1) INFO 10-02 18:09:26 [utils.py:233] non-default args: {'model_tag': 'Qwen/Qwen3.8-27B', 'host': '0.0.0.0', 'model': 'Qwen/Qwen3.8-27B', 'dtype': 'float16', 'max_model_len': 8192, 'quantization': 'bitsandbytes', 'enforce_eager': True}
+(APIServer pid=1) INFO 10-02 18:09:37 [model.py:549] Resolved architecture: Qwen3_5ForConditionalGeneration
+(APIServer pid=1) The `use_fast` parameter is deprecated and will be removed in a future version. Use `backend="torchvision"` instead of `use_fast=True`, or `backend="pil"` instead of `use_fast=False`.
+(EngineCore pid=204) INFO 10-02 18:10:08 [core.py:105] Initializing a V1 LLM engine (v0.19.1) with config: model='Qwen/Qwen3.8-27B', speculative_config=None, tokenizer='Qwen/Qwen3.8-27B', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=False, dtype=torch.float16, max_seq_len=8192, download_dir=None, load_format=bitsandbytes, tensor_parallel
+(EngineCore pid=204) INFO 10-02 18:10:12 [parallel_state.py:1400] world_size=1 rank=0 local_rank=0 distributed_init_method=tcp://10.244.179.76:41349 backend=nccl
+(EngineCore pid=204) The `use_fast` parameter is deprecated and will be removed in a future version. Use `backend="torchvision"` instead of `use_fast=True`, or `backend="pil"` instead of `use_fast=False`.
+(EngineCore pid=204) ERROR 10-02 18:10:30 [fa_utils.py:145] Cannot use FA version 2 is not supported due to FA2 is only supported on devices with compute capability >= 8
+(EngineCore pid=204) INFO 10-02 18:10:30 [mm_encoder_attention.py:230] Using AttentionBackendEnum.TORCH_SDPA for MMEncoderAttention.
+(EngineCore pid=204) INFO 10-02 18:10:30 [cuda.py:334] Using TRITON_ATTN attention backend out of potential backends: ['TRITON_ATTN', 'FLEX_ATTENTION'].
+(EngineCore pid=204) INFO 10-02 18:10:31 [bitsandbytes_loader.py:786] Loading weights with BitsAndBytes quantization. May take a while ...
+(EngineCore pid=204) INFO 10-02 18:10:51 [gpu_model_runner.py:4820] Model loading took 18.06 GiB memory and 21.225486 seconds
+(EngineCore pid=204) INFO 10-02 18:20:53 [gpu_worker.py:436] Available KV cache memory: 5.0 GiB
+(EngineCore pid=204) INFO 10-02 18:20:53 [kv_cache_utils.py:1319] GPU KV cache size: 20,384 tokens
+(EngineCore pid=204) INFO 10-02 18:20:57 [core.py:283] init engine (profile, create kv cache, warmup model) took 606.65 seconds
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /version, Methods: GET
+(APIServer pid=1) INFO 10-02 18:21:48 [loggers.py:259] Engine 000: Avg prompt throughput: 6.9 tokens/s, Avg generation throughput: 1.1 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 3.9%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO 10-02 18:21:58 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 4.7 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 3.9%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO 10-02 18:22:08 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 3.3 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 3.9%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO 10-02 18:22:18 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 3.0 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 3.9%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO 10-02 18:22:28 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 3.1 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 3.9%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO 10-02 18:22:38 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 3.1 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 3.9%, Prefix cache hit rate: 0.0%
+### log completo
+(APIServer pid=1) INFO 10-02 18:09:26 [utils.py:299] 
+(APIServer pid=1) INFO 10-02 18:09:26 [utils.py:299]        █     █     █▄   ▄█
+(APIServer pid=1) INFO 10-02 18:09:26 [utils.py:299]  ▄▄ ▄█ █     █     █ ▀▄▀ █  version 0.19.1
+(APIServer pid=1) INFO 10-02 18:09:26 [utils.py:299]   █▄█▀ █     █     █     █  model   Qwen/Qwen3.8-27B
+(APIServer pid=1) INFO 10-02 18:09:26 [utils.py:299]    ▀▀  ▀▀▀▀▀ ▀▀▀▀▀ ▀     ▀
+(APIServer pid=1) INFO 10-02 18:09:26 [utils.py:299] 
+(APIServer pid=1) INFO 10-02 18:09:26 [utils.py:233] non-default args: {'model_tag': 'Qwen/Qwen3.8-27B', 'host': '0.0.0.0', 'model': 'Qwen/Qwen3.8-27B', 'dtype': 'float16', 'max_model_len': 8192, 'quantization': 'bitsandbytes', 'enforce_eager': True}
+(APIServer pid=1) Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(APIServer pid=1) INFO 10-02 18:09:37 [model.py:549] Resolved architecture: Qwen3_5ForConditionalGeneration
+(APIServer pid=1) WARNING 10-02 18:09:37 [model.py:2016] Casting torch.bfloat16 to torch.float16.
+(APIServer pid=1) INFO 10-02 18:09:37 [model.py:1678] Using max model len 8192
+(APIServer pid=1) `Qwen2VLImageProcessorFast` is deprecated. The `Fast` suffix for image processors has been removed; use `Qwen2VLImageProcessor` instead.
+(APIServer pid=1) INFO 10-02 18:09:37 [config.py:281] Setting attention block size to 784 tokens to ensure that attention page size is >= mamba page size.
+(APIServer pid=1) INFO 10-02 18:09:37 [config.py:312] Padding mamba page size by 0.13% to ensure that mamba page size and attention page size are exactly equal.
+(APIServer pid=1) INFO 10-02 18:09:37 [vllm.py:790] Asynchronous scheduling is enabled.
+(APIServer pid=1) WARNING 10-02 18:09:37 [vllm.py:848] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+(APIServer pid=1) WARNING 10-02 18:09:37 [vllm.py:859] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+(APIServer pid=1) INFO 10-02 18:09:37 [vllm.py:1025] Cudagraph is disabled under eager mode
+(APIServer pid=1) INFO 10-02 18:09:37 [compilation.py:292] Enabled custom fusions: norm_quant, act_quant
+(APIServer pid=1) The `use_fast` parameter is deprecated and will be removed in a future version. Use `backend="torchvision"` instead of `use_fast=True`, or `backend="pil"` instead of `use_fast=False`.
+(EngineCore pid=204) INFO 10-02 18:10:08 [core.py:105] Initializing a V1 LLM engine (v0.19.1) with config: model='Qwen/Qwen3.8-27B', speculative_config=None, tokenizer='Qwen/Qwen3.8-27B', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=False, dtype=torch.float16, max_seq_len=8192, download_dir=None, load_format=bitsandbytes, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=bitsandbytes, enforce_eager=True, enable_return_routed_experts=False, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False), seed=0, served_model_name=Qwen/Qwen3.8-27B, enable_prefix_caching=False, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.NONE: 0>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['all'], 'splitting_ops': [], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_images_per_batch': 0, 'compile_sizes': [], 'compile_ranges_endpoints': [2048], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'size_asserts': False, 'alignment_asserts': False, 'scalar_asserts': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.NONE: 0>, 'cudagraph_num_of_warmups': 0, 'cudagraph_capture_sizes': [], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': True, 'fuse_act_quant': True, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': False}, 'max_cudagraph_capture_size': 0, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': True, 'static_all_moe_layers': []}
+(EngineCore pid=204) `Qwen2VLImageProcessorFast` is deprecated. The `Fast` suffix for image processors has been removed; use `Qwen2VLImageProcessor` instead.
+(EngineCore pid=204) Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(EngineCore pid=204) INFO 10-02 18:10:12 [parallel_state.py:1400] world_size=1 rank=0 local_rank=0 distributed_init_method=tcp://10.244.179.76:41349 backend=nccl
+(EngineCore pid=204) INFO 10-02 18:10:12 [parallel_state.py:1716] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank N/A, EPLB rank N/A
+(EngineCore pid=204) The `use_fast` parameter is deprecated and will be removed in a future version. Use `backend="torchvision"` instead of `use_fast=True`, or `backend="pil"` instead of `use_fast=False`.
+(EngineCore pid=204) INFO 10-02 18:10:28 [gpu_model_runner.py:4735] Starting to load model Qwen/Qwen3.8-27B...
+(EngineCore pid=204) ERROR 10-02 18:10:30 [fa_utils.py:145] Cannot use FA version 2 is not supported due to FA2 is only supported on devices with compute capability >= 8
+(EngineCore pid=204) INFO 10-02 18:10:30 [mm_encoder_attention.py:230] Using AttentionBackendEnum.TORCH_SDPA for MMEncoderAttention.
+(EngineCore pid=204) INFO 10-02 18:10:30 [gdn_linear_attn.py:147] Using Triton/FLA GDN prefill kernel
+(EngineCore pid=204) INFO 10-02 18:10:30 [cuda.py:334] Using TRITON_ATTN attention backend out of potential backends: ['TRITON_ATTN', 'FLEX_ATTENTION'].
+(EngineCore pid=204) INFO 10-02 18:10:31 [bitsandbytes_loader.py:786] Loading weights with BitsAndBytes quantization. May take a while ...
+(EngineCore pid=204) Loading safetensors checkpoint shards:   0% Completed | 0/18 [00:00<?, ?it/s]
+(EngineCore pid=204) Loading safetensors checkpoint shards:   6% Completed | 1/18 [00:01<00:24,  1.42s/it]
+(EngineCore pid=204) Loading safetensors checkpoint shards:  11% Completed | 2/18 [00:02<00:18,  1.14s/it]
+(EngineCore pid=204) Loading safetensors checkpoint shards:  17% Completed | 3/18 [00:03<00:18,  1.22s/it]
+(EngineCore pid=204) Loading safetensors checkpoint shards:  22% Completed | 4/18 [00:04<00:17,  1.22s/it]
+(EngineCore pid=204) Loading safetensors checkpoint shards:  28% Completed | 5/18 [00:05<00:13,  1.02s/it]
+(EngineCore pid=204) Loading safetensors checkpoint shards:  33% Completed | 6/18 [00:06<00:13,  1.09s/it]
+(EngineCore pid=204) Loading safetensors checkpoint shards:  39% Completed | 7/18 [00:07<00:10,  1.05it/s]
+(EngineCore pid=204) Loading safetensors checkpoint shards:  44% Completed | 8/18 [00:08<00:10,  1.05s/it]
+(EngineCore pid=204) Loading safetensors checkpoint shards:  50% Completed | 9/18 [00:09<00:08,  1.08it/s]
+(EngineCore pid=204) Loading safetensors checkpoint shards:  56% Completed | 10/18 [00:10<00:08,  1.04s/it]
+(EngineCore pid=204) Loading safetensors checkpoint shards:  61% Completed | 11/18 [00:11<00:06,  1.08it/s]
+(EngineCore pid=204) Loading safetensors checkpoint shards:  67% Completed | 12/18 [00:12<00:06,  1.03s/it]
+(EngineCore pid=204) Loading safetensors checkpoint shards:  72% Completed | 13/18 [00:13<00:04,  1.09it/s]
+(EngineCore pid=204) Loading safetensors checkpoint shards:  78% Completed | 14/18 [00:14<00:04,  1.02s/it]
+(EngineCore pid=204) Loading safetensors checkpoint shards:  83% Completed | 15/18 [00:15<00:02,  1.11it/s]
+(EngineCore pid=204) Loading safetensors checkpoint shards:  89% Completed | 16/18 [00:16<00:02,  1.01s/it]
+(EngineCore pid=204) Loading safetensors checkpoint shards:  94% Completed | 17/18 [00:17<00:00,  1.11it/s]
+(EngineCore pid=204) Loading safetensors checkpoint shards: 100% Completed | 18/18 [00:18<00:00,  1.02s/it]
+(EngineCore pid=204) Loading safetensors checkpoint shards: 100% Completed | 18/18 [00:18<00:00,  1.02s/it]
+(EngineCore pid=204) 
+(EngineCore pid=204) INFO 10-02 18:10:51 [gpu_model_runner.py:4820] Model loading took 18.06 GiB memory and 21.225486 seconds
+(EngineCore pid=204) INFO 10-02 18:10:51 [gpu_model_runner.py:5753] Encoder cache will be initialized with a budget of 16384 tokens, and profiled with 1 image items of the maximum feature size.
+(EngineCore pid=204) /usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fla/ops/utils.py:113: UserWarning: Input tensor shape suggests potential format mismatch: seq_len (16) < num_heads (48). This may indicate the inputs were passed in head-first format [B, H, T, ...] when head_first=False was specified. Please verify your input tensor format matches the expected shape [B, T, H, ...].
+(EngineCore pid=204)   return fn(*contiguous_args, **contiguous_kwargs)
+(EngineCore pid=204) /usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fla/ops/utils.py:113: UserWarning: Input tensor shape suggests potential format mismatch: seq_len (32) < num_heads (48). This may indicate the inputs were passed in head-first format [B, H, T, ...] when head_first=False was specified. Please verify your input tensor format matches the expected shape [B, T, H, ...].
+(EngineCore pid=204)   return fn(*contiguous_args, **contiguous_kwargs)
+(EngineCore pid=204) /usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fla/ops/utils.py:113: UserWarning: Input tensor shape suggests potential format mismatch: seq_len (16) < num_heads (48). This may indicate the inputs were passed in head-first format [B, H, T, ...] when head_first=False was specified. Please verify your input tensor format matches the expected shape [B, T, H, ...].
+(EngineCore pid=204)   return fn(*contiguous_args, **contiguous_kwargs)
+(EngineCore pid=204) /usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fla/ops/utils.py:113: UserWarning: Input tensor shape suggests potential format mismatch: seq_len (32) < num_heads (48). This may indicate the inputs were passed in head-first format [B, H, T, ...] when head_first=False was specified. Please verify your input tensor format matches the expected shape [B, T, H, ...].
+(EngineCore pid=204)   return fn(*contiguous_args, **contiguous_kwargs)
+(EngineCore pid=204) /usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fla/ops/utils.py:113: UserWarning: Input tensor shape suggests potential format mismatch: seq_len (16) < num_heads (48). This may indicate the inputs were passed in head-first format [B, H, T, ...] when head_first=False was specified. Please verify your input tensor format matches the expected shape [B, T, H, ...].
+(EngineCore pid=204)   return fn(*contiguous_args, **contiguous_kwargs)
+(EngineCore pid=204) /usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fla/ops/utils.py:113: UserWarning: Input tensor shape suggests potential format mismatch: seq_len (32) < num_heads (48). This may indicate the inputs were passed in head-first format [B, H, T, ...] when head_first=False was specified. Please verify your input tensor format matches the expected shape [B, T, H, ...].
+(EngineCore pid=204)   return fn(*contiguous_args, **contiguous_kwargs)
+(EngineCore pid=204) INFO 10-02 18:20:53 [gpu_worker.py:436] Available KV cache memory: 5.0 GiB
+(EngineCore pid=204) INFO 10-02 18:20:53 [kv_cache_utils.py:1319] GPU KV cache size: 20,384 tokens
+(EngineCore pid=204) INFO 10-02 18:20:53 [kv_cache_utils.py:1324] Maximum concurrency for 8,192 tokens per request: 7.43x
+(EngineCore pid=204) INFO 10-02 18:20:57 [core.py:283] init engine (profile, create kv cache, warmup model) took 606.65 seconds
+(EngineCore pid=204) INFO 10-02 18:20:58 [vllm.py:790] Asynchronous scheduling is enabled.
+(EngineCore pid=204) WARNING 10-02 18:20:58 [vllm.py:848] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+(EngineCore pid=204) WARNING 10-02 18:20:58 [vllm.py:859] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+(EngineCore pid=204) INFO 10-02 18:20:58 [vllm.py:1025] Cudagraph is disabled under eager mode
+(EngineCore pid=204) INFO 10-02 18:20:58 [compilation.py:292] Enabled custom fusions: norm_quant, act_quant
+(APIServer pid=1) INFO 10-02 18:20:58 [api_server.py:592] Supported tasks: ['generate']
+(APIServer pid=1) WARNING 10-02 18:20:59 [model.py:1435] Default vLLM sampling parameters have been overridden by the model's `generation_config.json`: `{'temperature': 1.0, 'top_k': 20, 'top_p': 0.95}`. If this is not intended, please relaunch vLLM instance with `--generation-config vllm`.
+(APIServer pid=1) INFO 10-02 18:21:05 [hf.py:314] Detected the chat template content format to be 'string'. You can set `--chat-template-content-format` to override this.
+(APIServer pid=1) INFO 10-02 18:21:17 [base.py:231] Multi-modal warmup completed in 11.986s
+(APIServer pid=1) INFO 10-02 18:21:18 [api_server.py:596] Starting vLLM server on http://0.0.0.0:8000
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:37] Available routes are:
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /openapi.json, Methods: HEAD, GET
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /docs, Methods: HEAD, GET
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /docs/oauth2-redirect, Methods: HEAD, GET
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /redoc, Methods: HEAD, GET
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /tokenize, Methods: POST
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /detokenize, Methods: POST
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /load, Methods: GET
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /version, Methods: GET
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /health, Methods: GET
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /metrics, Methods: GET
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /v1/models, Methods: GET
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /ping, Methods: GET
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /ping, Methods: POST
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /invocations, Methods: POST
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /v1/chat/completions, Methods: POST
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /v1/chat/completions/batch, Methods: POST
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /v1/responses, Methods: POST
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /v1/responses/{response_id}, Methods: GET
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /v1/responses/{response_id}/cancel, Methods: POST
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /v1/completions, Methods: POST
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /v1/messages, Methods: POST
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /v1/messages/count_tokens, Methods: POST
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /inference/v1/generate, Methods: POST
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /scale_elastic_ep, Methods: POST
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /is_scaling_elastic_ep, Methods: POST
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /v1/chat/completions/render, Methods: POST
+(APIServer pid=1) INFO 10-02 18:21:18 [launcher.py:46] Route: /v1/completions/render, Methods: POST
+(APIServer pid=1) INFO:     Started server process [1]
+(APIServer pid=1) INFO:     Waiting for application startup.
+(APIServer pid=1) INFO:     Application startup complete.
+(APIServer pid=1) INFO:     192.168.50.151:47450 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:48666 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:41286 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:55664 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 10-02 18:21:48 [loggers.py:259] Engine 000: Avg prompt throughput: 6.9 tokens/s, Avg generation throughput: 1.1 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 3.9%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO:     192.168.50.151:44826 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 10-02 18:21:58 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 4.7 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 3.9%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO:     192.168.50.151:47114 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 10-02 18:22:08 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 3.3 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 3.9%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO:     192.168.50.151:58866 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 10-02 18:22:18 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 3.0 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 3.9%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO:     192.168.50.151:58140 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 10-02 18:22:28 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 3.1 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 3.9%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO:     192.168.50.151:54884 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 10-02 18:22:38 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 3.1 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 3.9%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO:     192.168.50.151:54652 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:41302 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:36654 - "GET /metrics HTTP/1.1" 200 OK

@@ -1,0 +1,22 @@
+### nó: sabdiia01   2026-10-02 12:47:21
+### disco
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/ol-root   70G   51G   20G  72% /
+33G	/var/lib/containerd
+### GPU reservada neste nó
+  nvidia.com/gpu     1             1
+### pods com GPU
+NAMESPACE        NAME                                                          READY   STATUS      RESTARTS           AGE   IP               NODE        NOMINATED NODE   READINESS GATES
+vllms            vllm-llama31-8b-7ff775c756-f6lr4                              0/1     Running     2853 (5m32s ago)   10d   10.244.179.80    sabdiia01   <none>           <none>
+### deployment do Llama
+NAME              READY   UP-TO-DATE   AVAILABLE   AGE
+vllm-llama31-8b   0/1     1            0           10d
+### digest da v0.12.0
+sha256:6766ce0c459e24b76f3e9ba14ffc0442131ef4248c904efdcbf0d89e38be01fe
+### todas as referências com esse digest (espera-se 3)
+docker.io/vllm/vllm-openai:v0.12.0 8.3 GiB
+docker.io/vllm/vllm-openai@sha256:6766ce0c459e24b76f3e9ba14ffc0442131ef4248c904efdcbf0d89e38be01fe 8.3 GiB
+sha256:0c19f07f0c8601d5b77e5a95e188115c17e5d9ddab105462be4951c92f4ebdbb 8.3 GiB
+### uso real da GPU
+name, memory.used [MiB], memory.total [MiB]
+Tesla V100S-PCIE-32GB, 0 MiB, 32768 MiB

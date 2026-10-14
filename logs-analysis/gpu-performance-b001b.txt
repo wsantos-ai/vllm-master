@@ -1,0 +1,87 @@
+=== foto 1 (30 s) ===
+
+==============NVSMI LOG==============
+
+Timestamp                                              : Wed Oct 14 18:32:47 2026
+Driver Version                                         : 580.173.02
+CUDA Version                                           : 13.0
+
+Attached GPUs                                          : 1
+GPU 00000000:05:00.0
+    Performance State                                  : P0
+    Clocks Event Reasons
+        Idle                                           : Not Active
+        Applications Clocks Setting                    : Not Active
+        SW Power Cap                                   : Not Active
+        HW Slowdown                                    : Not Active
+            HW Thermal Slowdown                        : Not Active
+            HW Power Brake Slowdown                    : Not Active
+        Sync Boost                                     : Not Active
+        SW Thermal Slowdown                            : Active
+        Display Clock Setting                          : Not Active
+    Clocks Event Reasons Counters
+        SW Power Capping                               : 826683371607 us
+        Sync Boost                                     : 0 us
+        SW Thermal Slowdown                            : 14864014887140936 us
+        HW Thermal Slowdown                            : 0 us
+        HW Power Braking                               : 0 us
+    Sparse Operation Mode                              : N/A
+
+=== foto 2 (90 s) ===
+
+==============NVSMI LOG==============
+
+Timestamp                                              : Wed Oct 14 18:33:47 2026
+Driver Version                                         : 580.173.02
+CUDA Version                                           : 13.0
+
+Attached GPUs                                          : 1
+GPU 00000000:05:00.0
+    Performance State                                  : P0
+    Clocks Event Reasons
+        Idle                                           : Not Active
+        Applications Clocks Setting                    : Not Active
+        SW Power Cap                                   : Not Active
+        HW Slowdown                                    : Not Active
+            HW Thermal Slowdown                        : Not Active
+            HW Power Brake Slowdown                    : Not Active
+        Sync Boost                                     : Not Active
+        SW Thermal Slowdown                            : Active
+        Display Clock Setting                          : Not Active
+    Clocks Event Reasons Counters
+        SW Power Capping                               : 826685913052 us
+        Sync Boost                                     : 0 us
+        SW Thermal Slowdown                            : 14864014885844046 us
+        HW Thermal Slowdown                            : 0 us
+        HW Power Braking                               : 0 us
+    Sparse Operation Mode                              : N/A
+
+=== foto 3 (150 s) ===
+
+==============NVSMI LOG==============
+
+Timestamp                                              : Wed Oct 14 18:34:48 2026
+Driver Version                                         : 580.173.02
+CUDA Version                                           : 13.0
+
+Attached GPUs                                          : 1
+GPU 00000000:05:00.0
+    Performance State                                  : P0
+    Clocks Event Reasons
+        Idle                                           : Not Active
+        Applications Clocks Setting                    : Not Active
+        SW Power Cap                                   : Not Active
+        HW Slowdown                                    : Not Active
+            HW Thermal Slowdown                        : Not Active
+            HW Power Brake Slowdown                    : Not Active
+        Sync Boost                                     : Not Active
+        SW Thermal Slowdown                            : Active
+        Display Clock Setting                          : Not Active
+    Clocks Event Reasons Counters
+        SW Power Capping                               : 14864837443293508 us
+        Sync Boost                                     : 0 us
+        SW Thermal Slowdown                            : 14864014885844046 us
+        HW Thermal Slowdown                            : 0 us
+        HW Power Braking                               : 0 us
+    Sparse Operation Mode                              : N/A
+

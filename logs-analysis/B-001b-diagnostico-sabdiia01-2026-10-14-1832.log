@@ -1,0 +1,253 @@
+### 2026-10-14 18:32:17
+NAME        READY   STATUS    RESTARTS   AGE   IP              NODE        NOMINATED NODE   READINESS GATES
+vllm-conc   1/1     Running   0          95m   10.244.179.86   sabdiia01   <none>           <none>
+### CPU do pod: estrangulamento ANTES
+usage_usec 3885164144
+user_usec 3739005589
+system_usec 146158554
+nice_usec 0
+core_sched.force_idle_usec 0
+nr_periods 56529
+nr_throttled 12
+throttled_usec 10788904
+nr_bursts 0
+burst_usec 0
+### GPU parada
+temperature.gpu, power.draw [W], power.limit [W], clocks.current.sm [MHz], clocks.max.sm [MHz], clocks.current.memory [MHz], utilization.gpu [%], pstate
+72, 55.50 W, 250.00 W, 1245 MHz, 1597 MHz, 1107 MHz, 0 %, P0
+### rodada de carga: concorrência 1, 12 requisições
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+  0%|          | 0/12 [00:00<?, ?it/s]  8%|▊         | 1/12 [00:05<01:01,  5.59s/it] 17%|█▋        | 2/12 [00:12<01:03,  6.33s/it] 25%|██▌       | 3/12 [00:20<01:03,  7.01s/it] 33%|███▎      | 4/12 [00:29<01:03,  7.89s/it] 42%|████▏     | 5/12 [00:41<01:04,  9.23s/it] 50%|█████     | 6/12 [00:55<01:05, 10.86s/it] 58%|█████▊    | 7/12 [01:11<01:03, 12.66s/it] 67%|██████▋   | 8/12 [01:30<00:58, 14.71s/it] 75%|███████▌  | 9/12 [01:50<00:49, 16.42s/it] 83%|████████▎ | 10/12 [02:15<00:38, 19.06s/it] 92%|█████████▏| 11/12 [02:40<00:20, 20.70s/it]100%|██████████| 12/12 [03:04<00:00, 21.83s/it]100%|██████████| 12/12 [03:04<00:00, 15.38s/it]
+============ Serving Benchmark Result ============
+Successful requests:                     12        
+Failed requests:                         0         
+Maximum request concurrency:             1         
+Benchmark duration (s):                  184.57    
+Total input tokens:                      6144      
+Total generated tokens:                  3072      
+Request throughput (req/s):              0.07      
+Output token throughput (tok/s):         16.64     
+Peak output token throughput (tok/s):    49.00     
+Peak concurrent requests:                2.00      
+Total token throughput (tok/s):          49.93     
+---------------Time to First Token----------------
+Mean TTFT (ms):                          402.90    
+Median TTFT (ms):                        375.44    
+P50 TTFT (ms):                           375.44    
+P95 TTFT (ms):                           670.49    
+P99 TTFT (ms):                           670.50    
+-----Time per Output Token (excl. 1st token)------
+Mean TPOT (ms):                          58.74     
+Median TPOT (ms):                        58.11     
+P50 TPOT (ms):                           58.11     
+P95 TPOT (ms):                           94.53     
+P99 TPOT (ms):                           95.91     
+---------------Inter-token Latency----------------
+Mean ITL (ms):                           58.74     
+Median ITL (ms):                         57.07     
+P50 ITL (ms):                            57.07     
+P95 ITL (ms):                            93.35     
+P99 ITL (ms):                            151.79    
+==================================================
+### CPU do pod: estrangulamento DEPOIS
+usage_usec 4094134099
+user_usec 3943175395
+system_usec 150958704
+nice_usec 0
+core_sched.force_idle_usec 0
+nr_periods 58503
+nr_throttled 13
+throttled_usec 11937768
+nr_bursts 0
+burst_usec 0
+### quantas threads o processo do vLLM abriu
+pid 2820081: 88 threads
+pid 2820917: 144 threads
+### GPU durante a carga (amostras a cada 2 s)
+timestamp, temperature.gpu, power.draw [W], clocks.current.sm [MHz], clocks.max.sm [MHz], utilization.gpu [%], pstate
+2026/10/14 18:32:17.958, 72, 55.48 W, 1245 MHz, 1597 MHz, 0 %, P0
+2026/10/14 18:32:19.961, 71, 55.48 W, 1245 MHz, 1597 MHz, 0 %, P0
+2026/10/14 18:32:21.964, 72, 55.49 W, 1245 MHz, 1597 MHz, 0 %, P0
+2026/10/14 18:32:23.967, 71, 55.48 W, 1245 MHz, 1597 MHz, 0 %, P0
+2026/10/14 18:32:25.971, 72, 55.48 W, 1245 MHz, 1597 MHz, 0 %, P0
+2026/10/14 18:32:27.974, 71, 55.39 W, 1245 MHz, 1597 MHz, 0 %, P0
+2026/10/14 18:32:29.977, 71, 55.39 W, 1245 MHz, 1597 MHz, 0 %, P0
+2026/10/14 18:32:31.980, 79, 249.54 W, 1560 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:32:33.987, 78, 149.81 W, 1125 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:32:35.992, 78, 121.53 W, 840 MHz, 1597 MHz, 92 %, P0
+2026/10/14 18:32:37.995, 78, 129.73 W, 1012 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:32:40.003, 78, 132.35 W, 1012 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:32:42.019, 78, 132.49 W, 1020 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:32:44.052, 78, 125.46 W, 960 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:32:46.085, 78, 125.09 W, 945 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:32:48.102, 79, 123.43 W, 945 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:32:50.126, 79, 122.25 W, 930 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:32:52.129, 79, 113.27 W, 855 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:32:54.132, 79, 113.39 W, 862 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:32:56.144, 80, 114.59 W, 862 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:32:58.148, 80, 111.26 W, 855 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:00.172, 82, 200.62 W, 1320 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:02.177, 80, 95.09 W, 705 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:04.203, 80, 94.14 W, 705 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:06.218, 80, 101.29 W, 765 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:08.236, 80, 101.65 W, 750 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:10.253, 80, 101.16 W, 742 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:12.260, 82, 117.16 W, 667 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:14.264, 81, 91.70 W, 652 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:16.272, 81, 90.13 W, 667 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:18.279, 81, 92.11 W, 660 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:20.288, 81, 91.92 W, 652 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:22.295, 81, 92.20 W, 660 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:24.303, 81, 91.64 W, 660 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:26.311, 81, 91.68 W, 667 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:28.332, 81, 92.03 W, 682 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:30.342, 82, 90.97 W, 675 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:32.351, 81, 89.37 W, 592 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:34.363, 81, 84.23 W, 630 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:36.374, 81, 88.82 W, 622 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:38.382, 81, 84.31 W, 630 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:40.394, 82, 84.32 W, 622 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:42.406, 82, 73.57 W, 472 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:44.427, 81, 74.64 W, 330 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:46.477, 82, 84.67 W, 592 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:48.504, 82, 83.38 W, 600 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:50.516, 82, 84.29 W, 577 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:52.533, 82, 82.73 W, 592 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:54.551, 82, 83.92 W, 592 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:56.570, 82, 84.29 W, 585 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:33:58.597, 82, 81.68 W, 592 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:00.623, 82, 82.25 W, 585 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:02.626, 82, 82.16 W, 592 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:04.646, 82, 81.78 W, 585 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:06.651, 82, 82.13 W, 585 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:08.665, 82, 82.60 W, 577 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:10.683, 82, 82.16 W, 592 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:12.692, 82, 82.79 W, 577 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:14.699, 82, 82.54 W, 577 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:16.708, 82, 82.25 W, 577 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:18.716, 82, 82.60 W, 577 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:20.727, 82, 64.26 W, 217 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:22.732, 82, 81.75 W, 532 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:24.748, 82, 81.40 W, 517 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:26.756, 82, 64.24 W, 187 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:28.781, 82, 64.07 W, 202 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:30.785, 82, 73.97 W, 397 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:32.812, 82, 74.15 W, 397 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:34.824, 82, 74.73 W, 397 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:36.835, 82, 73.68 W, 397 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:38.847, 82, 74.35 W, 405 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:40.896, 82, 74.07 W, 397 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:42.908, 82, 73.59 W, 397 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:44.918, 82, 74.45 W, 397 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:46.930, 82, 73.96 W, 397 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:48.942, 82, 74.08 W, 405 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:50.953, 82, 74.52 W, 405 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:52.964, 82, 73.79 W, 405 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:54.976, 82, 74.14 W, 382 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:56.987, 82, 75.36 W, 397 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:34:58.998, 82, 74.26 W, 397 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:35:01.007, 82, 74.63 W, 397 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:35:03.018, 82, 73.97 W, 397 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:35:05.029, 82, 73.85 W, 405 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:35:07.048, 82, 74.63 W, 405 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:35:09.063, 82, 74.04 W, 397 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:35:11.078, 82, 74.81 W, 315 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:35:13.157, 82, 73.95 W, 405 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:35:15.189, 82, 74.23 W, 405 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:35:17.201, 82, 74.18 W, 390 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:35:19.210, 82, 73.97 W, 405 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:35:21.258, 82, 74.25 W, 397 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:35:23.270, 82, 74.63 W, 405 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:35:25.282, 82, 73.85 W, 405 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:35:27.291, 82, 74.45 W, 405 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:35:29.340, 82, 74.27 W, 397 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:35:31.353, 82, 73.95 W, 397 MHz, 1597 MHz, 100 %, P0
+2026/10/14 18:35:33.362, 82, 74.08 W, 397 MHz, 1597 MHz, 100 %, P0
+### motivos de redução de clock (3 fotos)
+=== foto 1 (30 s) ===
+
+==============NVSMI LOG==============
+
+Timestamp                                              : Wed Oct 14 18:32:47 2026
+Driver Version                                         : 580.173.02
+CUDA Version                                           : 13.0
+
+Attached GPUs                                          : 1
+GPU 00000000:05:00.0
+    Performance State                                  : P0
+    Clocks Event Reasons
+        Idle                                           : Not Active
+        Applications Clocks Setting                    : Not Active
+        SW Power Cap                                   : Not Active
+        HW Slowdown                                    : Not Active
+            HW Thermal Slowdown                        : Not Active
+            HW Power Brake Slowdown                    : Not Active
+        Sync Boost                                     : Not Active
+        SW Thermal Slowdown                            : Active
+        Display Clock Setting                          : Not Active
+    Clocks Event Reasons Counters
+        SW Power Capping                               : 826683371607 us
+        Sync Boost                                     : 0 us
+        SW Thermal Slowdown                            : 14864014887140936 us
+        HW Thermal Slowdown                            : 0 us
+        HW Power Braking                               : 0 us
+    Sparse Operation Mode                              : N/A
+
+=== foto 2 (90 s) ===
+
+==============NVSMI LOG==============
+
+Timestamp                                              : Wed Oct 14 18:33:47 2026
+Driver Version                                         : 580.173.02
+CUDA Version                                           : 13.0
+
+Attached GPUs                                          : 1
+GPU 00000000:05:00.0
+    Performance State                                  : P0
+    Clocks Event Reasons
+        Idle                                           : Not Active
+        Applications Clocks Setting                    : Not Active
+        SW Power Cap                                   : Not Active
+        HW Slowdown                                    : Not Active
+            HW Thermal Slowdown                        : Not Active
+            HW Power Brake Slowdown                    : Not Active
+        Sync Boost                                     : Not Active
+        SW Thermal Slowdown                            : Active
+        Display Clock Setting                          : Not Active
+    Clocks Event Reasons Counters
+        SW Power Capping                               : 826685913052 us
+        Sync Boost                                     : 0 us
+        SW Thermal Slowdown                            : 14864014885844046 us
+        HW Thermal Slowdown                            : 0 us
+        HW Power Braking                               : 0 us
+    Sparse Operation Mode                              : N/A
+
+=== foto 3 (150 s) ===
+
+==============NVSMI LOG==============
+
+Timestamp                                              : Wed Oct 14 18:34:48 2026
+Driver Version                                         : 580.173.02
+CUDA Version                                           : 13.0
+
+Attached GPUs                                          : 1
+GPU 00000000:05:00.0
+    Performance State                                  : P0
+    Clocks Event Reasons
+        Idle                                           : Not Active
+        Applications Clocks Setting                    : Not Active
+        SW Power Cap                                   : Not Active
+        HW Slowdown                                    : Not Active
+            HW Thermal Slowdown                        : Not Active
+            HW Power Brake Slowdown                    : Not Active
+        Sync Boost                                     : Not Active
+        SW Thermal Slowdown                            : Active
+        Display Clock Setting                          : Not Active
+    Clocks Event Reasons Counters
+        SW Power Capping                               : 14864837443293508 us
+        Sync Boost                                     : 0 us
+        SW Thermal Slowdown                            : 14864014885844046 us
+        HW Thermal Slowdown                            : 0 us
+        HW Power Braking                               : 0 us
+    Sparse Operation Mode                              : N/A
+

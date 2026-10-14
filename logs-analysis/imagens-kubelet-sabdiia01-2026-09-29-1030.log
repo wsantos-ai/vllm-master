@@ -1,0 +1,17 @@
+### host
+sabdiia01
+### imagens de vLLM e Open WebUI
+REF                                                                                                                           TYPE                                                      DIGEST                                                                  SIZE      PLATFORMS                                                                                  LABELS                                                          
+docker.io/vllm/vllm-openai:v0.12.0                                                                                            application/vnd.docker.distribution.manifest.list.v2+json sha256:6766ce0c459e24b76f3e9ba14ffc0442131ef4248c904efdcbf0d89e38be01fe 8.3 GiB   linux/amd64,linux/arm64                                                                    io.cri-containerd.image=managed                                 
+docker.io/vllm/vllm-openai@sha256:6766ce0c459e24b76f3e9ba14ffc0442131ef4248c904efdcbf0d89e38be01fe                            application/vnd.docker.distribution.manifest.list.v2+json sha256:6766ce0c459e24b76f3e9ba14ffc0442131ef4248c904efdcbf0d89e38be01fe 8.3 GiB   linux/amd64,linux/arm64                                                                    io.cri-containerd.image=managed                                 
+### número de imagens no nó
+81
+### kubelet em vigor: GC de imagens e expulsão
+"imageMinimumGCAge":"2m0s"
+"imageGCHighThresholdPercent":85
+"imageGCLowThresholdPercent":80
+"imagefs.available":"15%"
+"imagefs.inodesFree":"5%"
+"memory.available":"100Mi"
+"nodefs.available":"10%"
+"nodefs.inodesFree":"5%"

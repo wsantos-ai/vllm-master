@@ -1,0 +1,54 @@
+### kubectl version
+Client Version: v1.37.0
+Kustomize Version: v5.8.1
+Server Version: v1.37.0
+### nodes
+NAME        STATUS   ROLES           AGE   VERSION   INTERNAL-IP      EXTERNAL-IP   OS-IMAGE                  KERNEL-VERSION                             CONTAINER-RUNTIME
+sabdiia01   Ready    control-plane   14d   v1.37.0   192.168.50.151   <none>        Oracle Linux Server 9.8   6.12.0-206.104.3.3.el9uek.x86_64 (amd64)   containerd://2.3.5
+sabdiia02   Ready    control-plane   14d   v1.37.0   192.168.50.152   <none>        Oracle Linux Server 9.8   6.12.0-206.104.3.3.el9uek.x86_64 (amd64)   containerd://2.3.5
+sabdiia03   Ready    control-plane   14d   v1.37.0   192.168.50.150   <none>        Oracle Linux Server 9.8   6.12.0-206.104.3.3.el9uek.x86_64 (amd64)   containerd://2.3.5
+### GPUs alocáveis por nó
+NODE        GPU_ALLOC   GPU_CAP
+sabdiia01   1           1
+sabdiia02   1           1
+sabdiia03   1           1
+### pods NVIDIA / GPU
+gpu-operator     gpu-feature-discovery-7z8vv                                   1/1     Running                      0                 11d    10.244.50.168    sabdiia03   <none>           <none>
+gpu-operator     gpu-feature-discovery-8cbdj                                   1/1     Running                      0                 11d    10.244.182.147   sabdiia02   <none>           <none>
+gpu-operator     gpu-feature-discovery-9q4lm                                   1/1     Running                      0                 11d    10.244.179.126   sabdiia01   <none>           <none>
+gpu-operator     gpu-operator-d57f6db6b-nj7bd                                  1/1     Running                      0                 11d    10.244.179.124   sabdiia01   <none>           <none>
+gpu-operator     gpu-operator-node-feature-discovery-gc-5f9c65779c-jg89k       1/1     Running                      0                 11d    10.244.179.120   sabdiia01   <none>           <none>
+gpu-operator     gpu-operator-node-feature-discovery-master-596d8bc6c8-8pwtf   1/1     Running                      0                 11d    10.244.179.102   sabdiia01   <none>           <none>
+gpu-operator     gpu-operator-node-feature-discovery-worker-9brcw              1/1     Running                      1 (11d ago)       11d    10.244.182.134   sabdiia02   <none>           <none>
+gpu-operator     gpu-operator-node-feature-discovery-worker-9lxsb              1/1     Running                      0                 11d    10.244.50.160    sabdiia03   <none>           <none>
+gpu-operator     gpu-operator-node-feature-discovery-worker-gpfw9              1/1     Running                      0                 11d    10.244.179.123   sabdiia01   <none>           <none>
+gpu-operator     nvidia-container-toolkit-daemonset-4l7fg                      1/1     Running                      0                 11d    10.244.179.117   sabdiia01   <none>           <none>
+gpu-operator     nvidia-container-toolkit-daemonset-9n2rj                      1/1     Running                      0                 11d    10.244.50.161    sabdiia03   <none>           <none>
+gpu-operator     nvidia-container-toolkit-daemonset-ct76m                      1/1     Running                      0                 11d    10.244.182.138   sabdiia02   <none>           <none>
+gpu-operator     nvidia-cuda-validator-8gmbq                                   0/1     Completed                    0                 11d    10.244.182.142   sabdiia02   <none>           <none>
+gpu-operator     nvidia-cuda-validator-f52m2                                   0/1     Completed                    0                 11d    10.244.50.162    sabdiia03   <none>           <none>
+gpu-operator     nvidia-cuda-validator-fwqck                                   0/1     Completed                    0                 11d    10.244.179.105   sabdiia01   <none>           <none>
+gpu-operator     nvidia-dcgm-exporter-2x9sr                                    1/1     Running                      0                 11d    10.244.50.166    sabdiia03   <none>           <none>
+gpu-operator     nvidia-dcgm-exporter-lfnzq                                    1/1     Running                      0                 11d    10.244.182.141   sabdiia02   <none>           <none>
+gpu-operator     nvidia-dcgm-exporter-xglh6                                    1/1     Running                      0                 11d    10.244.179.109   sabdiia01   <none>           <none>
+gpu-operator     nvidia-device-plugin-daemonset-2wxf2                          1/1     Running                      0                 11d    10.244.179.125   sabdiia01   <none>           <none>
+gpu-operator     nvidia-device-plugin-daemonset-82jth                          1/1     Running                      0                 11d    10.244.182.135   sabdiia02   <none>           <none>
+gpu-operator     nvidia-device-plugin-daemonset-95b8n                          1/1     Running                      0                 11d    10.244.50.163    sabdiia03   <none>           <none>
+gpu-operator     nvidia-operator-validator-dzrm2                               1/1     Running                      0                 11d    10.244.50.164    sabdiia03   <none>           <none>
+gpu-operator     nvidia-operator-validator-m7zpz                               1/1     Running                      0                 11d    10.244.182.184   sabdiia02   <none>           <none>
+gpu-operator     nvidia-operator-validator-zcqsk                               1/1     Running                      0                 11d    10.244.179.116   sabdiia01   <none>           <none>
+### runtimeclasses
+NAME            HANDLER         AGE
+nvidia          nvidia          11d
+nvidia-cdi      nvidia-cdi      11d
+nvidia-legacy   nvidia-legacy   11d
+### storageclasses
+NAME          PROVISIONER      RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
+nfs-storage   nfs.csi.k8s.io   Retain          Immediate           false                  14d
+### PVs
+NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS     CLAIM                   STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
+pvc-5ff9095f-5c83-452b-a638-7549f5dc9ab1   200Gi      RWX            Retain           Released   default/hf-cache        nfs-storage    <unset>                          14d
+pvc-6687e544-29a1-4332-aa60-fb56266efdb5   200Gi      RWX            Retain           Bound      vllms/hf-cache          nfs-storage    <unset>                          11d
+pvc-79fe274d-0344-4610-a790-e7ad3642f593   10Gi       RWX            Retain           Bound      default/pvc-teste       nfs-storage    <unset>                          14d
+pvc-813d89c1-a804-4d59-8d8a-a160ae08b987   20Gi       RWX            Retain           Bound      vllms/open-webui-data   nfs-storage    <unset>                          7d
+pvc-fcb1d657-7671-4bce-9ddc-cfbdc7742282   50Gi       RWX            Retain           Bound      default/hf-cache        nfs-storage    <unset>                          14d

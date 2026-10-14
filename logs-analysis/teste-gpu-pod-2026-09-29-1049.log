@@ -1,0 +1,1 @@
+Error from server (BadRequest): container "cuda" in pod "teste-gpu" is waiting to start: InvalidImageName

@@ -1,0 +1,6 @@
+sabdiia02
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/ol-root   70G   43G   28G  61% /
+REF                                                                                                                           TYPE                                                      DIGEST                                                                  SIZE      PLATFORMS                                                                    LABELS                                                          
+ghcr.io/open-webui/open-webui:main                                                                                            application/vnd.oci.image.index.v1+json                   sha256:8b432fe0a65b91116afc7961365c6cca5379cc923171386a96691f3471f3cae9 1.5 GiB   linux/amd64,linux/arm64                                                      io.cri-containerd.image=managed                                 
+ghcr.io/open-webui/open-webui@sha256:8b432fe0a65b91116afc7961365c6cca5379cc923171386a96691f3471f3cae9                         application/vnd.oci.image.index.v1+json                   sha256:8b432fe0a65b91116afc7961365c6cca5379cc923171386a96691f3471f3cae9 1.5 GiB   linux/amd64,linux/arm64                                                      io.cri-containerd.image=managed                                 

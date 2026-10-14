@@ -1,0 +1,31 @@
+### host
+sabdiia01
+### configuração efetiva (mesclada)
+1:version = 4
+2:root = '/var/lib/containerd'
+3:state = '/run/containerd'
+8:imports = ['/etc/containerd/conf.d/*.toml']
+17:    snapshotter = 'overlayfs'
+77:          snapshotter = ''
+103:          snapshotter = ''
+129:          snapshotter = ''
+155:          snapshotter = ''
+293:    root_path = ''
+300:    root_path = ''
+309:    root_path = ''
+317:    root_path = ''
+320:    root_path = ''
+327:    root_path = ''
+### arquivos de configuração
+/etc/containerd/:
+total 12
+drwxr-xr-x  2 root root   28 Sep 17 16:01 conf.d
+-rw-r--r--. 1 root root 8518 Sep 17 16:01 config.toml
+
+/etc/containerd/conf.d/:
+total 8
+-rw-r--r-- 1 root root 5124 Sep 17 16:01 99-nvidia.toml
+### root no arquivo principal
+2:imports = ["/etc/containerd/conf.d/*.toml"]
+5:root = "/var/lib/containerd"
+6:state = "/run/containerd"

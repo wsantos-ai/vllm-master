@@ -1,0 +1,972 @@
+### labels GPU dos nós (GFD)
+Name:               sabdiia01
+                    nvidia.com/cuda.driver-version.full=580.173.02
+                    nvidia.com/cuda.driver-version.major=580
+                    nvidia.com/cuda.driver-version.minor=173
+                    nvidia.com/cuda.driver-version.revision=02
+                    nvidia.com/cuda.driver.major=580
+                    nvidia.com/cuda.driver.minor=173
+                    nvidia.com/cuda.driver.rev=02
+                    nvidia.com/cuda.runtime-version.full=13.0
+                    nvidia.com/cuda.runtime-version.major=13
+                    nvidia.com/cuda.runtime-version.minor=0
+                    nvidia.com/cuda.runtime.major=13
+                    nvidia.com/cuda.runtime.minor=0
+                    nvidia.com/gpu-driver-upgrade-state=upgrade-done
+                    nvidia.com/gpu.compute.major=7
+                    nvidia.com/gpu.compute.minor=0
+                    nvidia.com/gpu.count=1
+                    nvidia.com/gpu.deploy.client=true
+                    nvidia.com/gpu.deploy.container-toolkit=true
+                    nvidia.com/gpu.deploy.dcgm=true
+                    nvidia.com/gpu.deploy.dcgm-exporter=true
+                    nvidia.com/gpu.deploy.device-plugin=true
+                    nvidia.com/gpu.deploy.driver=pre-installed
+                    nvidia.com/gpu.deploy.gpu-feature-discovery=true
+                    nvidia.com/gpu.deploy.node-status-exporter=true
+                    nvidia.com/gpu.deploy.nvsm=
+                    nvidia.com/gpu.deploy.operator-validator=true
+                    nvidia.com/gpu.family=volta
+                    nvidia.com/gpu.machine=PowerEdge-R720
+                    nvidia.com/gpu.memory=32768
+                    nvidia.com/gpu.mode=compute
+                    nvidia.com/gpu.present=true
+                    nvidia.com/gpu.product=Tesla-V100S-PCIE-32GB
+                    nvidia.com/gpu.replicas=1
+                    nvidia.com/gpu.sharing-strategy=none
+                    nvidia.com/mig.capable=false
+                    nvidia.com/mig.strategy=single
+                    nvidia.com/gpu-driver-upgrade-enabled: true
+  nvidia.com/gpu:     1
+  nvidia.com/gpu:     1
+  nvidia.com/gpu     1             1
+Name:               sabdiia02
+                    nvidia.com/cuda.driver-version.full=580.173.02
+                    nvidia.com/cuda.driver-version.major=580
+                    nvidia.com/cuda.driver-version.minor=173
+                    nvidia.com/cuda.driver-version.revision=02
+                    nvidia.com/cuda.driver.major=580
+                    nvidia.com/cuda.driver.minor=173
+                    nvidia.com/cuda.driver.rev=02
+                    nvidia.com/cuda.runtime-version.full=13.0
+                    nvidia.com/cuda.runtime-version.major=13
+                    nvidia.com/cuda.runtime-version.minor=0
+                    nvidia.com/cuda.runtime.major=13
+                    nvidia.com/cuda.runtime.minor=0
+                    nvidia.com/gpu-driver-upgrade-state=upgrade-done
+                    nvidia.com/gpu.compute.major=7
+                    nvidia.com/gpu.compute.minor=0
+                    nvidia.com/gpu.count=1
+                    nvidia.com/gpu.deploy.client=true
+                    nvidia.com/gpu.deploy.container-toolkit=true
+                    nvidia.com/gpu.deploy.dcgm=true
+                    nvidia.com/gpu.deploy.dcgm-exporter=true
+                    nvidia.com/gpu.deploy.device-plugin=true
+                    nvidia.com/gpu.deploy.driver=pre-installed
+                    nvidia.com/gpu.deploy.gpu-feature-discovery=true
+                    nvidia.com/gpu.deploy.node-status-exporter=true
+                    nvidia.com/gpu.deploy.nvsm=
+                    nvidia.com/gpu.deploy.operator-validator=true
+                    nvidia.com/gpu.family=volta
+                    nvidia.com/gpu.machine=PowerEdge-R720
+                    nvidia.com/gpu.memory=32768
+                    nvidia.com/gpu.mode=compute
+                    nvidia.com/gpu.present=true
+                    nvidia.com/gpu.product=Tesla-V100S-PCIE-32GB
+                    nvidia.com/gpu.replicas=1
+                    nvidia.com/gpu.sharing-strategy=none
+                    nvidia.com/mig.capable=false
+                    nvidia.com/mig.strategy=single
+                    nvidia.com/gpu-driver-upgrade-enabled: true
+  nvidia.com/gpu:     1
+  nvidia.com/gpu:     1
+  nvidia.com/gpu     0            0
+Name:               sabdiia03
+                    nvidia.com/cuda.driver-version.full=580.173.02
+                    nvidia.com/cuda.driver-version.major=580
+                    nvidia.com/cuda.driver-version.minor=173
+                    nvidia.com/cuda.driver-version.revision=02
+                    nvidia.com/cuda.driver.major=580
+                    nvidia.com/cuda.driver.minor=173
+                    nvidia.com/cuda.driver.rev=02
+                    nvidia.com/cuda.runtime-version.full=13.0
+                    nvidia.com/cuda.runtime-version.major=13
+                    nvidia.com/cuda.runtime-version.minor=0
+                    nvidia.com/cuda.runtime.major=13
+                    nvidia.com/cuda.runtime.minor=0
+                    nvidia.com/gpu.compute.major=7
+                    nvidia.com/gpu.compute.minor=0
+                    nvidia.com/gpu.count=1
+                    nvidia.com/gpu.deploy.client=true
+                    nvidia.com/gpu.deploy.container-toolkit=true
+                    nvidia.com/gpu.deploy.dcgm=true
+                    nvidia.com/gpu.deploy.dcgm-exporter=true
+                    nvidia.com/gpu.deploy.device-plugin=true
+                    nvidia.com/gpu.deploy.driver=pre-installed
+                    nvidia.com/gpu.deploy.gpu-feature-discovery=true
+                    nvidia.com/gpu.deploy.node-status-exporter=true
+                    nvidia.com/gpu.deploy.operator-validator=true
+                    nvidia.com/gpu.family=volta
+                    nvidia.com/gpu.machine=PowerEdge-R720
+                    nvidia.com/gpu.memory=32768
+                    nvidia.com/gpu.mode=compute
+                    nvidia.com/gpu.present=true
+                    nvidia.com/gpu.product=Tesla-V100S-PCIE-32GB
+                    nvidia.com/gpu.replicas=1
+                    nvidia.com/gpu.sharing-strategy=none
+                    nvidia.com/mig.capable=false
+                    nvidia.com/mig.strategy=single
+                    nvidia.com/gpu-driver-upgrade-enabled: true
+  nvidia.com/gpu:     1
+  nvidia.com/gpu:     1
+  nvidia.com/gpu     1             1
+### taints
+Name:               sabdiia01
+Taints:             <none>
+Name:               sabdiia02
+Taints:             <none>
+Name:               sabdiia03
+Taints:             <none>
+### recursos alocados por nó
+Name:               sabdiia01
+Allocated resources:
+  (Total limits may be over 100 percent, i.e., overcommitted.)
+  Resource           Requests      Limits
+  --------           --------      ------
+  cpu                5395m (16%)   12500m (39%)
+  memory             33518Mi (4%)  73488Mi (9%)
+  ephemeral-storage  0 (0%)        0 (0%)
+  hugepages-1Gi      0 (0%)        0 (0%)
+  hugepages-2Mi      0 (0%)        0 (0%)
+  nvidia.com/gpu     1             1
+
+
+Name:               sabdiia02
+Name:               sabdiia02
+Roles:              control-plane
+Labels:             beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/os=linux
+                    feature.node.kubernetes.io/cpu-cpuid.AESNI=true
+                    feature.node.kubernetes.io/cpu-cpuid.AVX=true
+                    feature.node.kubernetes.io/cpu-cpuid.AVXSLOW=true
+                    feature.node.kubernetes.io/cpu-cpuid.AVXVNNIINT16=true
+                    feature.node.kubernetes.io/cpu-cpuid.CMPXCHG8=true
+                    feature.node.kubernetes.io/cpu-cpuid.FLUSH_L1D=true
+                    feature.node.kubernetes.io/cpu-cpuid.FXSR=true
+                    feature.node.kubernetes.io/cpu-cpuid.FXSROPT=true
+                    feature.node.kubernetes.io/cpu-cpuid.IBPB=true
+                    feature.node.kubernetes.io/cpu-cpuid.LAHF=true
+                    feature.node.kubernetes.io/cpu-cpuid.MD_CLEAR=true
+                    feature.node.kubernetes.io/cpu-cpuid.OSXSAVE=true
+                    feature.node.kubernetes.io/cpu-cpuid.PMU_FIXEDCOUNTER_CYCLES=true
+                    feature.node.kubernetes.io/cpu-cpuid.PMU_FIXEDCOUNTER_INSTRUCTIONS=true
+                    feature.node.kubernetes.io/cpu-cpuid.PMU_FIXEDCOUNTER_REFCYCLES=true
+                    feature.node.kubernetes.io/cpu-cpuid.SPEC_CTRL_SSBD=true
+                    feature.node.kubernetes.io/cpu-cpuid.STIBP=true
+                    feature.node.kubernetes.io/cpu-cpuid.SYSCALL=true
+                    feature.node.kubernetes.io/cpu-cpuid.SYSEE=true
+                    feature.node.kubernetes.io/cpu-cpuid.VMX=true
+                    feature.node.kubernetes.io/cpu-cpuid.X87=true
+                    feature.node.kubernetes.io/cpu-cpuid.XSAVE=true
+                    feature.node.kubernetes.io/cpu-cpuid.XSAVEOPT=true
+                    feature.node.kubernetes.io/cpu-cstate.enabled=true
+                    feature.node.kubernetes.io/cpu-hardware_multithreading=true
+                    feature.node.kubernetes.io/cpu-model.family=6
+                    feature.node.kubernetes.io/cpu-model.id=45
+                    feature.node.kubernetes.io/cpu-model.vendor_id=Intel
+                    feature.node.kubernetes.io/cpu-pstate.status=passive
+                    feature.node.kubernetes.io/cpu-pstate.turbo=true
+                    feature.node.kubernetes.io/kernel-config.NO_HZ=true
+                    feature.node.kubernetes.io/kernel-config.NO_HZ_FULL=true
+                    feature.node.kubernetes.io/kernel-version.full=6.12.0-206.104.3.3.el9uek.x86_64
+                    feature.node.kubernetes.io/kernel-version.major=6
+                    feature.node.kubernetes.io/kernel-version.minor=12
+                    feature.node.kubernetes.io/kernel-version.revision=0
+                    feature.node.kubernetes.io/memory-numa=true
+                    feature.node.kubernetes.io/network-sriov.capable=true
+                    feature.node.kubernetes.io/pci-102b.present=true
+                    feature.node.kubernetes.io/pci-10de.present=true
+                    feature.node.kubernetes.io/pci-14e4.present=true
+                    feature.node.kubernetes.io/pci-8086.present=true
+                    feature.node.kubernetes.io/pci-8086.sriov.capable=true
+                    feature.node.kubernetes.io/storage-nonrotationaldisk=true
+                    feature.node.kubernetes.io/system-os_release.ID=ol
+                    feature.node.kubernetes.io/system-os_release.VERSION_ID=9.8
+                    feature.node.kubernetes.io/system-os_release.VERSION_ID.major=9
+                    feature.node.kubernetes.io/system-os_release.VERSION_ID.minor=8
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=sabdiia02
+                    kubernetes.io/os=linux
+                    node-role.kubernetes.io/control-plane=
+                    nvidia.com/cuda.driver-version.full=580.173.02
+                    nvidia.com/cuda.driver-version.major=580
+                    nvidia.com/cuda.driver-version.minor=173
+                    nvidia.com/cuda.driver-version.revision=02
+                    nvidia.com/cuda.driver.major=580
+                    nvidia.com/cuda.driver.minor=173
+                    nvidia.com/cuda.driver.rev=02
+                    nvidia.com/cuda.runtime-version.full=13.0
+                    nvidia.com/cuda.runtime-version.major=13
+                    nvidia.com/cuda.runtime-version.minor=0
+                    nvidia.com/cuda.runtime.major=13
+                    nvidia.com/cuda.runtime.minor=0
+                    nvidia.com/gfd.timestamp=1789673464
+                    nvidia.com/gpu-driver-upgrade-state=upgrade-done
+                    nvidia.com/gpu.compute.major=7
+                    nvidia.com/gpu.compute.minor=0
+                    nvidia.com/gpu.count=1
+                    nvidia.com/gpu.deploy.client=true
+                    nvidia.com/gpu.deploy.container-toolkit=true
+                    nvidia.com/gpu.deploy.dcgm=true
+                    nvidia.com/gpu.deploy.dcgm-exporter=true
+                    nvidia.com/gpu.deploy.device-plugin=true
+                    nvidia.com/gpu.deploy.driver=pre-installed
+                    nvidia.com/gpu.deploy.gpu-feature-discovery=true
+                    nvidia.com/gpu.deploy.node-status-exporter=true
+                    nvidia.com/gpu.deploy.nvsm=
+                    nvidia.com/gpu.deploy.operator-validator=true
+                    nvidia.com/gpu.family=volta
+                    nvidia.com/gpu.machine=PowerEdge-R720
+                    nvidia.com/gpu.memory=32768
+                    nvidia.com/gpu.mode=compute
+                    nvidia.com/gpu.present=true
+                    nvidia.com/gpu.product=Tesla-V100S-PCIE-32GB
+                    nvidia.com/gpu.replicas=1
+                    nvidia.com/gpu.sharing-strategy=none
+                    nvidia.com/mig.capable=false
+                    nvidia.com/mig.strategy=single
+                    nvidia.com/mps.capable=false
+                    nvidia.com/vgpu.present=false
+Annotations:        csi.volume.kubernetes.io/nodeid: {"nfs.csi.k8s.io":"sabdiia02"}
+                    nfd.node.kubernetes.io/feature-labels:
+                      cpu-cpuid.AESNI,cpu-cpuid.AVX,cpu-cpuid.AVXSLOW,cpu-cpuid.AVXVNNIINT16,cpu-cpuid.CMPXCHG8,cpu-cpuid.FLUSH_L1D,cpu-cpuid.FXSR,cpu-cpuid.FXS...
+                    node.alpha.kubernetes.io/ttl: 0
+                    nvidia.com/gpu-driver-upgrade-enabled: true
+                    projectcalico.org/IPv4Address: 192.168.50.152/24
+                    projectcalico.org/IPv4IPIPTunnelAddr: 10.244.182.128
+                    projectcalico.org/Interfaces:
+                      [{"name":"bond0"},{"name":"bond0.302"},{"name":"bond0.500","addresses":["192.168.50.152"]},{"name":"eno1"},{"name":"eno2"},{"name":"eno3"}...
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Mon, 14 Sep 2026 14:18:34 -0300
+Taints:             <none>
+Unschedulable:      false
+Lease:
+  HolderIdentity:  sabdiia02
+  AcquireTime:     <unset>
+  RenewTime:       Mon, 28 Sep 2026 19:35:24 -0300
+Conditions:
+  Type                 Status  LastHeartbeatTime                 LastTransitionTime                Reason                       Message
+  ----                 ------  -----------------                 ------------------                ------                       -------
+  NetworkUnavailable   False   Thu, 17 Sep 2026 16:29:52 -0300   Thu, 17 Sep 2026 16:29:52 -0300   CalicoIsUp                   Calico is running on this node
+  MemoryPressure       False   Mon, 28 Sep 2026 19:34:39 -0300   Thu, 17 Sep 2026 16:29:29 -0300   KubeletHasSufficientMemory   kubelet has sufficient memory available
+  DiskPressure         False   Mon, 28 Sep 2026 19:34:39 -0300   Fri, 18 Sep 2026 15:55:32 -0300   KubeletHasNoDiskPressure     kubelet has no disk pressure
+  PIDPressure          False   Mon, 28 Sep 2026 19:34:39 -0300   Thu, 17 Sep 2026 16:29:29 -0300   KubeletHasSufficientPID      kubelet has sufficient PID available
+  Ready                True    Mon, 28 Sep 2026 19:34:39 -0300   Thu, 17 Sep 2026 16:29:29 -0300   KubeletReady                 kubelet is posting ready status
+Addresses:
+  InternalIP:  192.168.50.152
+  Hostname:    sabdiia02
+Capacity:
+  cpu:                32
+  ephemeral-storage:  75094818816
+  hugepages-1Gi:      0
+  hugepages-2Mi:      0
+  memory:             791994960Ki
+  nvidia.com/gpu:     1
+  pods:               110
+Allocatable:
+  cpu:                32
+  ephemeral-storage:  67585336823
+  hugepages-1Gi:      0
+  hugepages-2Mi:      0
+  memory:             791892560Ki
+  nvidia.com/gpu:     1
+  pods:               110
+System Info:
+  Machine ID:                 5bd611582ffc47f49650ab1ce8214d33
+  System UUID:                4c4c4544-0044-5010-8047-b3c04f593132
+  Boot ID:                    8108beca-3a87-4991-bb23-dc819f2481fb
+  Kernel Version:             6.12.0-206.104.3.3.el9uek.x86_64
+  OS Image:                   Oracle Linux Server 9.8
+  Operating System:           linux
+  Architecture:               amd64
+  Container Runtime Version:  containerd://2.3.5
+  Kubelet Version:            v1.37.0
+PodCIDR:                      10.244.3.0/24
+PodCIDRs:                     10.244.3.0/24
+Non-terminated Pods:          (16 in total)
+  Namespace                   Name                                                CPU Requests  CPU Limits  Memory Requests  Memory Limits  Age
+  ---------                   ----                                                ------------  ----------  ---------------  -------------  ---
+  gpu-operator                gpu-feature-discovery-8cbdj                         0 (0%)        0 (0%)      0 (0%)           0 (0%)         11d
+  gpu-operator                gpu-operator-node-feature-discovery-worker-9brcw    5m (0%)       0 (0%)      64Mi (0%)        512Mi (0%)     11d
+  gpu-operator                nvidia-container-toolkit-daemonset-ct76m            0 (0%)        0 (0%)      0 (0%)           0 (0%)         11d
+  gpu-operator                nvidia-dcgm-exporter-lfnzq                          0 (0%)        0 (0%)      0 (0%)           0 (0%)         11d
+  gpu-operator                nvidia-device-plugin-daemonset-82jth                0 (0%)        0 (0%)      0 (0%)           0 (0%)         11d
+  gpu-operator                nvidia-operator-validator-m7zpz                     0 (0%)        0 (0%)      0 (0%)           0 (0%)         11d
+  kube-system                 calico-node-s4gsm                                   250m (0%)     0 (0%)      0 (0%)           0 (0%)         14d
+  kube-system                 csi-nfs-node-h28xj                                  30m (0%)      0 (0%)      60Mi (0%)        500Mi (0%)     14d
+  kube-system                 etcd-sabdiia02                                      100m (0%)     0 (0%)      100Mi (0%)       0 (0%)         14d
+  kube-system                 kube-apiserver-sabdiia02                            250m (0%)     0 (0%)      0 (0%)           0 (0%)         14d
+  kube-system                 kube-controller-manager-sabdiia02                   200m (0%)     0 (0%)      0 (0%)           0 (0%)         14d
+  kube-system                 kube-proxy-jzncl                                    0 (0%)        0 (0%)      0 (0%)           0 (0%)         14d
+  kube-system                 kube-scheduler-sabdiia02                            100m (0%)     0 (0%)      0 (0%)           0 (0%)         14d
+  metallb-system              speaker-hn2fc                                       0 (0%)        0 (0%)      0 (0%)           0 (0%)         7d7h
+  monitoring                  monitoring-prometheus-node-exporter-vxvj9           0 (0%)        0 (0%)      0 (0%)           0 (0%)         14d
+  vllms                       open-webui-566c8b6bd7-9r5nj                         500m (1%)     2 (6%)      1Gi (0%)         4Gi (0%)       7d1h
+Allocated resources:
+  (Total limits may be over 100 percent, i.e., overcommitted.)
+  Resource           Requests     Limits
+  --------           --------     ------
+  cpu                1435m (4%)   2 (6%)
+  memory             1248Mi (0%)  5108Mi (0%)
+  ephemeral-storage  0 (0%)       0 (0%)
+  hugepages-1Gi      0 (0%)       0 (0%)
+  hugepages-2Mi      0 (0%)       0 (0%)
+  nvidia.com/gpu     0            0
+
+
+Name:               sabdiia03
+Name:               sabdiia03
+Roles:              control-plane
+Labels:             beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/os=linux
+                    feature.node.kubernetes.io/cpu-cpuid.AESNI=true
+                    feature.node.kubernetes.io/cpu-cpuid.AVX=true
+                    feature.node.kubernetes.io/cpu-cpuid.AVXSLOW=true
+                    feature.node.kubernetes.io/cpu-cpuid.AVXVNNIINT16=true
+                    feature.node.kubernetes.io/cpu-cpuid.CMPXCHG8=true
+                    feature.node.kubernetes.io/cpu-cpuid.FLUSH_L1D=true
+                    feature.node.kubernetes.io/cpu-cpuid.FXSR=true
+                    feature.node.kubernetes.io/cpu-cpuid.FXSROPT=true
+                    feature.node.kubernetes.io/cpu-cpuid.IBPB=true
+                    feature.node.kubernetes.io/cpu-cpuid.LAHF=true
+                    feature.node.kubernetes.io/cpu-cpuid.MD_CLEAR=true
+                    feature.node.kubernetes.io/cpu-cpuid.OSXSAVE=true
+                    feature.node.kubernetes.io/cpu-cpuid.PMU_FIXEDCOUNTER_CYCLES=true
+                    feature.node.kubernetes.io/cpu-cpuid.PMU_FIXEDCOUNTER_INSTRUCTIONS=true
+                    feature.node.kubernetes.io/cpu-cpuid.PMU_FIXEDCOUNTER_REFCYCLES=true
+                    feature.node.kubernetes.io/cpu-cpuid.SPEC_CTRL_SSBD=true
+                    feature.node.kubernetes.io/cpu-cpuid.STIBP=true
+                    feature.node.kubernetes.io/cpu-cpuid.SYSCALL=true
+                    feature.node.kubernetes.io/cpu-cpuid.SYSEE=true
+                    feature.node.kubernetes.io/cpu-cpuid.VMX=true
+                    feature.node.kubernetes.io/cpu-cpuid.X87=true
+                    feature.node.kubernetes.io/cpu-cpuid.XSAVE=true
+                    feature.node.kubernetes.io/cpu-cpuid.XSAVEOPT=true
+                    feature.node.kubernetes.io/cpu-cstate.enabled=true
+                    feature.node.kubernetes.io/cpu-hardware_multithreading=true
+                    feature.node.kubernetes.io/cpu-model.family=6
+                    feature.node.kubernetes.io/cpu-model.id=45
+                    feature.node.kubernetes.io/cpu-model.vendor_id=Intel
+                    feature.node.kubernetes.io/cpu-pstate.status=passive
+                    feature.node.kubernetes.io/cpu-pstate.turbo=true
+                    feature.node.kubernetes.io/kernel-config.NO_HZ=true
+                    feature.node.kubernetes.io/kernel-config.NO_HZ_FULL=true
+                    feature.node.kubernetes.io/kernel-version.full=6.12.0-206.104.3.3.el9uek.x86_64
+                    feature.node.kubernetes.io/kernel-version.major=6
+                    feature.node.kubernetes.io/kernel-version.minor=12
+                    feature.node.kubernetes.io/kernel-version.revision=0
+                    feature.node.kubernetes.io/memory-numa=true
+                    feature.node.kubernetes.io/network-sriov.capable=true
+                    feature.node.kubernetes.io/pci-102b.present=true
+                    feature.node.kubernetes.io/pci-10de.present=true
+                    feature.node.kubernetes.io/pci-14e4.present=true
+                    feature.node.kubernetes.io/pci-8086.present=true
+                    feature.node.kubernetes.io/pci-8086.sriov.capable=true
+                    feature.node.kubernetes.io/storage-nonrotationaldisk=true
+                    feature.node.kubernetes.io/system-os_release.ID=ol
+                    feature.node.kubernetes.io/system-os_release.VERSION_ID=9.8
+                    feature.node.kubernetes.io/system-os_release.VERSION_ID.major=9
+                    feature.node.kubernetes.io/system-os_release.VERSION_ID.minor=8
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=sabdiia03
+                    kubernetes.io/os=linux
+                    node-role.kubernetes.io/control-plane=
+                    nvidia.com/cuda.driver-version.full=580.173.02
+                    nvidia.com/cuda.driver-version.major=580
+                    nvidia.com/cuda.driver-version.minor=173
+                    nvidia.com/cuda.driver-version.revision=02
+                    nvidia.com/cuda.driver.major=580
+                    nvidia.com/cuda.driver.minor=173
+                    nvidia.com/cuda.driver.rev=02
+                    nvidia.com/cuda.runtime-version.full=13.0
+                    nvidia.com/cuda.runtime-version.major=13
+                    nvidia.com/cuda.runtime-version.minor=0
+                    nvidia.com/cuda.runtime.major=13
+                    nvidia.com/cuda.runtime.minor=0
+                    nvidia.com/gfd.timestamp=1789671743
+                    nvidia.com/gpu.compute.major=7
+                    nvidia.com/gpu.compute.minor=0
+                    nvidia.com/gpu.count=1
+                    nvidia.com/gpu.deploy.client=true
+                    nvidia.com/gpu.deploy.container-toolkit=true
+                    nvidia.com/gpu.deploy.dcgm=true
+                    nvidia.com/gpu.deploy.dcgm-exporter=true
+                    nvidia.com/gpu.deploy.device-plugin=true
+                    nvidia.com/gpu.deploy.driver=pre-installed
+                    nvidia.com/gpu.deploy.gpu-feature-discovery=true
+                    nvidia.com/gpu.deploy.node-status-exporter=true
+                    nvidia.com/gpu.deploy.operator-validator=true
+                    nvidia.com/gpu.family=volta
+                    nvidia.com/gpu.machine=PowerEdge-R720
+                    nvidia.com/gpu.memory=32768
+                    nvidia.com/gpu.mode=compute
+                    nvidia.com/gpu.present=true
+                    nvidia.com/gpu.product=Tesla-V100S-PCIE-32GB
+                    nvidia.com/gpu.replicas=1
+                    nvidia.com/gpu.sharing-strategy=none
+                    nvidia.com/mig.capable=false
+                    nvidia.com/mig.strategy=single
+                    nvidia.com/mps.capable=false
+                    nvidia.com/vgpu.present=false
+Annotations:        csi.volume.kubernetes.io/nodeid: {"nfs.csi.k8s.io":"sabdiia03"}
+                    nfd.node.kubernetes.io/feature-labels:
+                      cpu-cpuid.AESNI,cpu-cpuid.AVX,cpu-cpuid.AVXSLOW,cpu-cpuid.AVXVNNIINT16,cpu-cpuid.CMPXCHG8,cpu-cpuid.FLUSH_L1D,cpu-cpuid.FXSR,cpu-cpuid.FXS...
+                    node.alpha.kubernetes.io/ttl: 0
+                    nvidia.com/gpu-driver-upgrade-enabled: true
+                    projectcalico.org/IPv4Address: 192.168.50.150/24
+                    projectcalico.org/IPv4IPIPTunnelAddr: 10.244.50.128
+                    projectcalico.org/Interfaces:
+                      [{"name":"bond0"},{"name":"bond0.302"},{"name":"bond0.500","addresses":["192.168.50.150"]},{"name":"eno1"},{"name":"eno2"},{"name":"eno3"}...
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Mon, 14 Sep 2026 14:02:04 -0300
+Taints:             <none>
+Unschedulable:      false
+Lease:
+  HolderIdentity:  sabdiia03
+  AcquireTime:     <unset>
+  RenewTime:       Mon, 28 Sep 2026 19:35:21 -0300
+Conditions:
+  Type                 Status  LastHeartbeatTime                 LastTransitionTime                Reason                       Message
+  ----                 ------  -----------------                 ------------------                ------                       -------
+  NetworkUnavailable   False   Thu, 17 Sep 2026 15:30:00 -0300   Thu, 17 Sep 2026 15:30:00 -0300   CalicoIsUp                   Calico is running on this node
+  MemoryPressure       False   Mon, 28 Sep 2026 19:34:12 -0300   Thu, 17 Sep 2026 15:29:53 -0300   KubeletHasSufficientMemory   kubelet has sufficient memory available
+  DiskPressure         False   Mon, 28 Sep 2026 19:34:12 -0300   Fri, 18 Sep 2026 15:59:48 -0300   KubeletHasNoDiskPressure     kubelet has no disk pressure
+  PIDPressure          False   Mon, 28 Sep 2026 19:34:12 -0300   Thu, 17 Sep 2026 15:29:53 -0300   KubeletHasSufficientPID      kubelet has sufficient PID available
+  Ready                True    Mon, 28 Sep 2026 19:34:12 -0300   Thu, 17 Sep 2026 15:29:53 -0300   KubeletReady                 kubelet is posting ready status
+Addresses:
+  InternalIP:  192.168.50.150
+  Hostname:    sabdiia03
+Capacity:
+  cpu:                32
+  ephemeral-storage:  75094818816
+  hugepages-1Gi:      0
+  hugepages-2Mi:      0
+  memory:             791995208Ki
+  nvidia.com/gpu:     1
+  pods:               110
+Allocatable:
+  cpu:                32
+  ephemeral-storage:  67585336823
+  hugepages-1Gi:      0
+  hugepages-2Mi:      0
+  memory:             791892808Ki
+  nvidia.com/gpu:     1
+  pods:               110
+System Info:
+  Machine ID:                 289eaaf87c6c43febf5bb33af1748063
+  System UUID:                4c4c4544-0044-5110-8046-b3c04f593132
+  Boot ID:                    6b311cf5-a6d1-447c-a51c-d70825c85587
+  Kernel Version:             6.12.0-206.104.3.3.el9uek.x86_64
+  OS Image:                   Oracle Linux Server 9.8
+  Operating System:           linux
+  Architecture:               amd64
+  Container Runtime Version:  containerd://2.3.5
+  Kubelet Version:            v1.37.0
+PodCIDR:                      10.244.0.0/24
+PodCIDRs:                     10.244.0.0/24
+Non-terminated Pods:          (24 in total)
+  Namespace                   Name                                                      CPU Requests  CPU Limits  Memory Requests  Memory Limits  Age
+  ---------                   ----                                                      ------------  ----------  ---------------  -------------  ---
+  gpu-operator                gpu-feature-discovery-7z8vv                               0 (0%)        0 (0%)      0 (0%)           0 (0%)         11d
+  gpu-operator                gpu-operator-node-feature-discovery-worker-9lxsb          5m (0%)       0 (0%)      64Mi (0%)        512Mi (0%)     11d
+  gpu-operator                nvidia-container-toolkit-daemonset-9n2rj                  0 (0%)        0 (0%)      0 (0%)           0 (0%)         11d
+  gpu-operator                nvidia-dcgm-exporter-2x9sr                                0 (0%)        0 (0%)      0 (0%)           0 (0%)         11d
+  gpu-operator                nvidia-device-plugin-daemonset-95b8n                      0 (0%)        0 (0%)      0 (0%)           0 (0%)         11d
+  gpu-operator                nvidia-operator-validator-dzrm2                           0 (0%)        0 (0%)      0 (0%)           0 (0%)         11d
+  kong                        kong-controller-76f66d77f-qv8hw                           0 (0%)        0 (0%)      0 (0%)           0 (0%)         11d
+  kong                        kong-gateway-5f88dd7bcd-xdtbw                             0 (0%)        0 (0%)      0 (0%)           0 (0%)         11d
+  kube-system                 calico-node-fz4fl                                         250m (0%)     0 (0%)      0 (0%)           0 (0%)         14d
+  kube-system                 coredns-559f6c778d-ttnvj                                  100m (0%)     0 (0%)      70Mi (0%)        170Mi (0%)     11d
+  kube-system                 csi-nfs-node-pqm4t                                        30m (0%)      0 (0%)      60Mi (0%)        500Mi (0%)     14d
+  kube-system                 etcd-sabdiia03                                            100m (0%)     0 (0%)      100Mi (0%)       0 (0%)         14d
+  kube-system                 kube-apiserver-sabdiia03                                  250m (0%)     0 (0%)      0 (0%)           0 (0%)         14d
+  kube-system                 kube-controller-manager-sabdiia03                         200m (0%)     0 (0%)      0 (0%)           0 (0%)         14d
+  kube-system                 kube-proxy-vp5w2                                          0 (0%)        0 (0%)      0 (0%)           0 (0%)         14d
+  kube-system                 kube-scheduler-sabdiia03                                  100m (0%)     0 (0%)      0 (0%)           0 (0%)         14d
+  kube-system                 metrics-server-55df8bfccb-dfchx                           100m (0%)     0 (0%)      200Mi (0%)       0 (0%)         11d
+  metallb-system              controller-5d66678cc4-xd82m                               0 (0%)        0 (0%)      0 (0%)           0 (0%)         11d
+  metallb-system              speaker-sg6xs                                             0 (0%)        0 (0%)      0 (0%)           0 (0%)         7d7h
+  monitoring                  alertmanager-monitoring-kube-prometheus-alertmanager-0    0 (0%)        0 (0%)      200Mi (0%)       0 (0%)         11d
+  monitoring                  monitoring-kube-state-metrics-78fd56fc4b-vbqvz            0 (0%)        0 (0%)      0 (0%)           0 (0%)         11d
+  monitoring                  monitoring-prometheus-node-exporter-ssz46                 0 (0%)        0 (0%)      0 (0%)           0 (0%)         14d
+  monitoring                  prometheus-monitoring-kube-prometheus-prometheus-0        0 (0%)        0 (0%)      0 (0%)           0 (0%)         11d
+  vllms                       vllm-deepseek-33b-67754f4465-hn6q9                        4 (12%)       8 (25%)     16Gi (2%)        32Gi (4%)      10d
+Allocated resources:
+  (Total limits may be over 100 percent, i.e., overcommitted.)
+  Resource           Requests      Limits
+  --------           --------      ------
+  cpu                5135m (16%)   8 (25%)
+  memory             17078Mi (2%)  33950Mi (4%)
+  ephemeral-storage  0 (0%)        0 (0%)
+  hugepages-1Gi      0 (0%)        0 (0%)
+  hugepages-2Mi      0 (0%)        0 (0%)
+  nvidia.com/gpu     1             1
+### namespace vllms
+NAME                                     READY   STATUS                       RESTARTS           AGE    IP               NODE        NOMINATED NODE   READINESS GATES
+pod/open-webui-566c8b6bd7-9r5nj          0/1     CreateContainerConfigError   0                  7d1h   10.244.182.189   sabdiia02   <none>           <none>
+pod/vllm-deepseek-33b-67754f4465-hn6q9   1/1     Running                      18 (10d ago)       10d    10.244.50.138    sabdiia03   <none>           <none>
+pod/vllm-llama31-8b-7ff775c756-f6lr4     0/1     CrashLoopBackOff             1867 (4m28s ago)   7d     10.244.179.80    sabdiia01   <none>           <none>
+
+NAME                        TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)          AGE   SELECTOR
+service/vllm-deepseek-33b   LoadBalancer   10.102.231.75   192.168.50.160   8001:30191/TCP   10d   app=vllm-deepseek-33b
+
+NAME                                READY   UP-TO-DATE   AVAILABLE   AGE    CONTAINERS   IMAGES                               SELECTOR
+deployment.apps/open-webui          0/1     1            0           7d1h   open-webui   ghcr.io/open-webui/open-webui:main   app=open-webui
+deployment.apps/vllm-deepseek-33b   1/1     1            1           10d    vllm         vllm/vllm-openai:v0.6.4              app=vllm-deepseek-33b
+deployment.apps/vllm-llama31-8b     0/1     1            0           7d     vllm         vllm/vllm-openai:v0.12.0             app=vllm-llama31-8b
+
+NAME                                           DESIRED   CURRENT   READY   AGE    CONTAINERS   IMAGES                               SELECTOR
+replicaset.apps/open-webui-566c8b6bd7          1         1         0       7d1h   open-webui   ghcr.io/open-webui/open-webui:main   app=open-webui,pod-template-hash=566c8b6bd7
+replicaset.apps/vllm-deepseek-33b-67754f4465   1         1         1       10d    vllm         vllm/vllm-openai:v0.6.4              app=vllm-deepseek-33b,pod-template-hash=67754f4465
+replicaset.apps/vllm-llama31-8b-7ff775c756     1         1         0       7d     vllm         vllm/vllm-openai:v0.12.0             app=vllm-llama31-8b,pod-template-hash=7ff775c756
+
+NAME                                    STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE    VOLUMEMODE
+persistentvolumeclaim/hf-cache          Bound    pvc-6687e544-29a1-4332-aa60-fb56266efdb5   200Gi      RWX            nfs-storage    <unset>                 11d    Filesystem
+persistentvolumeclaim/open-webui-data   Bound    pvc-813d89c1-a804-4d59-8d8a-a160ae08b987   20Gi       RWX            nfs-storage    <unset>                 7d1h   Filesystem
+
+NAME                         DATA   AGE
+configmap/kube-root-ca.crt   1      11d
+### secrets vllms (só nomes)
+NAME        TYPE     DATA   AGE
+hf-secret   Opaque   1      11d
+### manifestos vllms
+apiVersion: v1
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "2"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"name":"open-webui","namespace":"vllms"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"open-webui"}},"template":{"metadata":{"labels":{"app":"open-webui"}},"spec":{"containers":[{"env":[{"name":"OPENAI_API_BASE_URL","value":"http://192.168.50.160:8001/v1"},{"name":"OPENAI_API_KEY","valueFrom":{"secretKeyRef":{"key":"OPENAI_API_KEY","name":"open-webui-secret"}}}],"image":"ghcr.io/open-webui/open-webui:main","imagePullPolicy":"IfNotPresent","livenessProbe":{"httpGet":{"path":"/","port":8080},"initialDelaySeconds":60,"periodSeconds":30},"name":"open-webui","ports":[{"containerPort":8080,"name":"http","protocol":"TCP"}],"readinessProbe":{"httpGet":{"path":"/","port":8080},"initialDelaySeconds":20,"periodSeconds":10},"resources":{"limits":{"cpu":"2","memory":"4Gi"},"requests":{"cpu":"500m","memory":"1Gi"}},"volumeMounts":[{"mountPath":"/app/backend/data","name":"data"}]}],"volumes":[{"name":"data","persistentVolumeClaim":{"claimName":"open-webui-data"}}]}}}}
+    creationTimestamp: "2026-09-21T21:07:30Z"
+    generation: 2
+    name: open-webui
+    namespace: vllms
+    resourceVersion: "2434210"
+    uid: 1fcf4bcd-7350-4faa-bd74-20409276c992
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: open-webui
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        labels:
+          app: open-webui
+      spec:
+        containers:
+        - env:
+          - name: OPENAI_API_BASE_URL
+            value: http://192.168.50.160:8001/v1
+          - name: OPENAI_API_KEY
+            valueFrom:
+              secretKeyRef:
+                key: OPENAI_API_KEY
+                name: open-webui-secret
+          image: ghcr.io/open-webui/open-webui:main
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: open-webui
+          ports:
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: "2"
+              memory: 4Gi
+            requests:
+              cpu: 500m
+              memory: 1Gi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /app/backend/data
+            name: data
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: open-webui-data
+  status:
+    conditions:
+    - lastTransitionTime: "2026-09-21T21:07:30Z"
+      lastUpdateTime: "2026-09-21T21:07:30Z"
+      message: Deployment does not have minimum availability.
+      reason: MinimumReplicasUnavailable
+      status: "False"
+      type: Available
+    - lastTransitionTime: "2026-09-21T21:20:18Z"
+      lastUpdateTime: "2026-09-21T21:20:18Z"
+      message: ReplicaSet "open-webui-566c8b6bd7" has timed out progressing.
+      reason: ProgressDeadlineExceeded
+      status: "False"
+      type: Progressing
+    observedGeneration: 2
+    replicas: 1
+    terminatingReplicas: 0
+    unavailableReplicas: 1
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"name":"vllm-deepseek-33b","namespace":"vllms"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"vllm-deepseek-33b"}},"template":{"metadata":{"labels":{"app":"vllm-deepseek-33b"}},"spec":{"containers":[{"args":["--model","TheBloke/deepseek-coder-33B-instruct-GPTQ","--quantization","gptq","--dtype","float16","--host","0.0.0.0","--port","8001","--gpu-memory-utilization","0.90","--max-model-len","8192","--max-num-seqs","4","--enforce-eager"],"command":["python3","-m","vllm.entrypoints.openai.api_server"],"env":[{"name":"HF_TOKEN","valueFrom":{"secretKeyRef":{"key":"HF_TOKEN","name":"hf-secret"}}}],"image":"vllm/vllm-openai:v0.6.4","livenessProbe":{"httpGet":{"path":"/health","port":8001},"initialDelaySeconds":30,"periodSeconds":30},"name":"vllm","ports":[{"containerPort":8001,"name":"http","protocol":"TCP"}],"readinessProbe":{"httpGet":{"path":"/health","port":8001},"initialDelaySeconds":10,"periodSeconds":10},"resources":{"limits":{"cpu":"8","memory":"32Gi","nvidia.com/gpu":1},"requests":{"cpu":"4","memory":"16Gi","nvidia.com/gpu":1}},"startupProbe":{"failureThreshold":60,"httpGet":{"path":"/health","port":8001},"periodSeconds":10},"volumeMounts":[{"mountPath":"/root/.cache/huggingface","name":"hf-cache"},{"mountPath":"/dev/shm","name":"shm"}]}],"volumes":[{"name":"hf-cache","persistentVolumeClaim":{"claimName":"hf-cache"}},{"emptyDir":{"medium":"Memory","sizeLimit":"4Gi"},"name":"shm"}]}}}}
+    creationTimestamp: "2026-09-18T18:51:21Z"
+    generation: 1
+    name: vllm-deepseek-33b
+    namespace: vllms
+    resourceVersion: "1354331"
+    uid: 7c2ff94b-121b-432d-844f-12a935603ea0
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: vllm-deepseek-33b
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        labels:
+          app: vllm-deepseek-33b
+      spec:
+        containers:
+        - args:
+          - --model
+          - TheBloke/deepseek-coder-33B-instruct-GPTQ
+          - --quantization
+          - gptq
+          - --dtype
+          - float16
+          - --host
+          - 0.0.0.0
+          - --port
+          - "8001"
+          - --gpu-memory-utilization
+          - "0.90"
+          - --max-model-len
+          - "8192"
+          - --max-num-seqs
+          - "4"
+          - --enforce-eager
+          command:
+          - python3
+          - -m
+          - vllm.entrypoints.openai.api_server
+          env:
+          - name: HF_TOKEN
+            valueFrom:
+              secretKeyRef:
+                key: HF_TOKEN
+                name: hf-secret
+          image: vllm/vllm-openai:v0.6.4
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: 8001
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: vllm
+          ports:
+          - containerPort: 8001
+            name: http
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: 8001
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: "8"
+              memory: 32Gi
+              nvidia.com/gpu: "1"
+            requests:
+              cpu: "4"
+              memory: 16Gi
+              nvidia.com/gpu: "1"
+          startupProbe:
+            failureThreshold: 60
+            httpGet:
+              path: /health
+              port: 8001
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /root/.cache/huggingface
+            name: hf-cache
+          - mountPath: /dev/shm
+            name: shm
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: hf-cache
+          persistentVolumeClaim:
+            claimName: hf-cache
+        - emptyDir:
+            medium: Memory
+            sizeLimit: 4Gi
+          name: shm
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2026-09-18T20:20:28Z"
+      lastUpdateTime: "2026-09-18T20:20:28Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2026-09-18T20:20:28Z"
+      lastUpdateTime: "2026-09-18T20:20:28Z"
+      message: ReplicaSet "vllm-deepseek-33b-67754f4465" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 1
+    readyReplicas: 1
+    replicas: 1
+    terminatingReplicas: 0
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"name":"vllm-llama31-8b","namespace":"vllms"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"vllm-llama31-8b"}},"strategy":{"type":"Recreate"},"template":{"metadata":{"labels":{"app":"vllm-llama31-8b"}},"spec":{"containers":[{"args":["meta-llama/Llama-3.1-8B-Instruct","--host","0.0.0.0","--port","8002","--dtype","float16","--gpu-memory-utilization","0.92","--max-model-len","8192","--max-num-seqs","8","--max-num-batched-tokens","8192"],"command":["vllm","serve"],"env":[{"name":"HF_TOKEN","valueFrom":{"secretKeyRef":{"key":"HF_TOKEN","name":"hf-secret"}}},{"name":"HF_HOME","value":"/root/.cache/huggingface"}],"image":"vllm/vllm-openai:v0.12.0","imagePullPolicy":"IfNotPresent","livenessProbe":{"failureThreshold":3,"httpGet":{"path":"/health","port":8002},"periodSeconds":30,"timeoutSeconds":5},"name":"vllm","ports":[{"containerPort":8002,"name":"http","protocol":"TCP"}],"readinessProbe":{"failureThreshold":6,"httpGet":{"path":"/health","port":8002},"periodSeconds":10,"timeoutSeconds":5},"resources":{"limits":{"cpu":"12","memory":"64Gi","nvidia.com/gpu":1},"requests":{"cpu":"4","memory":"32Gi","nvidia.com/gpu":1}},"startupProbe":{"failureThreshold":120,"httpGet":{"path":"/health","port":8002},"periodSeconds":10,"timeoutSeconds":5},"volumeMounts":[{"mountPath":"/root/.cache/huggingface","name":"hf-cache"},{"mountPath":"/dev/shm","name":"shm"}]}],"terminationGracePeriodSeconds":60,"volumes":[{"name":"hf-cache","persistentVolumeClaim":{"claimName":"hf-cache"}},{"emptyDir":{"medium":"Memory","sizeLimit":"8Gi"},"name":"shm"}]}}}}
+    creationTimestamp: "2026-09-21T21:48:47Z"
+    generation: 1
+    name: vllm-llama31-8b
+    namespace: vllms
+    resourceVersion: "2444357"
+    uid: eaa1f9b2-c7fe-4846-b8cc-2f10f3d8b968
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: vllm-llama31-8b
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          app: vllm-llama31-8b
+      spec:
+        containers:
+        - args:
+          - meta-llama/Llama-3.1-8B-Instruct
+          - --host
+          - 0.0.0.0
+          - --port
+          - "8002"
+          - --dtype
+          - float16
+          - --gpu-memory-utilization
+          - "0.92"
+          - --max-model-len
+          - "8192"
+          - --max-num-seqs
+          - "8"
+          - --max-num-batched-tokens
+          - "8192"
+          command:
+          - vllm
+          - serve
+          env:
+          - name: HF_TOKEN
+            valueFrom:
+              secretKeyRef:
+                key: HF_TOKEN
+                name: hf-secret
+          - name: HF_HOME
+            value: /root/.cache/huggingface
+          image: vllm/vllm-openai:v0.12.0
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: 8002
+              scheme: HTTP
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: vllm
+          ports:
+          - containerPort: 8002
+            name: http
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /health
+              port: 8002
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources:
+            limits:
+              cpu: "12"
+              memory: 64Gi
+              nvidia.com/gpu: "1"
+            requests:
+              cpu: "4"
+              memory: 32Gi
+              nvidia.com/gpu: "1"
+          startupProbe:
+            failureThreshold: 120
+            httpGet:
+              path: /health
+              port: 8002
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /root/.cache/huggingface
+            name: hf-cache
+          - mountPath: /dev/shm
+            name: shm
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 60
+        volumes:
+        - name: hf-cache
+          persistentVolumeClaim:
+            claimName: hf-cache
+        - emptyDir:
+            medium: Memory
+            sizeLimit: 8Gi
+          name: shm
+  status:
+    conditions:
+    - lastTransitionTime: "2026-09-21T21:48:47Z"
+      lastUpdateTime: "2026-09-21T21:48:47Z"
+      message: Deployment does not have minimum availability.
+      reason: MinimumReplicasUnavailable
+      status: "False"
+      type: Available
+    - lastTransitionTime: "2026-09-21T21:58:48Z"
+      lastUpdateTime: "2026-09-21T21:58:48Z"
+      message: ReplicaSet "vllm-llama31-8b-7ff775c756" has timed out progressing.
+      reason: ProgressDeadlineExceeded
+      status: "False"
+      type: Progressing
+    observedGeneration: 1
+    replicas: 1
+    terminatingReplicas: 0
+    unavailableReplicas: 1
+    updatedReplicas: 1
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"vllm-deepseek-33b","namespace":"vllms"},"spec":{"ports":[{"name":"http","port":8001,"protocol":"TCP","targetPort":8001}],"selector":{"app":"vllm-deepseek-33b"},"type":"LoadBalancer"}}
+      metallb.io/ip-allocated-from-pool: pool-publico
+    creationTimestamp: "2026-09-18T20:38:12Z"
+    name: vllm-deepseek-33b
+    namespace: vllms
+    resourceVersion: "1360248"
+    uid: c1ba6187-3a57-4525-b530-2f6cfc64a065
+  spec:
+    allocateLoadBalancerNodePorts: true
+    clusterIP: 10.102.231.75
+    clusterIPs:
+    - 10.102.231.75
+    externalTrafficPolicy: Cluster
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: http
+      nodePort: 30191
+      port: 8001
+      protocol: TCP
+      targetPort: 8001
+    selector:
+      app: vllm-deepseek-33b
+    sessionAffinity: None
+    type: LoadBalancer
+  status:
+    loadBalancer:
+      ingress:
+      - ip: 192.168.50.160
+        ipMode: VIP
+kind: List
+metadata:
+  resourceVersion: ""
+bash: syntax error near unexpected token `}'

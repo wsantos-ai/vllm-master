@@ -1,0 +1,75 @@
+pod/teste-gpu created
+### aguardando o pod terminar
+pod/teste-gpu condition met
+### saída do nvidia-smi dentro do pod
+Tue Sep 29 14:38:13 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.173.02             Driver Version: 580.173.02     CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  Tesla V100S-PCIE-32GB          On  |   00000000:05:00.0 Off |                    0 |
+| N/A   34C    P0             27W /  250W |       0MiB /  32768MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+### estado e eventos (diagnóstico)
+Containers:
+  cuda:
+    Container ID:  containerd://2152033a38574b9cfdf678ab44d39a16e5ae5c8f4f3686abbb235d8712d46631
+    Image:         nvidia/cuda:12.4.1-base-ubuntu22.04
+    Image ID:      docker.io/nvidia/cuda@sha256:0f6bfcbf267e65123bcc2287e2153dedfc0f24772fb5ce84afe16ac4b2fada95
+    Port:          <none>
+    Host Port:     <none>
+    Command:
+      nvidia-smi
+    State:          Terminated
+      Reason:       Completed
+      Exit Code:    0
+      Started:      Tue, 29 Sep 2026 11:38:13 -0300
+      Finished:     Tue, 29 Sep 2026 11:38:14 -0300
+    Ready:          False
+    Restart Count:  0
+    Limits:
+      nvidia.com/gpu:  1
+    Requests:
+      nvidia.com/gpu:  1
+    Environment:       <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-8m5px (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   False 
+  Initialized                 True 
+  Ready                       False 
+  ContainersReady             False 
+  PodScheduled                True 
+Volumes:
+  kube-api-access-8m5px:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              kubernetes.io/hostname=sabdiia02
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  6s    default-scheduler  Successfully assigned default/teste-gpu to sabdiia02
+  Normal  Pulling    6s    kubelet            spec.containers{cuda}: Pulling image "nvidia/cuda:12.4.1-base-ubuntu22.04"
+  Normal  Pulled     3s    kubelet            spec.containers{cuda}: Successfully pulled image "nvidia/cuda:12.4.1-base-ubuntu22.04" in 2.658s (2.658s including waiting). Image size: 91769375 bytes.
+  Normal  Created    3s    kubelet            spec.containers{cuda}: Container created
+  Normal  Started    3s    kubelet            spec.containers{cuda}: Container started
+pod "teste-gpu" deleted from default namespace

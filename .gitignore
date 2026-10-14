@@ -1,0 +1,11 @@
+.env
+*.env
+!*.env.example
+*secret*.yaml
+!*secret*.example.yaml
+.claude/settings.local.json
+# kubeconfig e credenciais de cluster: nunca no repositório
+configs/k8config.txt
+*kubeconfig*
+*k8config*
+admin.conf

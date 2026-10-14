@@ -1,0 +1,22 @@
+# Service do vllm-qwen38-27b — TESTE, ainda não executado
+#
+# Exposição: ClusterIP, só dentro do cluster. O vLLM sobe sem --api-key, então não usar
+# LoadBalancer (AC-06). Acesso de fora: kubectl port-forward -n vllm-estudo svc/vllm-qwen38-27b 18000:8000
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: vllm-qwen38-27b
+  namespace: vllm-estudo
+
+spec:
+  type: ClusterIP
+
+  selector:
+    app: vllm-qwen38-27b
+
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8000
+      targetPort: 8000
