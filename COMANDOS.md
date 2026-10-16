@@ -116,6 +116,13 @@ nvidia-smi -q -d PERFORMANCE
 # a partir de que temperatura a GPU reduz o clock                               [não executado]
 nvidia-smi -q -d TEMPERATURE
 
+# o que roda no nó e pode aquecer a GPU/chassi (em cada nó)                      [não executado]
+nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv
+kubectl get pods -A -o wide --field-selector spec.nodeName=$(hostname -s) | grep -v Completed
+uptime; ps -eo pid,pcpu,pmem,etime,comm --sort=-pcpu | head -15
+sensors                      # temperaturas das CPUs, se lm_sensors estiver instalado
+ipmitool sdr type Fan        # ventoinhas do servidor, se ipmitool estiver instalado
+
 # a cota de CPU do pod está pausando o processo? (nr_throttled, throttled_usec) [executado 2026-10-14]
 kubectl exec -n vllm-estudo vllm-conc -- cat /sys/fs/cgroup/cpu.stat
 ```

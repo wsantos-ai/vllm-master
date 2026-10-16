@@ -1,0 +1,37 @@
+### nó: sabdiia03   2026-10-15 14:19:18
+### GPU agora
+temperature.gpu, power.draw [W], clocks.current.sm [MHz], clocks.max.sm [MHz], utilization.gpu [%], memory.used [MiB], pstate
+60, 44.25 W, 1245 MHz, 1597 MHz, 0 %, 28618 MiB, P0
+### limites de temperatura da GPU
+
+==============NVSMI LOG==============
+
+Timestamp                                              : Thu Oct 15 14:19:18 2026
+Driver Version                                         : 580.173.02
+CUDA Version                                           : 13.0
+
+Attached GPUs                                          : 1
+GPU 00000000:05:00.0
+    Temperature
+        GPU Current Temp                               : 60 C
+        GPU T.Limit Temp                               : N/A
+        GPU Shutdown Temp                              : 90 C
+        GPU Slowdown Temp                              : 87 C
+        GPU Max Operating Temp                         : 83 C
+        GPU Target Temperature                         : N/A
+        Memory Current Temp                            : 58 C
+        Memory Max Operating Temp                      : 85 C
+
+### motivos de redução de clock agora
+    Clocks Event Reasons
+        Idle                                           : Not Active
+        Applications Clocks Setting                    : Not Active
+        SW Power Cap                                   : Not Active
+        HW Slowdown                                    : Not Active
+            HW Thermal Slowdown                        : Not Active
+            HW Power Brake Slowdown                    : Not Active
+        Sync Boost                                     : Not Active
+        SW Thermal Slowdown                            : Not Active
+        Display Clock Setting                          : Not Active
+### ventoinhas e temperaturas do servidor (ipmitool)
+ipmitool nao instalado

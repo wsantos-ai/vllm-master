@@ -333,7 +333,10 @@ concorrente, entrada de imagem, qualidade das respostas em 4 bits, contexto pert
 ### AC-17 — A V100S de `sabdiia01` estrangula por temperatura: sob carga contínua, o *clock* cai de 1560 para ~400 MHz em 2 min {#ac-17}
 
 **O que é.** A GPU de `sabdiia01` fica a 72 °C parada, só com o modelo carregado. Sob carga ela chega a
-82 °C, e o *driver* reduz o *clock* para segurar a temperatura (`SW Thermal Slowdown: Active`). Em 2 min o
+82 °C, e o *driver* reduz o *clock* para segurar a temperatura (`SW Thermal Slowdown: Active`). Segundo a
+NVIDIA, esse motivo significa que o algoritmo de controle térmico está baixando o *clock* abaixo do
+solicitado porque a temperatura passou do limite "Max" ([F-022]). Que isso derruba a vazão do vLLM é a
+nossa medição, não a documentação. Em 2 min o
 *clock* do SM vai de 1560 para ~400 MHz, um quarto do máximo de 1597, e a potência cai de 250 para 74 W.
 O vLLM acompanha: requisições idênticas passaram de 5,6 s para 21,8 s. A primeira, ainda com *clock*
 alto, saiu a ~45 *tok*/s num 7B em FP16, que é a ordem de grandeza desta GPU sem estrangulamento
@@ -354,6 +357,14 @@ temperature.gpu, power.draw [W], clocks.current.sm [MHz], clocks.max.sm [MHz], u
     Clocks Event Reasons ... SW Thermal Slowdown : Active      (nas 3 fotos)
 nr_throttled 12 -> 13     throttled_usec 10788904 -> 11937768
 ```
+
+Limites de temperatura, **iguais nos 3 nós** ([sabdiia01](logs-analysis/termico-sabdiia01-2026-10-15-1417.log),
+[02](logs-analysis/termico-sabdiia02-2026-10-15-1418.log), [03](logs-analysis/termico-sabdiia03-2026-10-15-1419.log)):
+`GPU Max Operating Temp : 83 C` (onde começa o `SW Thermal Slowdown`, F-022), `GPU Slowdown Temp : 87 C`,
+`GPU Shutdown Temp : 90 C`. O patamar de 82 °C da B-001b é o *driver* segurando a GPU abaixo dos 83 °C.
+Paradas em 2026-10-15: `sabdiia01` 67 °C / 52,7 W com o Qwen2.5-7B carregado; `sabdiia03` 60 °C / 44,3 W
+com o deepseek; `sabdiia02` 31 °C / 27,2 W, sem modelo. Esses números não separam "refrigeração pior" de
+"mais calor gerado", e o comportamento de `sabdiia03` sob carga `[não medido]`.
 
 **Regra prática.** Antes de qualquer medição, vigie `clocks.current.sm`, `temperature.gpu` e
 `nvidia-smi -q -d PERFORMANCE` **durante a carga**. Medição com `SW Thermal Slowdown` ativo não vale como
@@ -752,7 +763,7 @@ Alavancas **candidatas**, a medir contra a linha de base de AC-05:
 
 | ID | Pergunta | Que decisão destrava | Como fechar |
 |---|---|---|---|
-| PD-24 | **A refrigeração das GPUs.** A de `sabdiia01` estrangula por temperatura (AC-17). As de `sabdiia02` e `sabdiia03` também, sob carga? O que muda no servidor (perfil térmico e ventoinhas no gerenciador do servidor, posição da placa, fluxo de ar) para a GPU sustentar o *clock*? | **toda medição de desempenho depende disto**; onde rodar a linha de base; se a topologia de 2 GPUs por nó é viável termicamente (PD-22) | (1) Bloco D do [runbook](runbooks/teste-concorrencia-vllm.md): temperaturas e ventoinhas nos 3 nós, só leitura; (2) com o administrador, ajuste de refrigeração em `sabdiia01`; (3) repetir o Bloco C: o critério é `SW Thermal Slowdown` inativo e *clock* perto de 1597 MHz durante a carga |
+| PD-24 | **A refrigeração das GPUs.** A de `sabdiia01` estrangula por temperatura (AC-17). As de `sabdiia02` e `sabdiia03` também, sob carga? O que muda no servidor (perfil térmico e ventoinhas no gerenciador do servidor, posição da placa, fluxo de ar) para a GPU sustentar o *clock*? | **toda medição de desempenho depende disto**; onde rodar a linha de base; se a topologia de 2 GPUs por nó é viável termicamente (PD-22) | (1) ~~Bloco D~~ feito em 2026-10-15: limites iguais nos 3 (83/87/90 °C); `ipmitool` ausente, ventoinhas só pelo iDRAC; (1b) teste térmico curto em `sabdiia02`, hoje fria, para saber se o problema é do nó ou dos três (exige liberar espaço para a imagem `v0.19.1` em `sabdiia02`); (2) com o administrador, ajuste de refrigeração em `sabdiia01`; (3) repetir o Bloco C: o critério é `SW Thermal Slowdown` inativo e *clock* perto de 1597 MHz durante a carga |
 | PD-10 | **Linha de base de concorrência na V100S (B-001):** com um modelo sem *quantization*, quanto a vazão total cresce de 1 a 64 requisições simultâneas, e quanto pioram TTFT e TPOT por usuário? (O deepseek em produção fica para depois: a API tem 1 requisição em 10 dias.) | se o vLLM serve vários usuários nesta GPU (objetivo do estudo, definido pelo usuário em 2026-10-14); contra o que medir cada alavanca | [runbooks/teste-concorrencia-vllm.md](runbooks/teste-concorrencia-vllm.md): `Qwen/Qwen2.5-7B-Instruct` em FP16 em `sabdiia01`, `vllm bench serve` dentro do *pod*, concorrência 1/4/8/16/32/64, 512 → 256 *tokens*, p50/p95/p99 |
 | PD-11 | Os 18 reinícios iniciais do deepseek foram a `startupProbe` (60 × 10 s = 10 min) matando o *pod* durante o *download* do modelo? | como dimensionar `startupProbe` e se o modelo deve ser pré-baixado por um `Job` | a última queda recebeu `SIGTERM` (`KeyboardInterrupt: terminated`) com o carregamento em 0 %; confirmar num arranque novo cronometrado |
 | PD-05 | O pool `pool-publico` é alcançável de fora? Quem consome a API hoje? | autenticação na borda (Kong) ou `--api-key`; risco aceito | conversa com o dono do ambiente; regras de MetalLB e *firewall* |
@@ -800,6 +811,7 @@ Alavancas **candidatas**, a medir contra a linha de base de AC-05:
 | 2026-09-29 | PD-01 fechada pelo Bloco 2 (→ §2, AC-08, AC-09); PD-07 fechada por AC-08 (rede de 1 GbE descarta multinó) | — |
 | 2026-09-29 | PD-14 fechada pelo Bloco 2c (→ AC-09) | — |
 | 2026-09-29 | PD-02 fechada pelo Bloco 3 (→ AC-10) | — |
+| 2026-10-15 | AC-17 citava o mecanismo de redução de *clock* por temperatura sem fonte → acrescentada a documentação do `nvidia-smi` (F-022) | conhecimento prévio escrito como fato, sem a fonte primária que o CLAUDE.md exige |
 | 2026-10-14 | PD-23 fechada pelo Bloco C (→ AC-17). B-001 rebaixada de "linha de base" para "medida sob estrangulamento térmico" | o runbook não vigiava *clock* e temperatura durante a carga; o checklist de medições não tinha esse item (acrescentado no CLAUDE.md) |
 | 2026-10-02 | PD-03 fechada pelo primeiro arranque (→ AC-13, D-01 confirmada). As hipóteses de AC-11 sobre Triton e AVX2 passaram a confirmadas | — |
 | 2026-10-02 | Passo 4 interrompido por engano com Ctrl+C: o *pod* seguiu sozinho, sem freio de disco, e a segunda execução abortou com 28 G livres | o bloco só monitora; interrompê-lo não para o *download*. Runbook ganhou o Passo 4b e o aviso |
@@ -827,6 +839,7 @@ Alavancas **candidatas**, a medir contra a linha de base de AC-05:
 | [containerd-config-sabdiia01-...](logs-analysis/containerd-config-sabdiia01-2026-10-02-1145.log), [02](logs-analysis/containerd-config-sabdiia02-2026-10-02-1145.log), [03](logs-analysis/containerd-config-sabdiia03-2026-10-02-0958.log) | configuração em vigor do containerd, **idêntica nos 3 nós**: `root = '/var/lib/containerd'`, `root_path` vazio em todos os *snapshotters*, `imports` de `conf.d` com um único `99-nvidia.toml` (5124 *bytes*); arquivos com contexto SELinux (AC-09, PD-15) |
 | [pre-arranque-sabdiia01-2026-10-02-1247.log](logs-analysis/pre-arranque-sabdiia01-2026-10-02-1247.log) | estado de `sabdiia01` antes do primeiro arranque: `/` com 51 G usados e 20 G livres, containerd com 33 G; GPU reservada pelo `vllm-llama31-8b` (2853 reinícios) com 0 MiB em uso; a imagem `v0.12.0` tem 3 referências com o mesmo *digest* (PD-15) |
 | [B-001-concorrencia-sabdiia01-2026-10-14-1718.log](logs-analysis/B-001-concorrencia-sabdiia01-2026-10-14-1718.log) | saída completa do `vllm bench serve` nas 6 concorrências da B-001 (vazão, TTFT, TPOT, ITL em p50/p95/p99) e preempções zeradas ([B-001](medicoes/B-001-concorrencia-qwen25-7b-fp16.md)) |
+| [termico-sabdiia01-...](logs-analysis/termico-sabdiia01-2026-10-15-1417.log), [02](logs-analysis/termico-sabdiia02-2026-10-15-1418.log), [03](logs-analysis/termico-sabdiia03-2026-10-15-1419.log) | limites de temperatura das 3 GPUs (83/87/90 °C, iguais), temperatura e potência paradas, nenhum motivo de redução ativo, `ipmitool` ausente (AC-17, PD-24) |
 | [B-001b-diagnostico-sabdiia01-2026-10-14-1832.log](logs-analysis/B-001b-diagnostico-sabdiia01-2026-10-14-1832.log), [gpu-amostras-b001b.csv](logs-analysis/gpu-amostras-b001b.csv), [gpu-performance-b001b.txt](logs-analysis/gpu-performance-b001b.txt) | GPU de `sabdiia01` sob carga: 72 → 82 °C, *clock* de 1560 para ~400 MHz, `SW Thermal Slowdown: Active`; `cpu.stat` do *pod* sem estrangulamento relevante; requisições de 5,6 s a 21,8 s (AC-17) |
 | `B-001-qwen25-7b-fp16-c{1,4,8,16,32,64}.json` | resultado de cada nível da B-001 em JSON, com desvio padrão e pico de vazão por segundo (`max_output_tokens_per_s`: 25 a 448 *tok*/s) ([B-001](medicoes/B-001-concorrencia-qwen25-7b-fp16.md)) |
 | [teste-concorrencia-arranque-sabdiia01-2026-10-14-1657.log](logs-analysis/teste-concorrencia-arranque-sabdiia01-2026-10-14-1657.log) | arranque do `Qwen/Qwen2.5-7B-Instruct` FP16 na `v0.19.1`: *download* de 15 GB em 125 s, modelo 14,25 GiB, *KV cache* 13,14 GiB / 246.016 *tokens*, 86 *CUDA graphs* em 12 s, *prefix caching* ligado (PD-10) |

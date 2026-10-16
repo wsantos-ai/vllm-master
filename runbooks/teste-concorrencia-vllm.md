@@ -243,6 +243,10 @@ mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
 } 2>&1 | tee termico-$(hostname -s)-$(date +%F-%H%M).log
 ```
 
+**Bloco D executado em 2026-10-15:** limites iguais nos 3 nós (`GPU Max Operating Temp : 83 C`,
+`Slowdown 87 C`, `Shutdown 90 C`); paradas, 01 a 67 °C, 02 a 31 °C, 03 a 60 °C; `ipmitool` ausente
+nos 3 ([AC-17](../ESTUDO-DE-CASO.md#ac-17)).
+
 O que olhar: a linha `GPU Slowdown Temp` (ou equivalente) de cada nó; a temperatura parada de cada GPU;
 e, se houver `ipmitool`, a rotação das ventoinhas. Uma GPU bem refrigerada fica bem abaixo da
 temperatura de redução mesmo com carga.
