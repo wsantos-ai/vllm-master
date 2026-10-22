@@ -105,6 +105,10 @@ Os logs de `kubectl logs` do deepseek começam em 09-27: o arranque foi perdido 
 | 2026-10-14 | Arranque do `Qwen/Qwen2.5-7B-Instruct` FP16 para a B-001: `Ready` em 4 min, *KV cache* de 246.016 *tokens*, *CUDA graphs* capturados | PD-10 |
 | 2026-10-14 | **B-001**: vazão total escala 13× de 1 a 64 requisições (10 → 130 *tok*/s), sem preempção; valores absolutos sob suspeita de estrangulamento | [B-001](medicoes/B-001-concorrencia-qwen25-7b-fp16.md), PD-23 |
 | 2026-10-14 | **Diagnóstico B-001b**: a GPU de `sabdiia01` estrangula por temperatura (82 °C, *clock* a ~400 MHz); a CPU não é a causa. B-001 invalidada como número do motor | AC-17, PD-23 fechada, PD-24 |
+| 2026-10-20 | Análise da arquitetura da aplicação que vai consumir o vLLM (ABDI, v0.3, [F-023]): depende de *tool calling* não testado e roda fora do *cluster* | PD-25, PD-26 |
+| 2026-10-22 | Administrador ajusta a refrigeração de `sabdiia01`. Rearranque do 7B cai: o *pod* não resolve `huggingface.co`, e a `v0.19.1` consulta o Hub mesmo com o modelo em cache ([F-024]) | PD-24; Bloco A2 (`HF_HUB_OFFLINE=1`) |
+| 2026-10-22 | Rearranque com `HF_HUB_OFFLINE=1`: `Ready` em 2 min 44 s. Os *pods* de `sabdiia01` estão sem DNS, inclusive o do *cluster* | AC-18, PD-28 |
+| 2026-10-22 | **Reteste térmico B-001c**: sem estrangulamento (72 °C máx. a 250 W); 47 *tok*/s com 1 usuário e 680 *tok*/s com 32, contra 10 e 114 antes do ajuste | AC-17, PD-24 (`sabdiia01` resolvido) |
 
 ## 4. Achados
 
@@ -330,7 +334,7 @@ para pelo menos 20 min. Antes de servir a usuários, configure o *reasoning pars
 **Validade.** `v0.19.1`, `sabdiia01`, 2026-10-02, duas tentativas, uma geração. Não medido: carga
 concorrente, entrada de imagem, qualidade das respostas em 4 bits, contexto perto de 8192 *tokens*.
 
-### AC-17 — A V100S de `sabdiia01` estrangula por temperatura: sob carga contínua, o *clock* cai de 1560 para ~400 MHz em 2 min {#ac-17}
+### AC-17 — A V100S de `sabdiia01` estrangulava por temperatura (~400 MHz em 2 min); depois do ajuste de refrigeração, sustenta 250 W a 72 °C e rende 4 a 6 vezes mais {#ac-17}
 
 **O que é.** A GPU de `sabdiia01` fica a 72 °C parada, só com o modelo carregado. Sob carga ela chega a
 82 °C, e o *driver* reduz o *clock* para segurar a temperatura (`SW Thermal Slowdown: Active`). Segundo a
@@ -366,14 +370,67 @@ Paradas em 2026-10-15: `sabdiia01` 67 °C / 52,7 W com o Qwen2.5-7B carregado; `
 com o deepseek; `sabdiia02` 31 °C / 27,2 W, sem modelo. Esses números não separam "refrigeração pior" de
 "mais calor gerado", e o comportamento de `sabdiia03` sob carga `[não medido]`.
 
-**Regra prática.** Antes de qualquer medição, vigie `clocks.current.sm`, `temperature.gpu` e
-`nvidia-smi -q -d PERFORMANCE` **durante a carga**. Medição com `SW Thermal Slowdown` ativo não vale como
-número do motor. Para servir de verdade, `sabdiia01` precisa de refrigeração corrigida (PD-24, com o
-administrador). Ao avaliar 2 GPUs no mesmo nó (PD-22), conte com mais calor no chassi.
+**Depois do ajuste (2026-10-22).** O administrador revisou a refrigeração de `sabdiia01` (o que mudou:
+`[não verificado]`). Reteste B-001c, mesmo *pod*, mesmo modelo: parada, a GPU foi de 67-72 °C para
+**31 °C**; com 3 min 25 s de carga contínua a 240-250 W (concorrência 32), chegou a **72 °C** e não
+estrangulou (contador `SW Thermal Slowdown` em 0 µs). O *clock* fica em 1500-1597 MHz, com quedas
+breves a ~1260 MHz a cada ~12 s. Elas **não são estrangulamento**: vêm com potência menor (média de
+225 W contra 240 W), o contador de `SW Power Capping` cresceu só 0,15 s na rodada inteira, e o período
+coincide com as levas da carga sintética, em que as 32 requisições de tamanho igual terminam juntas
+`[hipótese: a GPU espera a leva seguinte]`.
 
-**Validade.** `sabdiia01`, 2026-10-14, uma rodada de 3 min com concorrência 1. Temperatura sob carga de
-`sabdiia02` e `sabdiia03`: `[não medido]`. Configuração de ventoinhas e fluxo de ar do servidor:
-`[não verificado]`.
+```
+                         antes (B-001b/B-001, 10-14)    depois (B-001c, 10-22)
+concorrência 1           10,0 tok/s · TPOT p50 93 ms     47,0 tok/s · TPOT p50 20,3 ms · 5,3 s/requisição
+concorrência 32          113,7 tok/s · TTFT p50 8,96 s   680,4 tok/s · TTFT p50 1,09 s · TPOT p50 42,9 ms
+temperatura máx. / clock 82 °C / ~400 MHz                72 °C / mín. 1245, médio 1474 MHz
+SW Thermal Slowdown      Active (3 de 3 fotos)           0 us no contador, 0 de 3 fotos
+```
+
+Na concorrência 32, as cargas não são idênticas (512 requisições com a semente 102, contra 256 com a
+semente 32): ordem de grandeza. A comparação formal é a B-002 (Bloco F).
+Log: [B-001c-reteste-termico-sabdiia01-2026-10-22-1552.log](logs-analysis/B-001c-reteste-termico-sabdiia01-2026-10-22-1552.log).
+
+**Regra prática.** Antes de qualquer medição, vigie `clocks.current.sm`, `temperature.gpu` e
+`nvidia-smi -q -d PERFORMANCE` **durante a carga**. O critério é o **contador** `SW Thermal Slowdown`
+(e `HW Thermal Slowdown`) parado durante a carga e a temperatura abaixo de 83 °C, não um piso de *clock*:
+a V100S varia o *clock* com a carga mesmo sem estrangular. Medição com `SW Thermal Slowdown` ativo não
+vale como número do motor. Ao avaliar 2 GPUs no mesmo nó (PD-22), conte com mais calor no chassi.
+
+**Validade.** `sabdiia01`: estrangulamento em 2026-10-14 (3 min, concorrência 1); sem estrangulamento em
+2026-10-22 (1 min a concorrência 1 + 3 min 25 s a concorrência 32), com a temperatura ainda subindo
+devagar no fim (71 → 72 °C no último minuto). Carga de 20 min ou mais: `[não medido]` (B-002).
+`sabdiia02` e `sabdiia03` sob carga: `[não medido]`.
+
+### AC-18 — Com o modelo em cache, a `v0.19.1` ainda precisa de rede para arrancar; com `HF_HUB_OFFLINE=1`, não {#ac-18}
+
+**O que é.** Ao arrancar, a `v0.19.1` procura no Hugging Face um arquivo que o modelo não tem. Como ele
+não existe, nunca entra no cache, e a busca vai ao Hub ([F-024]). Sem DNS, a consulta falha e o *pod*
+cai em ~3 min, com o modelo inteiro em `/home`. Com `HF_HUB_OFFLINE=1`, o vLLM troca o nome do modelo
+pelo caminho no cache e não consulta a rede ([F-025]). O log do motor passa a mostrar o caminho em
+`model` e `served_model_name`, mas **a API continua anunciando o nome do Hub**: `/v1/models` devolveu
+`Qwen/Qwen2.5-7B-Instruct`, e o `vllm bench serve` funcionou com esse nome (B-001c).
+
+**Evidência.** [sem offline](logs-analysis/teste-concorrencia-arranque-sabdiia01-2026-10-22-1521.log),
+[com offline](logs-analysis/teste-concorrencia-arranque-offline-sabdiia01-2026-10-22-1541.log):
+
+```
+ERROR [repo_utils.py:45] Error retrieving file list: [Errno -3] Temporary failure in name resolution
+vllm-conc   0/1     Error    0          3m6s
+---
+INFO [arg_utils.py:665] HF_HUB_OFFLINE is True, replace model_id [Qwen/Qwen2.5-7B-Instruct] to model_path [/hf-cache/hub/models--Qwen--Qwen2.5-7B-Instruct/snapshots/a09a35458c702b33eeacc393d103063234e8bc28]
+... served_model_name=/hf-cache/hub/models--Qwen--Qwen2.5-7B-Instruct/snapshots/a09a35458c702b33eeacc393d103063234e8bc28
+### PARADA: pod Ready   em 2026-10-22 15:44:04
+---
+### nome do modelo servido (com HF_HUB_OFFLINE=1 é o caminho no cache): Qwen/Qwen2.5-7B-Instruct   (B-001c)
+```
+
+**Regra prática.** Em produção, baixe o modelo antes e suba com `HF_HUB_OFFLINE=1` (variável de
+ambiente), para o arranque não depender de internet nem de DNS. O nome que os clientes usam não muda.
+Para trocar de modelo, rode antes um arranque com rede, ou um `Job` que baixe o modelo para o cache.
+
+**Validade.** `v0.19.1`, `sabdiia01`, 2026-10-22, `Qwen/Qwen2.5-7B-Instruct`. Modelo ausente do cache com
+o modo *offline* ligado: `[não executado]` (deve falhar).
 
 ### AC-16 — Com bitsandbytes, o Qwen3.8-27B não ganha nada com concorrência: ~4 *tokens*/s no total, com 1 ou 8 requisições {#ac-16}
 
@@ -753,6 +810,7 @@ Manifesto anterior, ainda em produção: o do deepseek em AC-05.
 Alavancas **candidatas**, a medir contra a linha de base de AC-05:
 
 - Tirar `--enforce-eager` (*CUDA graphs*): costuma melhorar o *decode* e custa VRAM `[hipótese]`.
+  Medição planejada na PD-27.
 - Aumentar `--max-num-seqs`: mais *throughput* com concorrência, desde que o *KV cache* caiba.
 - Versão mais nova do vLLM, se houver uma com `sm_70` (PD-03).
 - Cache de modelos local em `/home` em vez do NFS: arranque a frio mais curto `[hipótese]` (PD-04).
@@ -763,10 +821,14 @@ Alavancas **candidatas**, a medir contra a linha de base de AC-05:
 
 | ID | Pergunta | Que decisão destrava | Como fechar |
 |---|---|---|---|
-| PD-24 | **A refrigeração das GPUs.** A de `sabdiia01` estrangula por temperatura (AC-17). As de `sabdiia02` e `sabdiia03` também, sob carga? O que muda no servidor (perfil térmico e ventoinhas no gerenciador do servidor, posição da placa, fluxo de ar) para a GPU sustentar o *clock*? | **toda medição de desempenho depende disto**; onde rodar a linha de base; se a topologia de 2 GPUs por nó é viável termicamente (PD-22) | (1) ~~Bloco D~~ feito em 2026-10-15: limites iguais nos 3 (83/87/90 °C); `ipmitool` ausente, ventoinhas só pelo iDRAC; (1b) teste térmico curto em `sabdiia02`, hoje fria, para saber se o problema é do nó ou dos três (exige liberar espaço para a imagem `v0.19.1` em `sabdiia02`); (2) com o administrador, ajuste de refrigeração em `sabdiia01`; (3) repetir o Bloco C: o critério é `SW Thermal Slowdown` inativo e *clock* perto de 1597 MHz durante a carga |
+| PD-24 | **A refrigeração das GPUs.** **`sabdiia01` resolvido em 2026-10-22** (ajuste do administrador; B-001c sem estrangulamento, AC-17). Falta saber o que foi mudado, para repetir nos outros nós, e se `sabdiia01` aguenta carga de 20 min ou mais (B-002). As de `sabdiia02` e `sabdiia03` estrangulam sob carga? O que muda no servidor (perfil térmico e ventoinhas no gerenciador do servidor, posição da placa, fluxo de ar) para a GPU sustentar o *clock*? | **toda medição de desempenho depende disto**; onde rodar a linha de base; se a topologia de 2 GPUs por nó é viável termicamente (PD-22) | (1) ~~Bloco D~~ feito em 2026-10-15: limites iguais nos 3 (83/87/90 °C); `ipmitool` ausente, ventoinhas só pelo iDRAC; (1b) teste térmico curto em `sabdiia02`, hoje fria, para saber se o problema é do nó ou dos três (exige liberar espaço para a imagem `v0.19.1` em `sabdiia02`); (2) com o administrador, ajuste de refrigeração em `sabdiia01`; (3) repetir o Bloco C: o critério é `SW Thermal Slowdown` inativo e *clock* perto de 1597 MHz durante a carga |
 | PD-10 | **Linha de base de concorrência na V100S (B-001):** com um modelo sem *quantization*, quanto a vazão total cresce de 1 a 64 requisições simultâneas, e quanto pioram TTFT e TPOT por usuário? (O deepseek em produção fica para depois: a API tem 1 requisição em 10 dias.) | se o vLLM serve vários usuários nesta GPU (objetivo do estudo, definido pelo usuário em 2026-10-14); contra o que medir cada alavanca | [runbooks/teste-concorrencia-vllm.md](runbooks/teste-concorrencia-vllm.md): `Qwen/Qwen2.5-7B-Instruct` em FP16 em `sabdiia01`, `vllm bench serve` dentro do *pod*, concorrência 1/4/8/16/32/64, 512 → 256 *tokens*, p50/p95/p99 |
+| PD-28 | **Por que os *pods* de `sabdiia01` não resolvem nomes desde a manutenção?** De dentro do *pod*, falham `kubernetes.default.svc.cluster.local` e `huggingface.co`; o nó resolve. O `resolv.conf` do *pod* aponta para o *Service* do CoreDNS (`10.96.0.10`), e as duas réplicas do CoreDNS estão em `sabdiia03`. O nó tem 3 dias de *uptime*, e o `calico-node` dele reiniciou há 3d1h. Hipótese: o tráfego de *pod* de `sabdiia01` para *pods* de outro nó ou para IPs de *Service* não passa `[hipótese]` | se `sabdiia01` pode receber uma réplica de produção (um *pod* sem DNS de *cluster* não alcança *Services* pelo nome) e se a rede de *pods* entre nós está íntegra antes de montar o `Service` com 3 réplicas | com o administrador: estado do Calico e das rotas em `sabdiia01`; de dentro do `vllm-conc`, testar o IP do CoreDNS e um IP de *pod* de `sabdiia03` |
+| PD-27 | **Quanto custa `--enforce-eager` na V100S?** Com o mesmo `Qwen/Qwen2.5-7B-Instruct` FP16, quanto caem a vazão total e o tempo por *token* com os *CUDA graphs* desligados? No arranque, os *graphs* custaram 0,32-0,44 GiB e 9-12 s (AC-13, B-001); o ganho de velocidade `[não medido]` | se vale aceitar `--enforce-eager` quando a memória aperta (como no 27B, AC-14) ou trocar de modelo; quanto a configuração do deepseek em produção (`--enforce-eager`, AC-05) deixa de ganhar | depois da PD-24 e da B-001 refeita: repetir o Bloco B de [runbooks/teste-concorrencia-vllm.md](runbooks/teste-concorrencia-vllm.md) com `--enforce-eager` como **única** mudança, concorrência 1, 8 e 64, vigiando *clock* e temperatura (AC-17); comparar vazão total e TPOT p50/p99 |
+| PD-25 | **Os candidatos da PD-19 fazem *tool calling* confiável na `v0.19.1` desta GPU?** A aplicação que vai usar o vLLM ([F-023]) responde toda pergunta pedindo ao modelo uma ferramenta de consulta ao SQL Server: no mínimo duas chamadas ao modelo por pergunta. Para devolver `tool_calls`, o servidor precisa de *flags* que ligam um *parser* específico do modelo (`--enable-auto-tool-choice`, `--tool-call-parser`) `[não verificado na v0.19.1]` | o modelo do MVP (a taxa de chamadas válidas pesa mais que *tok*/s); as *flags* do manifesto; a latência por pergunta (duas chamadas mais o SQL) | (1) conferir as *flags* e os *parsers* em `vllm/engine/arg_utils.py` e na doc da *tag* `v0.19.1`, registrar em FONTES; (2) para cada candidato, ~20 perguntas do *golden set* da aplicação com as ferramentas declaradas, `temperature` 0: contar chamadas com JSON válido e ferramenta certa, medir tempo total por pergunta; (3) só depois da PD-24, para o tempo não sair da refrigeração |
 | PD-11 | Os 18 reinícios iniciais do deepseek foram a `startupProbe` (60 × 10 s = 10 min) matando o *pod* durante o *download* do modelo? | como dimensionar `startupProbe` e se o modelo deve ser pré-baixado por um `Job` | a última queda recebeu `SIGTERM` (`KeyboardInterrupt: terminated`) com o carregamento em 0 %; confirmar num arranque novo cronometrado |
 | PD-05 | O pool `pool-publico` é alcançável de fora? Quem consome a API hoje? | autenticação na borda (Kong) ou `--api-key`; risco aceito | conversa com o dono do ambiente; regras de MetalLB e *firewall* |
+| PD-26 | **Como a aplicação nos servidores 10 e 11, fora do *cluster*, alcança o vLLM, e com que autenticação?** Um `Service` `ClusterIP` não serve; `NodePort`, `LoadBalancer` ou Ingress (Kong) expõem a API, que hoje sobe sem `--api-key` (AC-06). A arquitetura ([F-023]) promete "sem rota pública ao vLLM" sem dizer como | o tipo do `Service` e o uso de `--api-key` no manifesto de produção; se o SSE atravessa o Kong (*buffering* desligado na rota) | com a infraestrutura e o responsável pela arquitetura: caminho de rede 10/11 → *cluster*, alcance do `pool-publico` (PD-05); depois, teste de *streaming* a partir de um dos servidores 10/11 com a chave |
 | PD-04 | Quanto leva carregar os *weights*: NFS (1 conexão, `rsize` 64 KiB) × cópia local em `/home`? | onde fica o cache de modelos; `startupProbe` | cronometrar o carregamento no log de arranque, nas duas origens, com o mesmo modelo (AC-08, AC-09) |
 | PD-15 | **Bloqueia o primeiro arranque.** Onde colocar as imagens: mover o *root* do containerd para `/home` (755 G livres), ou liberar as camadas órfãs da `v0.6.4` em `sabdiia02` (~16 G)? | se dá para baixar a `v0.19.1` (27-32 G em disco) | com o administrador: (a) `root` do containerd em `/home`, com o nó drenado e o containerd reiniciado; ou (b) descobrir o que segura as camadas órfãs (*leases*) e deixar o GC do containerd coletá-las. O `config.toml` do nó ([cópia](docs-analysis/config.toml), 2026-10-02) confirma `root = "/var/lib/containerd"`, `root_path = ""` no `overlayfs` (tudo sob o `root`) e `discard_unpacked_layers = false`, que é o que faz a imagem ocupar ~3× (guarda as camadas comprimidas depois de desempacotar). Ligar essa opção reduziria o custo por imagem em cerca de um terço `[hipótese, não testado]`. **Hipótese nova (2026-10-02) para as camadas "órfãs" de `sabdiia02`:** o containerd guarda três referências por imagem (*tag*, *digest* e `sha256:<id>`), e só duas foram removidas; a terceira ainda seguraria as camadas. O Passo 1 do runbook confirmou em `sabdiia01` que a `v0.12.0` tem **três referências com o mesmo *digest*** (*tag*, *digest* e `sha256:0c19f07f...`). Falta o Passo 3 confirmar que remover as três libera o espaço; se liberar, o mesmo comando resolve os ~16 G de `sabdiia02`. A configuração em vigor é idêntica nos 3 nós (2026-10-02), então a mudança é a mesma em todos; os arquivos têm contexto SELinux, a conferir com `getenforce` antes de mover dados para `/home` |
 | PD-17 | Quanto a imagem `v0.19.1` consome de `/` de fato, e o que o nó faz quando falta espaço? | troca a estimativa de AC-09 por medida; argumento para a PD-15 | [runbooks/teste-queda-disco-v0.19.1.md](runbooks/teste-queda-disco-v0.19.1.md): aplica [configs/vllm-qwen38-27b.yaml](configs/vllm-qwen38-27b.yaml) em `sabdiia02` e para sozinho em 15 G livres. **Arriscado: combinar com o administrador** |
@@ -811,6 +873,8 @@ Alavancas **candidatas**, a medir contra a linha de base de AC-05:
 | 2026-09-29 | PD-01 fechada pelo Bloco 2 (→ §2, AC-08, AC-09); PD-07 fechada por AC-08 (rede de 1 GbE descarta multinó) | — |
 | 2026-09-29 | PD-14 fechada pelo Bloco 2c (→ AC-09) | — |
 | 2026-09-29 | PD-02 fechada pelo Bloco 3 (→ AC-10) | — |
+| 2026-10-22 | AC-18 dizia que, com `HF_HUB_OFFLINE=1`, a API anunciaria o modelo pelo caminho no cache e recomendava `--served-model-name` → a API continuou anunciando `Qwen/Qwen2.5-7B-Instruct` (B-001c) | li `served_model_name` no log do motor e no código de `EngineArgs` e supus que a API usa o mesmo valor, sem perguntar a `/v1/models` (o texto estava marcado como inferência) |
+| 2026-10-22 | Critério do Bloco E "nenhuma amostra < 1400 MHz" → contadores de `Thermal Slowdown` parados e temperatura < 83 °C | um piso de *clock* confunde a variação normal da V100S com a carga com estrangulamento; o contador mede a causa |
 | 2026-10-15 | AC-17 citava o mecanismo de redução de *clock* por temperatura sem fonte → acrescentada a documentação do `nvidia-smi` (F-022) | conhecimento prévio escrito como fato, sem a fonte primária que o CLAUDE.md exige |
 | 2026-10-14 | PD-23 fechada pelo Bloco C (→ AC-17). B-001 rebaixada de "linha de base" para "medida sob estrangulamento térmico" | o runbook não vigiava *clock* e temperatura durante a carga; o checklist de medições não tinha esse item (acrescentado no CLAUDE.md) |
 | 2026-10-02 | PD-03 fechada pelo primeiro arranque (→ AC-13, D-01 confirmada). As hipóteses de AC-11 sobre Triton e AVX2 passaram a confirmadas | — |
@@ -843,6 +907,9 @@ Alavancas **candidatas**, a medir contra a linha de base de AC-05:
 | [B-001b-diagnostico-sabdiia01-2026-10-14-1832.log](logs-analysis/B-001b-diagnostico-sabdiia01-2026-10-14-1832.log), [gpu-amostras-b001b.csv](logs-analysis/gpu-amostras-b001b.csv), [gpu-performance-b001b.txt](logs-analysis/gpu-performance-b001b.txt) | GPU de `sabdiia01` sob carga: 72 → 82 °C, *clock* de 1560 para ~400 MHz, `SW Thermal Slowdown: Active`; `cpu.stat` do *pod* sem estrangulamento relevante; requisições de 5,6 s a 21,8 s (AC-17) |
 | `B-001-qwen25-7b-fp16-c{1,4,8,16,32,64}.json` | resultado de cada nível da B-001 em JSON, com desvio padrão e pico de vazão por segundo (`max_output_tokens_per_s`: 25 a 448 *tok*/s) ([B-001](medicoes/B-001-concorrencia-qwen25-7b-fp16.md)) |
 | [teste-concorrencia-arranque-sabdiia01-2026-10-14-1657.log](logs-analysis/teste-concorrencia-arranque-sabdiia01-2026-10-14-1657.log) | arranque do `Qwen/Qwen2.5-7B-Instruct` FP16 na `v0.19.1`: *download* de 15 GB em 125 s, modelo 14,25 GiB, *KV cache* 13,14 GiB / 246.016 *tokens*, 86 *CUDA graphs* em 12 s, *prefix caching* ligado (PD-10) |
+| [teste-concorrencia-arranque-sabdiia01-2026-10-22-1521.log](logs-analysis/teste-concorrencia-arranque-sabdiia01-2026-10-22-1521.log) | depois da intervenção do administrador: imagem já no nó, GPU livre (`0 0`), mas o *pod* cai em 3 min com `Temporary failure in name resolution` ao listar o repositório do modelo no Hugging Face |
+| [teste-concorrencia-arranque-offline-sabdiia01-2026-10-22-1541.log](logs-analysis/teste-concorrencia-arranque-offline-sabdiia01-2026-10-22-1541.log) | arranque com `HF_HUB_OFFLINE=1`: `Ready` em 2 min 44 s, pesos lidos de `/home` (disco local) em 47 s, mesmo *KV cache* do dia 14 (246.016 *tokens*); nome servido = caminho no cache (AC-18). DNS: o nó resolve `huggingface.co`; de dentro do *pod* falham o nome do *cluster* e o externo; CoreDNS só em `sabdiia03`; `calico-node` de 01 reiniciado há 3d1h (PD-28) |
+| [B-001c-reteste-termico-sabdiia01-2026-10-22-1552.log](logs-analysis/B-001c-reteste-termico-sabdiia01-2026-10-22-1552.log), [gpu-amostras-b001c.csv](logs-analysis/gpu-amostras-b001c.csv), [gpu-performance-b001c.txt](logs-analysis/gpu-performance-b001c.txt) | depois do ajuste de refrigeração: GPU parada a 31 °C, máx. 72 °C a 240-250 W, contador `SW Thermal Slowdown` em 0 µs; concorrência 1 a 47 *tok*/s (TPOT 20,3 ms), concorrência 32 a 680 *tok*/s (TTFT p50 1,09 s); quedas de *clock* a ~1260 MHz a cada ~12 s com potência menor, sem estrangulamento; `/v1/models` anuncia `Qwen/Qwen2.5-7B-Instruct` com o modo *offline* (AC-17, AC-18) |
 | [alavancas-qwen38-2026-10-14-1625.log](logs-analysis/alavancas-qwen38-2026-10-14-1625.log) | Qwen3.8-27B + bitsandbytes com 1, 4 e 8 requisições simultâneas: vazão total ~4 *tokens*/s em todos os níveis; raciocínio desligado por `chat_template_kwargs` (AC-16) |
 | [teste-qwen38-27b-bnb-sabdiia01-2026-10-02-1509.log](logs-analysis/teste-qwen38-27b-bnb-sabdiia01-2026-10-02-1509.log) | **`Qwen/Qwen3.8-27B` no ar** com bitsandbytes + `--enforce-eager`: `Ready` em 12 min 24 s, *KV cache* 5,0 GiB / 20.384 *tokens*, 28.728 MiB de GPU, 200 *tokens* em 71,1 s (TTFT 13,5 s), raciocínio dentro de `content` (AC-14) |
 | [teste-qwen38-27b-bnb-sabdiia01-2026-10-02-1436.log](logs-analysis/teste-qwen38-27b-bnb-sabdiia01-2026-10-02-1436.log) | `Qwen/Qwen3.8-27B` + bitsandbytes na `v0.19.1`: linha do tempo de *download* e GPU, arquitetura reconhecida, 18,06 GiB carregados, bloco de 784 *tokens*, *warmup* de 550 s e o `CUDA out of memory` em `profile_cudagraph_memory` (AC-14) |

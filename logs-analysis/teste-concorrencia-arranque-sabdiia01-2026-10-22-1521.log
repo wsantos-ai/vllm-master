@@ -1,0 +1,204 @@
+### nó: sabdiia01   início: 2026-10-22 15:21:57   livres em /: 17G
+### liberando a GPU
+### GPU reservada em sabdiia01 (espera-se 0 0)
+  nvidia.com/gpu     0           0
+pod/vllm-conc created
+### linha do tempo (a cada 10 s): hora | G livres em / | GPU MiB | fase | ready
+15:21:58 | 17G | 0 | Pending | false
+15:22:08 | 17G | 0 | Running | false
+15:22:18 | 17G | 0 | Running | false
+15:22:28 | 17G | 0 | Running | false
+15:22:39 | 17G | 0 | Running | false
+15:22:49 | 17G | 0 | Running | false
+15:22:59 | 17G | 0 | Running | false
+15:23:09 | 17G | 0 | Running | false
+15:23:19 | 17G | 0 | Running | false
+15:23:29 | 17G | 0 | Running | false
+15:23:40 | 17G | 0 | Running | false
+15:23:50 | 17G | 0 | - | -
+15:24:00 | 17G | 0 | - | -
+15:24:10 | 17G | 0 | - | -
+15:24:20 | 17G | 0 | - | -
+15:24:33 | 17G | 0 | - | false
+15:24:43 | 17G | 0 | Running | false
+15:24:53 | 17G | 0 | Running | false
+15:25:04 | 17G | 0 | Failed | false
+### PARADA: contêiner terminou (fase Failed)   em 2026-10-22 15:25:04
+NAME        READY   STATUS   RESTARTS   AGE    IP              NODE        NOMINATED NODE   READINESS GATES
+vllm-conc   0/1     Error    0          3m6s   10.244.179.96   sabdiia01   <none>           <none>
+Events:
+  Type     Reason     Age                 From               Message
+  ----     ------     ----                ----               -------
+  Normal   Scheduled  3m6s                default-scheduler  Successfully assigned vllm-estudo/vllm-conc to sabdiia01
+  Normal   Pulled     3m6s                kubelet            spec.containers{vllm}: Container image "vllm/vllm-openai:v0.19.1" already present on machine and can be accessed by the pod
+  Normal   Created    3m6s                kubelet            spec.containers{vllm}: Container created
+  Normal   Started    3m4s                kubelet            spec.containers{vllm}: Container started
+  Warning  Unhealthy  4s (x21 over 3m4s)  kubelet            spec.containers{vllm}: Readiness probe failed: Get "http://10.244.179.96:8000/health": dial tcp 10.244.179.96:8000: connect: connection refused
+### GPU
+memory.used [MiB], memory.total [MiB]
+0 MiB, 32768 MiB
+### processos na GPU (deve haver só o vLLM)
+pid, process_name, used_gpu_memory [MiB]
+### linhas-chave do arranque
+(APIServer pid=1) INFO 10-22 18:22:33 [utils.py:299]  ▄▄ ▄█ █     █     █ ▀▄▀ █  version 0.19.1
+(APIServer pid=1) INFO 10-22 18:22:33 [utils.py:233] non-default args: {'model_tag': 'Qwen/Qwen2.5-7B-Instruct', 'host': '0.0.0.0', 'model': 'Qwen/Qwen2.5-7B-Instruct', 'dtype': 'float16', 'max_model_len': 8192, 'generation_config': 'vllm'}
+(APIServer pid=1) ERROR 10-22 18:23:13 [repo_utils.py:47] Error retrieving file list: [Errno -3] Temporary failure in name resolution, retrying 1 of 2
+(APIServer pid=1) ERROR 10-22 18:23:35 [repo_utils.py:45] Error retrieving file list: [Errno -3] Temporary failure in name resolution
+(APIServer pid=1) ERROR 10-22 18:23:35 [repo_utils.py:110] Error retrieving file list. Please ensure your `model_name_or_path``repo_type`, `token` and `revision` arguments are correctly set. Returning an empty list.
+(APIServer pid=1) ERROR 10-22 18:24:35 [repo_utils.py:47] Error retrieving file list: [Errno -3] Temporary failure in name resolution, retrying 1 of 2
+(APIServer pid=1) ERROR 10-22 18:24:57 [repo_utils.py:45] Error retrieving file list: [Errno -3] Temporary failure in name resolution
+(APIServer pid=1) Traceback (most recent call last):
+(APIServer pid=1)     stream = self._network_backend.connect_tcp(**kwargs)
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/httpcore/_backends/sync.py", line 207, in connect_tcp
+(APIServer pid=1) httpcore.ConnectError: [Errno -3] Temporary failure in name resolution
+(APIServer pid=1) Traceback (most recent call last):
+(APIServer pid=1)     return with_retry(lookup_files, "Error retrieving file list")
+(APIServer pid=1) httpx.ConnectError: [Errno -3] Temporary failure in name resolution
+### log completo
+(APIServer pid=1) INFO 10-22 18:22:33 [utils.py:299] 
+(APIServer pid=1) INFO 10-22 18:22:33 [utils.py:299]        █     █     █▄   ▄█
+(APIServer pid=1) INFO 10-22 18:22:33 [utils.py:299]  ▄▄ ▄█ █     █     █ ▀▄▀ █  version 0.19.1
+(APIServer pid=1) INFO 10-22 18:22:33 [utils.py:299]   █▄█▀ █     █     █     █  model   Qwen/Qwen2.5-7B-Instruct
+(APIServer pid=1) INFO 10-22 18:22:33 [utils.py:299]    ▀▀  ▀▀▀▀▀ ▀▀▀▀▀ ▀     ▀
+(APIServer pid=1) INFO 10-22 18:22:33 [utils.py:299] 
+(APIServer pid=1) INFO 10-22 18:22:33 [utils.py:233] non-default args: {'model_tag': 'Qwen/Qwen2.5-7B-Instruct', 'host': '0.0.0.0', 'model': 'Qwen/Qwen2.5-7B-Instruct', 'dtype': 'float16', 'max_model_len': 8192, 'generation_config': 'vllm'}
+(APIServer pid=1) ERROR 10-22 18:23:13 [repo_utils.py:47] Error retrieving file list: [Errno -3] Temporary failure in name resolution, retrying 1 of 2
+(APIServer pid=1) ERROR 10-22 18:23:35 [repo_utils.py:45] Error retrieving file list: [Errno -3] Temporary failure in name resolution
+(APIServer pid=1) ERROR 10-22 18:23:35 [repo_utils.py:110] Error retrieving file list. Please ensure your `model_name_or_path``repo_type`, `token` and `revision` arguments are correctly set. Returning an empty list.
+(APIServer pid=1) ERROR 10-22 18:24:35 [repo_utils.py:47] Error retrieving file list: [Errno -3] Temporary failure in name resolution, retrying 1 of 2
+(APIServer pid=1) ERROR 10-22 18:24:57 [repo_utils.py:45] Error retrieving file list: [Errno -3] Temporary failure in name resolution
+(APIServer pid=1) Traceback (most recent call last):
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/httpx/_transports/default.py", line 101, in map_httpcore_exceptions
+(APIServer pid=1)     yield
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/httpx/_transports/default.py", line 250, in handle_request
+(APIServer pid=1)     resp = self._pool.handle_request(req)
+(APIServer pid=1)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/httpcore/_sync/connection_pool.py", line 256, in handle_request
+(APIServer pid=1)     raise exc from None
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/httpcore/_sync/connection_pool.py", line 236, in handle_request
+(APIServer pid=1)     response = connection.handle_request(
+(APIServer pid=1)                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/httpcore/_sync/connection.py", line 101, in handle_request
+(APIServer pid=1)     raise exc
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/httpcore/_sync/connection.py", line 78, in handle_request
+(APIServer pid=1)     stream = self._connect(request)
+(APIServer pid=1)              ^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/httpcore/_sync/connection.py", line 124, in _connect
+(APIServer pid=1)     stream = self._network_backend.connect_tcp(**kwargs)
+(APIServer pid=1)              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/httpcore/_backends/sync.py", line 207, in connect_tcp
+(APIServer pid=1)     with map_exceptions(exc_map):
+(APIServer pid=1)          ^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/lib/python3.12/contextlib.py", line 158, in __exit__
+(APIServer pid=1)     self.gen.throw(value)
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/httpcore/_exceptions.py", line 14, in map_exceptions
+(APIServer pid=1)     raise to_exc(exc) from exc
+(APIServer pid=1) httpcore.ConnectError: [Errno -3] Temporary failure in name resolution
+(APIServer pid=1) 
+(APIServer pid=1) The above exception was the direct cause of the following exception:
+(APIServer pid=1) 
+(APIServer pid=1) Traceback (most recent call last):
+(APIServer pid=1)   File "/usr/local/bin/vllm", line 10, in <module>
+(APIServer pid=1)     sys.exit(main())
+(APIServer pid=1)              ^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/vllm/entrypoints/cli/main.py", line 75, in main
+(APIServer pid=1)     args.dispatch_function(args)
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/vllm/entrypoints/cli/serve.py", line 122, in cmd
+(APIServer pid=1)     uvloop.run(run_server(args))
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/uvloop/__init__.py", line 96, in run
+(APIServer pid=1)     return __asyncio.run(
+(APIServer pid=1)            ^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/lib/python3.12/asyncio/runners.py", line 195, in run
+(APIServer pid=1)     return runner.run(main)
+(APIServer pid=1)            ^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/lib/python3.12/asyncio/runners.py", line 118, in run
+(APIServer pid=1)     return self._loop.run_until_complete(task)
+(APIServer pid=1)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/uvloop/__init__.py", line 48, in wrapper
+(APIServer pid=1)     return await main
+(APIServer pid=1)            ^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/vllm/entrypoints/openai/api_server.py", line 672, in run_server
+(APIServer pid=1)     await run_server_worker(listen_address, sock, args, **uvicorn_kwargs)
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/vllm/entrypoints/openai/api_server.py", line 686, in run_server_worker
+(APIServer pid=1)     async with build_async_engine_client(
+(APIServer pid=1)                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/lib/python3.12/contextlib.py", line 210, in __aenter__
+(APIServer pid=1)     return await anext(self.gen)
+(APIServer pid=1)            ^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/vllm/entrypoints/openai/api_server.py", line 100, in build_async_engine_client
+(APIServer pid=1)     async with build_async_engine_client_from_engine_args(
+(APIServer pid=1)                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/lib/python3.12/contextlib.py", line 210, in __aenter__
+(APIServer pid=1)     return await anext(self.gen)
+(APIServer pid=1)            ^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/vllm/entrypoints/openai/api_server.py", line 124, in build_async_engine_client_from_engine_args
+(APIServer pid=1)     vllm_config = engine_args.create_engine_config(usage_context=usage_context)
+(APIServer pid=1)                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/vllm/engine/arg_utils.py", line 1549, in create_engine_config
+(APIServer pid=1)     model_config = self.create_model_config()
+(APIServer pid=1)                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/vllm/engine/arg_utils.py", line 1398, in create_model_config
+(APIServer pid=1)     return ModelConfig(
+(APIServer pid=1)            ^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/pydantic/_internal/_dataclasses.py", line 121, in __init__
+(APIServer pid=1)     s.__pydantic_validator__.validate_python(ArgsKwargs(args, kwargs), self_instance=s)
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/vllm/config/model.py", line 491, in __post_init__
+(APIServer pid=1)     hf_config = get_config(
+(APIServer pid=1)                 ^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/vllm/transformers_utils/config.py", line 746, in get_config
+(APIServer pid=1)     if quantization_config is None and file_or_path_exists(
+(APIServer pid=1)                                        ^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/vllm/transformers_utils/repo_utils.py", line 201, in file_or_path_exists
+(APIServer pid=1)     return file_exists(str(model), config_name, revision=revision)
+(APIServer pid=1)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/vllm/transformers_utils/repo_utils.py", line 176, in file_exists
+(APIServer pid=1)     file_list = list_repo_files(
+(APIServer pid=1)                 ^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/vllm/transformers_utils/repo_utils.py", line 92, in list_repo_files
+(APIServer pid=1)     return with_retry(lookup_files, "Error retrieving file list")
+(APIServer pid=1)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/vllm/transformers_utils/repo_utils.py", line 42, in with_retry
+(APIServer pid=1)     return func()
+(APIServer pid=1)            ^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/vllm/transformers_utils/repo_utils.py", line 83, in lookup_files
+(APIServer pid=1)     return hf_list_repo_files(
+(APIServer pid=1)            ^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/huggingface_hub/utils/_validators.py", line 88, in _inner_fn
+(APIServer pid=1)     return fn(*args, **kwargs)
+(APIServer pid=1)            ^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/huggingface_hub/hf_api.py", line 3701, in list_repo_files
+(APIServer pid=1)     for f in self.list_repo_tree(
+(APIServer pid=1)              ^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/huggingface_hub/hf_api.py", line 3836, in list_repo_tree
+(APIServer pid=1)     for path_info in paginate(path=tree_url, headers=headers, params={"recursive": recursive, "expand": expand}):
+(APIServer pid=1)                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/huggingface_hub/utils/_pagination.py", line 35, in paginate
+(APIServer pid=1)     r = session.get(path, params=params, headers=headers)
+(APIServer pid=1)         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/httpx/_client.py", line 1053, in get
+(APIServer pid=1)     return self.request(
+(APIServer pid=1)            ^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/httpx/_client.py", line 825, in request
+(APIServer pid=1)     return self.send(request, auth=auth, follow_redirects=follow_redirects)
+(APIServer pid=1)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/httpx/_client.py", line 914, in send
+(APIServer pid=1)     response = self._send_handling_auth(
+(APIServer pid=1)                ^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/httpx/_client.py", line 942, in _send_handling_auth
+(APIServer pid=1)     response = self._send_handling_redirects(
+(APIServer pid=1)                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/httpx/_client.py", line 979, in _send_handling_redirects
+(APIServer pid=1)     response = self._send_single_request(request)
+(APIServer pid=1)                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/httpx/_client.py", line 1014, in _send_single_request
+(APIServer pid=1)     response = transport.handle_request(request)
+(APIServer pid=1)                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/httpx/_transports/default.py", line 249, in handle_request
+(APIServer pid=1)     with map_httpcore_exceptions():
+(APIServer pid=1)          ^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/usr/lib/python3.12/contextlib.py", line 158, in __exit__
+(APIServer pid=1)     self.gen.throw(value)
+(APIServer pid=1)   File "/usr/local/lib/python3.12/dist-packages/httpx/_transports/default.py", line 118, in map_httpcore_exceptions
+(APIServer pid=1)     raise mapped_exc(message) from exc
+(APIServer pid=1) httpx.ConnectError: [Errno -3] Temporary failure in name resolution

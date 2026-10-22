@@ -113,8 +113,12 @@ nvidia-smi --query-gpu=timestamp,temperature.gpu,power.draw,clocks.sm,clocks.max
 # por que o clock está reduzido: procure "SW Thermal Slowdown : Active"         [executado 2026-10-14, sabdiia01]
 nvidia-smi -q -d PERFORMANCE
 
-# a partir de que temperatura a GPU reduz o clock                               [não executado]
+# a partir de que temperatura a GPU reduz o clock                               [executado 2026-10-15, via Bloco D]
 nvidia-smi -q -d TEMPERATURE
+
+# resumo de um CSV gravado com o comando acima (-l 2): temperatura máxima e clock  [não executado]
+# mínimo/médio só nas amostras com a GPU em uso; passou se nenhuma amostra < 1400 MHz (Bloco E)
+awk -F', ' 'NR>1 && $6+0>=90 {n++; t=$2+0; c=$4+0; if(n==1||t>tmax)tmax=t; if(n==1||c<cmin)cmin=c; s+=c; if(c<1400)baixo++} END {printf "amostras: %d | temp. max: %d C | clock min: %d MHz | clock medio: %.0f MHz | amostras com clock < 1400 MHz: %d\n", n, tmax, cmin, (n?s/n:0), baixo+0}' gpu-amostras.csv
 
 # o que roda no nó e pode aquecer a GPU/chassi (em cada nó)                      [não executado]
 nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv

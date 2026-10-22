@@ -161,7 +161,9 @@ p50/p95/p99 de TTFT, ITL e *throughput*, o comando do gerador de carga e a saíd
 - [ ] O gerador de carga roda onde? (dentro do *cluster* ou fora: a rede entra na latência)
 - [ ] **A GPU sustentou o *clock* durante a carga?** Grave `nvidia-smi` (temperatura, *clock*, potência) a
       cada 2 s e `nvidia-smi -q -d PERFORMANCE`. Com `SW Thermal Slowdown` ativo, o número é da
-      refrigeração, não do motor: a V100S de `sabdiia01` cai a ~400 MHz em 2 min (AC-17).
+      refrigeração, não do motor: a V100S de `sabdiia01` caía a ~400 MHz em 2 min, até o ajuste de
+      refrigeração de 2026-10-22 (AC-17). O critério é o contador `SW Thermal Slowdown` parado, não um
+      piso de *clock*.
 
 ---
 
