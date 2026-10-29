@@ -154,6 +154,7 @@ Os logs de `kubectl logs` do deepseek começam em 09-27: o arranque foi perdido 
 | 2026-10-28 | 17:12: nada do Ray/vLLM em execução nos 3 nós (nem *pod*, nem processo, nem contêiner; GPUs 0 MiB). A rede ganhou a VLAN `bond1.20` nos 3 nós, sem endereço: suspeita principal do erro de subida `[hipótese]` | AC-19, §2 |
 | 2026-10-28 | 17:10: os *Deployments* `ray-head`/`ray-worker-2`/`ray-worker-3` foram removidos de `vllms` (nenhum *pod* no *namespace*); o administrador ajusta a rede e a nova subida da API dá erro `[erro não visto]` | AC-19 |
 | 2026-10-28 | 16:51: a API do Ray não responde (porta 8000 recusada), GPUs com 0 MiB, *pods* `Running` sem reinício: o servidor saiu e o Kubernetes não viu. B-003 bloqueada até o administrador subir de novo | AC-19 |
+| 2026-10-29 | Registro de testes compartilhado em `vllm-config` (`docs/registro-de-testes.md`): protocolo fixo 512 → 256 *tokens*, `temperature 0`, c=1/16/32. `v0.19.0` e `v0.19.1` têm `sm_70`; a diferença entre elas é o `transformers` v5 ([F-036]) | — |
 
 ## 4. Achados
 

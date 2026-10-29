@@ -361,7 +361,23 @@ curl -s http://localhost:18000/v1/chat/completions -H 'Content-Type: application
 
 # métricas: KV cache, requisições, TTFT, latência por token           [executado 2026-09-29]
 curl -s --max-time 10 http://192.168.50.160:8001/metrics | grep -E '^vllm:'
+
+# preempções acumuladas (falta de KV cache); compare antes e depois   [não executado]
+# da carga. Nome da métrica conferido no código da v0.19.1 (vllm/v1/metrics/loggers.py)
+curl -s --max-time 10 http://127.0.0.1:8000/metrics | grep '^vllm:num_preemptions_total'
 ```
+
+Rede entre nós: o MTU deixa passar pacote grande? Servidor, bash, em cada nó. `-M do` proíbe
+fragmentar; 1472 *bytes* de dados = MTU 1500, 8972 = MTU 9000. `[não executado]`
+
+```bash
+for ip in 192.168.50.150 192.168.50.151 192.168.50.152; do
+  for s in 1472 8972; do ping -c 2 -W 1 -M do -s $s $ip >/dev/null 2>&1 && echo "$ip $s passa" || echo "$ip $s FALHA"; done
+done
+```
+
+Teste de um modelo no protocolo comum (512 → 256, `temperature 0`, c=1/16/32), com as linhas do
+registro já montadas: [runbooks/teste-protocolo-modelos.md](runbooks/teste-protocolo-modelos.md).
 
 Estação Windows, PowerShell (o `curl` do PowerShell complica as aspas do JSON):  `[não executado]`
 
