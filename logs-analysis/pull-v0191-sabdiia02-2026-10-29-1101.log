@@ -1,0 +1,17 @@
+== sabdiia02  2026-10-29T11:01:28-03:00
+### limite de progresso do pull na configuração do containerd
+    max_concurrent_downloads = 3
+    image_pull_progress_timeout = '5m0s'
+    max_concurrent_downloads = 3
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/ol-root  631G  101G  530G  17% /
+### pull direto no containerd   início 11:01:28
+
+real	6m30.469s
+user	0m0.648s
+sys	0m0.264s
+ctr saiu com 0   fim 11:07:58
+REF                                                                                                                     
+docker.io/vllm/vllm-openai:v0.19.1                                                                                      
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/ol-root  631G  114G  518G  18% /

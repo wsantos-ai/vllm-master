@@ -205,6 +205,10 @@ crictl --runtime-endpoint unix:///run/containerd/containerd.sock images
 # o mesmo sem crictl, direto no containerd (namespace k8s.io)         [executado 2026-09-29]
 ctr -n k8s.io images ls
 
+# baixar uma imagem direto no containerd, fora do kubelet (ALTERA o nó: +~30 G em /)  [executado 2026-10-29, sabdiia02: 6 min 30 s]
+# quando o pull do kubelet cai com "failed to extract layer ... context canceled" (AC-24)
+ctr -n k8s.io images pull docker.io/vllm/vllm-openai:v0.19.1
+
 # remover uma imagem do nó e LIBERAR o espaço (ALTERA o nó)          [executado 2026-10-02, sabdiia01: liberou 27 G]
 # o containerd guarda 3 referências por imagem (tag, digest e sha256:<id>); é preciso apagar as 3.
 # Pare antes os pods que usam a imagem. Meça com "df -h /" antes e depois.

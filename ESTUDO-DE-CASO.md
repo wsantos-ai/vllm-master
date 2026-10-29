@@ -155,6 +155,7 @@ Os logs de `kubectl logs` do deepseek começam em 09-27: o arranque foi perdido 
 | 2026-10-28 | 17:10: os *Deployments* `ray-head`/`ray-worker-2`/`ray-worker-3` foram removidos de `vllms` (nenhum *pod* no *namespace*); o administrador ajusta a rede e a nova subida da API dá erro `[erro não visto]` | AC-19 |
 | 2026-10-28 | 16:51: a API do Ray não responde (porta 8000 recusada), GPUs com 0 MiB, *pods* `Running` sem reinício: o servidor saiu e o Kubernetes não viu. B-003 bloqueada até o administrador subir de novo | AC-19 |
 | 2026-10-29 | Registro de testes compartilhado em `vllm-config` (`docs/registro-de-testes.md`): protocolo fixo 512 → 256 *tokens*, `temperature 0`, c=1/16/32. `v0.19.0` e `v0.19.1` têm `sm_70`; a diferença entre elas é o `transformers` v5 ([F-036]) | — |
+| 2026-10-29 | O *pull* da `v0.19.1` em 02 pelo *kubelet* cai 2× com `context canceled` (limite de 5 min do containerd); `ctr images pull` resolve em 6,5 min | AC-24 |
 
 ## 4. Achados
 
@@ -379,6 +380,37 @@ para pelo menos 20 min. Antes de servir a usuários, configure o *reasoning pars
 
 **Validade.** `v0.19.1`, `sabdiia01`, 2026-10-02, duas tentativas, uma geração. Não medido: carga
 concorrente, entrada de imagem, qualidade das respostas em 4 bits, contexto perto de 8192 *tokens*.
+
+### AC-24 — O 1º *pull* da `v0.19.1` pelo Kubernetes cai com `context canceled`: o containerd desiste após 5 min sem progresso; `ctr images pull` baixa em 6,5 min {#ac-24}
+
+**O que é.** Em `sabdiia02`, o *kubelet* tentou baixar a `v0.19.1` duas vezes, e as duas caíram ~7 min
+depois de começar, **na mesma camada**, durante a descompactação. A configuração do containerd de 02 tem
+`image_pull_progress_timeout = '5m0s'`: ele cancela o *pull* que fica 5 min sem progresso. O `ctr`, que não
+passa por esse limite, baixou a mesma imagem sem erro em 6 min 30 s, e `/` subiu ~30 G no total (AC-09).
+Descompactar a maior camada no disco destes nós não conta como progresso e passa dos 5 min `[hipótese bem
+apoiada]`. O *kubelet* repete com intervalo crescente e cairia sempre no mesmo ponto. Em 01, o 1º *pull* da
+`v0.19.1` pelo *kubelet* funcionou em 2026-10-02, com o containerd `2.3.5`; se o limite já existia ali,
+`[não verificado]`.
+
+**Evidência.** Eventos do *pod* `ray-pp2-worker` (colados no chat, 2026-10-29) e
+[pull-v0191-sabdiia02-2026-10-29-1101.log](logs-analysis/pull-v0191-sabdiia02-2026-10-29-1101.log):
+
+```
+Failed to pull image "vllm/vllm-openai:v0.19.1": ... failed to extract layer (... sha256:257588654d22...) to overlayfs ...: context canceled
+Failed to pull image "vllm/vllm-openai:v0.19.1": ... failed to extract layer (... sha256:257588654d22...) to overlayfs ...: context canceled
+    image_pull_progress_timeout = '5m0s'
+real	6m30.469s
+ctr saiu com 0   fim 11:07:58
+```
+
+**Regra prática.** Antes do 1º *pod* com uma imagem do vLLM num nó, baixe-a no próprio nó (servidor,
+bash, como `root`): `ctr -n k8s.io images pull docker.io/vllm/vllm-openai:v0.19.1`, e confira com
+`ctr -n k8s.io images ls | grep vllm-openai`. A alternativa permanente é o administrador aumentar
+`image_pull_progress_timeout` `[não executado]`.
+
+**Validade.** 2026-10-29, `sabdiia02`, containerd `2.4.2`, imagem `v0.19.1` (~9,6 GB comprimida). O valor
+do limite em 01 e 03 `[não verificado]`. Imagens menores (a `v0.5.4`, 5,48 GB) desceram pelo *kubelet* em
+2026-10-28.
 
 ### AC-22 — O gpt-oss não roda no vLLM na V100S, com ou sem divisão entre nós: o MXFP4 exige *compute capability* 8.0 {#ac-22}
 
@@ -1242,6 +1274,7 @@ Alavancas **candidatas**, a medir contra a linha de base de AC-05:
 
 | Arquivo em `logs-analysis/` | Prova |
 |---|---|
+| [pull-v0191-sabdiia02-2026-10-29-1101.log](logs-analysis/pull-v0191-sabdiia02-2026-10-29-1101.log) | `image_pull_progress_timeout = '5m0s'` em 02; `ctr images pull` da `v0.19.1` em 6 min 30 s, saída 0; `/` de 101 para 114 G durante o `ctr` (84 G às 10:36) (AC-24) |
 | [ray-docker-inventario-sabdiia01-...](logs-analysis/ray-docker-inventario-sabdiia01-2026-10-27-1214.log), [02](logs-analysis/ray-docker-inventario-sabdiia02-2026-10-27-1218.log), [03](logs-analysis/ray-docker-inventario-sabdiia03-2026-10-27-1218.log) | Docker e Podman nos 3 nós; Ray do administrador no *host* (*venv*, `root`), *head* em 01 e *worker* em 02, mesma sessão; 8.162 MiB por GPU com o Kubernetes em `0 0`; painel `0.0.0.0:8265` e GCS `*:6379`; contêineres do projeto parados; `/` 100 % em 01 e 02, *pods* `Evicted` (MetalLB, `node-exporter`); `sabdiia03` redimensionado e com `kubectl` quebrado (OIDC); 27.882 MiB em 03 (AC-19, AC-20, §2) |
 | [containerd-config-sabdiia01-2026-10-27-1602.log](logs-analysis/containerd-config-sabdiia01-2026-10-27-1602.log) | o containerd de 01 ainda guarda as imagens em `/var/lib/containerd`, no `/` de 70 G (`ol-root`); o `imageFs` do *kubelet* confirma (75,1 GB de capacidade, 41,2 GB livres): PD-15 não feita. Arquivos de configuração regravados em 2026-10-26 18:39, `99-nvidia.toml` com 5226 *bytes* e três chaves ignoradas pelo containerd (§2) |
 | [estado-disco-rede-sabdiia01-...](logs-analysis/estado-disco-rede-sabdiia01-2026-10-28-1419.log), [02](logs-analysis/estado-disco-rede-sabdiia02-2026-10-28-1420.log), [03](logs-analysis/estado-disco-rede-sabdiia03-2026-10-28-1421.log) | depois da manutenção: `/` 631 G e `/home` 200 G nos 3 (LVM sem folga), `imageFs` 677,5 GB, `DiskPressure False` (PD-15 fechada, AC-09); novo `bond1` 4 × 10 GbE `layer2`, só VLAN 302 IPv6, 40000 em 01/02 e 20000 em 03; IP do nó, rota *default* e Calico em `bond0.500` (1 GbE); `bond0` de 03 com MTU 9000; `enp65s0f1` de 01 ainda a 100 Mbps (AC-08); Kubernetes `v1.37.1`, containerd `2.4.2`; **as 3 GPUs com 0 MiB, inclusive 03** (§2) |
