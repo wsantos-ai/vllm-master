@@ -21,6 +21,9 @@
 - A `v0.12.0` que "cai em *loop*" nunca chegou à GPU: morre com `401` no repositório *gated* da Meta.
   **Ainda não se sabe se a `v0.12.0` roda em `sm_70`** ([AC-07](#ac-07)).
 - O serviço atual está num IP de LoadBalancer **sem `--api-key`** ([AC-06](#ac-06)).
+- **Dividir um modelo entre dois nós pelo Ray funciona na `v0.19.1`, mas rende menos que uma GPU
+  sozinha**: o Qwen2.5-7B em 01 + 02 deu 36,7 e 510,6 *tok*/s (1 e 32 usuários), contra 47,0 e 680,4
+  em 1 GPU. Só o *KV cache* cresce (3,1×). Para modelos que cabem em 32 GB, réplicas ([AC-23](#ac-23)).
 - A rede entre os nós é 1 GbE por fluxo, o que descarta paralelismo multinó e limita o carregamento
   pelo NFS. `/home` tem 755 G livres por nó para cache local ([AC-08](#ac-08), [AC-09](#ac-09)).
 
@@ -60,7 +63,7 @@ do Bloco 2:
 | RAM | 755 GiB por nó, sem *swap* ativo | `free -h` |
 | CPU livre | *requests* já alocados: 1,4 a 5,4 vCPU por nó; *control plane* pesa pouco | `describe nodes` (Allocated) |
 | Disco local | 1 disco `sda` 836,6 G, `ROTA=1` (rotacional, ou volume de RAID que se declara assim `[hipótese]`). **2026-10-28 14:19, os 3 nós iguais: `/` 631 G e `/home` 200 G** (LVM `ol`, sem espaço livre no VG). `/` livre: **580 G (01), 563 G (02), 534 G (03)**; `/home` livre: 99 G (01), 77 G (02), 156 G (03). Imagens (`/var/lib/containerd`) e `etcd` seguem em `/`; o `imageFs` do *kubelet* tem 677,5 GB de capacidade; `DiskPressure False` (AC-09, PD-15 fechada). Histórico, **2026-10-27 14:20:** `/` (70 G) com **39 G livres em `sabdiia01`** (46 %) e 22 G em `sabdiia02` (70 %), depois de chegar a 100 % nos dois às 12:14 e ser limpo pelo administrador; `/var/lib/etcd` fica em `/`. `/home` 761 G com 652 G (01) e 717 G (02) livres às 12:14. **`sabdiia03` foi redimensionado:** `/` 631 G com 537 G livres, `/home` 200 G com 168 G livres. Em 2026-09-29: `/` com 20-28 G livres e `/home` com 755 G nos 3 | `df -h`, `du` (2026-10-27) — AC-09, AC-20 |
-| *Runtime* | **`containerd://2.4.2`** nos 3 nós em 2026-10-28 (era `2.3.5` em 2026-09-29; data da troca `[não verificado]`); NVIDIA Container Toolkit `1.20.0` `[não reconferido]`. A regravação da configuração em 2026-10-26 (abaixo) pode ser parte dessa atualização `[hipótese]`. **Docker e Podman instalados nos 3 nós** desde alguma data entre 2026-09-29 (ausentes) e 2026-10-27, fora do Kubernetes; `data-root` do Docker em `/home/utec/docker_data` (01 e 02, 14:20). **Nenhuma imagem `vllm-openai` no containerd de 01 e 02** (a `v0.19.1` de 01 foi apagada). **Em `sabdiia01`, a configuração do containerd foi regravada em 2026-10-26 18:39**: `99-nvidia.toml` passou de 5124 para 5226 *bytes*, e o `config dump` agora avisa `Ignoring unknown key` para `enable_cdi`, `enable_experimental_restore_via_create` e `cni bin_dir` (nenhum aviso em 2026-10-02). Efeito na entrega de GPU: `[não verificado]`, conferir no próximo arranque de *pod* com GPU em 01 | `command -v`, `docker info`, `ctr images ls` (2026-10-27) — AC-20 |
+| *Runtime* | **`containerd://2.4.2`** nos 3 nós em 2026-10-28 (era `2.3.5` em 2026-09-29; data da troca `[não verificado]`); NVIDIA Container Toolkit `1.20.0` `[não reconferido]`. A regravação da configuração em 2026-10-26 (abaixo) pode ser parte dessa atualização `[hipótese]`. **Docker e Podman instalados nos 3 nós** desde alguma data entre 2026-09-29 (ausentes) e 2026-10-27, fora do Kubernetes; `data-root` do Docker em `/home/utec/docker_data` (01 e 02, 14:20). **2026-10-29: em 01, `v0.19.0`, `v0.19.1` e `v0.5.4`** (quem baixou as duas primeiras `[não verificado]`, provavelmente o administrador); **em 02, `v0.5.4` e `v0.19.1`** (esta por `ctr`, AC-24). Em 2026-10-27 não havia nenhuma `vllm-openai` em 01 e 02. Em 02, `image_pull_progress_timeout = '5m0s'` (AC-24). **Em `sabdiia01`, a configuração do containerd foi regravada em 2026-10-26 18:39**: `99-nvidia.toml` passou de 5124 para 5226 *bytes*, e o `config dump` agora avisa `Ignoring unknown key` para `enable_cdi`, `enable_experimental_restore_via_create` e `cni bin_dir` (nenhum aviso em 2026-10-02). Efeito na entrega de GPU: `[não verificado]`, conferir no próximo arranque de *pod* com GPU em 01 | `command -v`, `docker info`, `ctr images ls` (2026-10-27; imagens reconferidas em 2026-10-29) — AC-20, AC-24 |
 | `kubectl` nos nós | funciona em 01 e 02; **em `sabdiia03` falha** (`apiVersion must be specified for oidc to use exec authentication plugin`): rode blocos com `kubectl` em 01 ou 02 | log de 03, 2026-10-27 |
 | Gestão de GPU | NVIDIA GPU Operator (*device plugin*, *toolkit*, GFD, NFD, DCGM *exporter*); *driver* `pre-installed` no *host* | *labels* `nvidia.com/gpu.deploy.*` |
 | GPU | `Tesla-V100S-PCIE-32GB`, 32768 MiB, `compute 7.0`, família `volta`; sem MIG, sem MPS, `sharing-strategy=none` | *labels* GFD |
@@ -102,6 +105,12 @@ ray-worker-5b5488995-gjcgb   1/1   Running   2 (69s ago)     10m   sabdiia03
 ray-worker-5b5488995-qpl84   0/1   Error     2 (4m32s ago)   10m   sabdiia02
 Warning   BackOff   Back-off restarting failed container vllm-worker in pod ray-worker-...
 ```
+
+**2026-10-29 10:35-10:36: GPUs de 01 e 02 livres** (`0 0` no Kubernetes, 0 MiB, nenhum processo) e
+**`vllms` sem nenhum *pod***: o Ray do administrador saiu em 2026-10-28 17:10, e o deepseek e o llama
+seguem em `0/0`. Em 03, `0 0` no Kubernetes; `nvidia-smi` não lido. A B-004 usou 01 e 02 de 10:39 a
+11:24 e os liberou ([01](logs-analysis/pronto-para-teste-sabdiia01-2026-10-29-1035.log),
+[02](logs-analysis/pronto-para-teste-sabdiia02-2026-10-29-1036.log)).
 
 Em 2026-09-29, o `/metrics` do deepseek registrava `request_success_total` = **1** desde 09-18 (75
 *tokens* de entrada, 158 de saída).
@@ -155,7 +164,9 @@ Os logs de `kubectl logs` do deepseek começam em 09-27: o arranque foi perdido 
 | 2026-10-28 | 17:10: os *Deployments* `ray-head`/`ray-worker-2`/`ray-worker-3` foram removidos de `vllms` (nenhum *pod* no *namespace*); o administrador ajusta a rede e a nova subida da API dá erro `[erro não visto]` | AC-19 |
 | 2026-10-28 | 16:51: a API do Ray não responde (porta 8000 recusada), GPUs com 0 MiB, *pods* `Running` sem reinício: o servidor saiu e o Kubernetes não viu. B-003 bloqueada até o administrador subir de novo | AC-19 |
 | 2026-10-29 | Registro de testes compartilhado em `vllm-config` (`docs/registro-de-testes.md`): protocolo fixo 512 → 256 *tokens*, `temperature 0`, c=1/16/32. `v0.19.0` e `v0.19.1` têm `sm_70`; a diferença entre elas é o `transformers` v5 ([F-036]) | — |
+| 2026-10-29 | 10:35: GPUs de 01 e 02 livres, `vllms` vazio; em 01 já estão a `v0.19.0` e a `v0.19.1` | §2 |
 | 2026-10-29 | O *pull* da `v0.19.1` em 02 pelo *kubelet* cai 2× com `context canceled` (limite de 5 min do containerd); `ctr images pull` resolve em 6,5 min | AC-24 |
+| 2026-10-29 | **B-004: Ray do estudo, Qwen2.5-7B com *pipeline parallel* 2 em 01 + 02, `v0.19.1`**: sobe e mede; 36,7 e 510,6 *tok*/s (1 e 32 usuários) contra 47,0 e 680,4 com 1 GPU; *KV cache* 3,1× | AC-23, AC-21 (corrigido), PD-31 |
 
 ## 4. Achados
 
@@ -412,6 +423,43 @@ bash, como `root`): `ctr -n k8s.io images pull docker.io/vllm/vllm-openai:v0.19.
 do limite em 01 e 03 `[não verificado]`. Imagens menores (a `v0.5.4`, 5,48 GB) desceram pelo *kubelet* em
 2026-10-28.
 
+### AC-23 — O Qwen2.5-7B dividido entre 01 e 02 pelo Ray (*pipeline parallel* 2) rende 22-25 % menos que em 1 GPU; só o *KV cache* cresce (3,1×) {#ac-23}
+
+**O que é.** Mesmo modelo, versão, *flags* e carga do `T-001` (B-001c), mudando só o arranjo: 2 GPUs (01 +
+02) com `--pipeline-parallel-size 2 --distributed-executor-backend ray`. **Duas GPUs entregaram menos que
+uma.** Com 1 usuário, 36,7 contra 47,0 *tok*/s, e o tempo por *token* foi de 20,3 para 26,6 ms: +6,3 ms,
+~25 vezes o RTT entre os nós (0,247 ms). Com 32 usuários, 510,6 contra 680,4 *tok*/s; o TTFT ficou igual
+(p50 1,10 × 1,09 s). As GPUs passaram parte do tempo paradas: com 32 usuários, uso médio de 60 % em 01 e
+81 % em 02, a 135 e 156 W, contra ~250 W da GPU sozinha. O ganho é de memória: cada GPU guarda metade dos
+pesos (7,13 GiB), e o *KV cache* sobe de 246.016 para **762.928 *tokens*** (93 conversas de 8.192 *tokens*,
+contra 30). Explicação `[hipótese]`: cada passo atravessa as duas etapas em sequência, e o custo é da
+coordenação (Ray Compiled Graph, sincronização das etapas) e do desequilíbrio entre elas (a última faz a
+projeção para o vocabulário e a amostragem), não do cabo. A GPU de 02, a última etapa, foi a mais ocupada.
+
+**Evidência.** [B-004-ray-pp2-qwen25-7b-sabdiia01-2026-10-29-1039.log](logs-analysis/B-004-ray-pp2-qwen25-7b-sabdiia01-2026-10-29-1039.log),
+amostras em [testes/2026-10-29-1113-…/gpu-amostras.csv](logs-analysis/testes/2026-10-29-1113-Qwen_Qwen2.5-7B-Instruct/gpu-amostras.csv):
+
+```
+ 2.0/2.0 GPU (2.0 used of 2.0 reserved in placement groups)
+(RayWorkerWrapper pid=436, ip=192.168.50.152) ... Model loading took 7.13 GiB memory and 9.469487 seconds
+GPU KV cache size: 762,928 tokens
+Maximum concurrency for 8,192 tokens per request: 93.13x
+| T-xxx | 1 | 12 | 0 | 36.7 | 38 | 189 / 199 | 26.6 / 27.6 | ...
+| T-xxx | 32 | 512 | 0 | 510.6 | 17 | 1100 / 3316 | 59.1 / 66.6 | ...
+```
+
+**Regra prática.** Modelo que cabe em 32 GB: réplicas de 1 GPU (D-04), nunca dividido entre nós. *Pipeline
+parallel* entre nós só para **capacidade** (modelo maior que 32 GB, ou contexto × concorrência que não cabe
+numa GPU), contando perder ~25 % de vazão `[extrapolado do 7B]`. Para subir: [runbook](runbooks/teste-ray-pp2-qwen25-7b.md)
+(`ray[cgraph,default]==2.48.0` e `cupy-cuda12x==13.6.0` instalados ao iniciar, `VLLM_HOST_IP` por *pod*,
+`NCCL_SOCKET_IFNAME`/`GLOO_SOCKET_IFNAME` = `bond0.500`, `hostNetwork`).
+
+**Validade.** 2026-10-29; `v0.19.1`, Ray `2.48.0`, `Qwen/Qwen2.5-7B-Instruct` FP16, `sabdiia01` + `sabdiia02`
+(MTU 1500, `bond0` de 1 GbE); uma rodada por nível; gerador no *head*, dividindo a CPU com o Ray e o vLLM,
+como no `T-001`. **Não testado:** se os *CUDA graphs* foram capturados (o log do arranque se perdeu, §9; o
+comando não tem `--enforce-eager`); 2 réplicas medidas (os ~1.360 *tok*/s são cálculo); um modelo que
+precise das 2 GPUs; `sabdiia03` (MTU 9000).
+
 ### AC-22 — O gpt-oss não roda no vLLM na V100S, com ou sem divisão entre nós: o MXFP4 exige *compute capability* 8.0 {#ac-22}
 
 **O que é.** Os dois gpt-oss são MoE com os *weights* de MoE em MXFP4 [F-028]. Na `v0.19.1`, o método
@@ -441,7 +489,7 @@ tamanho.
 **Validade.** 2026-10-27, `v0.19.1`. Onde o mínimo é aplicado e se o *backend* de MoE (`oracle.mxfp4`) tem
 caminho para `sm_70`: `[não verificado]`. Fecha-se de vez com um arranque (falha esperada em segundos).
 
-### AC-21 — Entre dois nós, *tensor parallel* sai mais lento que 1 GPU só pela rede; *pipeline parallel* custa ~5 % {#ac-21}
+### AC-21 — Entre dois nós, *tensor parallel* sai mais lento que 1 GPU só pela rede; *pipeline parallel* também perde (medido: −22 a −25 %, AC-23) {#ac-21}
 
 **O que é.** Com *tensor parallel*, o vLLM `v0.19.1` faz **2 *all-reduce* por camada** (saída da atenção e
 do MLP) a cada passo de *decode* [F-027]. No `Qwen/Qwen2.5-7B-Instruct` (28 camadas, `hidden_size`
@@ -451,9 +499,10 @@ entre 01 e 02 (0,247 ms), **só a espera soma ≥ 13,8 ms por *token***. Uma GPU
 otimista]`, o total (≥ 23,8 ms) já supera a GPU sozinha. Com 32 usuários, cada *all-reduce* leva 229 KB
 (3584 × 32 × 2 *bytes*), 1,8-2,3 ms a 98-125 MB/s (AC-08): **a rede limita a vazão a ≤ 245-310 *tok*/s**,
 contra 680 de uma GPU e ~1360 de duas réplicas `[cálculo; 2× é hipótese]`. *Pipeline parallel* manda
-pela rede só uma passagem por passo, na fronteira entre as metades (~2,6 ms em 32 usuários, ~5 % de um
-passo de ~47 ms) `[cálculo]`. Não acelera nada, mas é a forma barata de juntar 64 GB para um modelo que
-não cabe em 32.
+pela rede só uma passagem por passo, na fronteira entre as metades (~2,6 ms em 32 usuários) `[cálculo]`.
+Essa conta previa ~5 % de custo e **errou**: medido, o *pipeline parallel* 2 perde 22-25 % de vazão e
+acrescenta 6,3 ms por *token* (AC-23). A transferência é pequena; o custo está em coordenar as etapas. Não
+acelera nada; serve só para juntar 64 GB para um modelo que não cabe em 32.
 
 **Evidência.** [rtt-sabdiia01-02-2026-10-27-1446.log](logs-analysis/rtt-sabdiia01-02-2026-10-27-1446.log);
 código [F-027]; configuração [F-026]:
@@ -471,8 +520,8 @@ compete com 2 GPUs no mesmo nó (PD-22) e com *quantization*/MoE numa GPU (PD-19
 que cabe em 32 GB: réplicas independentes (AC-01).
 
 **Validade.** 2026-10-27; `v0.19.1`, Qwen2. O RTT é de ICMP, um piso: o NCCL sobre TCP acrescenta pilha e
-cópias `[não medido]`. Vale para modelos com o mesmo padrão de 2 *all-reduce* por camada. Nada disso foi
-executado no vLLM: *pipeline parallel* entre nós em `sm_70` e na `v0.19.1` é `[não executado]`.
+cópias `[não medido]`. Vale para modelos com o mesmo padrão de 2 *all-reduce* por camada. *Tensor parallel*
+entre nós segue `[não executado]`; *pipeline parallel* 2 entre 01 e 02 foi executado em 2026-10-29 (AC-23).
 
 ### AC-19 — O Ray do administrador rodava no *host*, invisível ao Kubernetes; desde 2026-10-28 roda em *pods* que reservam as 3 GPUs, com a produção desligada {#ac-19}
 
@@ -1142,7 +1191,7 @@ disco local: `[não medido]`.
 |---|---|---|---|---|
 | D-01 | Imagem de referência: `vllm/vllm-openai:v0.19.1` | `v0.20.0`+ (CUDA 13, sem `sm_70`); `v0.12.0` (7 versões mais antiga, também com `sm_70`); variantes `-cu129` de `v0.20.0`+ (Dockerfile sem `7.0`) | última versão com `sm_70` no Dockerfile (AC-11) | **confirmada** em 2026-10-02 pelo primeiro arranque (AC-13) |
 | D-03 | **Descartado** como modelo de produção: `Qwen/Qwen3.8-27B` com bitsandbytes 4 bits, na configuração de AC-14 | — | ~3 *tokens*/s e 12 min de arranque (AC-14) não atendem ao uso pretendido (decisão do usuário, 2026-10-13); sem GPTQ do 3.8, e o GPTQ do 3.5-27B não cabe (AC-15) | em vigor; **antes de apagar o *pod*, testar as alavancas da PD-20**; substituto: PD-19 |
-| D-04 | **Escalar com réplicas de 1 GPU por nó, sem Ray**: um `Deployment` do vLLM por GPU atrás de um `Service`; modelo que caiba inteiro em 32 GB. Primeiro candidato: `Qwen/Qwen3-30B-A3B-GPTQ-Int4` (PD-19) | Ray com modelo dividido entre nós (*tensor parallel*: a rede custa mais que o ganho; *pipeline parallel*: só para modelo > 32 GB, PD-31); Ray Serve na frente das réplicas (sem medida de ganho sobre o `Service`); gpt-oss no vLLM (MXFP4 exige CC 8.0) | AC-01, AC-21, AC-22; réplicas não passam pela rede durante a geração | **provisória** (2026-10-27): o modelo depende de arranque, qualidade (AC-15) e *tool calling* (PD-25); hoje são 2 réplicas possíveis (01 e 02), porque 03 tem a produção |
+| D-04 | **Escalar com réplicas de 1 GPU por nó, sem Ray**: um `Deployment` do vLLM por GPU atrás de um `Service`; modelo que caiba inteiro em 32 GB. Primeiro candidato: `Qwen/Qwen3-30B-A3B-GPTQ-Int4` (PD-19) | Ray com modelo dividido entre nós (*tensor parallel*: a rede custa mais que o ganho; *pipeline parallel*: só para modelo > 32 GB, PD-31); Ray Serve na frente das réplicas (sem medida de ganho sobre o `Service`); gpt-oss no vLLM (MXFP4 exige CC 8.0) | AC-01, AC-21, AC-22; réplicas não passam pela rede durante a geração. **Medido em 2026-10-29 (AC-23):** o mesmo 7B dividido em 2 GPUs pelo Ray rende 22-25 % menos que em 1 GPU | **provisória** (2026-10-27): o modelo depende de arranque, qualidade (AC-15) e *tool calling* (PD-25); hoje são 2 réplicas possíveis (01 e 02), porque 03 tem a produção |
 | D-02 | `sabdiia01` é o nó de testes; `vllm-llama31-8b` desligado (`--replicas=0`) e imagem `v0.12.0` removida | testar em `sabdiia02` (imagem não cabia, e a remoção por nome não liberou espaço) | abriu GPU e 27 G de disco sem tirar nenhum serviço que funcionasse (AC-09) | **suspensa em 2026-10-27**: a GPU de 01 é disputada pelo Ray do administrador, que liga sem aviso (AC-19), e a `v0.19.1` foi apagada e não cabe de volta em `/` (AC-20). Volta com a PD-15 (containerd em `/home`) e um acordo sobre a GPU (PD-29) |
 
 ## 6. Configuração de referência
@@ -1192,7 +1241,7 @@ Alavancas **candidatas**, a medir contra a linha de base de AC-05:
 
 | ID | Pergunta | Que decisão destrava | Como fechar |
 |---|---|---|---|
-| PD-31 | **Dividir um modelo entre dois nós vale a pena nesta rede?** Proposta do administrador: com Ray, dividir entre 2 nós um modelo que não cabe numa V100S. A divisão soma memória (64 GB), mas cada *token* passa pela rede de 1 GbE (AC-08), e o custo disso nunca foi medido aqui. Um modelo de 60 GB não carrega nem nas duas: 0,90 × 64 GB = 57,6 GB `[cálculo]` | se um modelo maior que 32 GB entra pelo multinó (Ray), por 2 GPUs no mesmo nó (PD-22) ou por *quantization*/MoE numa GPU (PD-19) | ~~(0) RTT~~ feito em 2026-10-27: 0,247 ms → *tensor parallel* entre nós descartado por cálculo (AC-21). (0b) **Rede nova (2026-10-28):** o `bond1` de 4 × 10 GbE não leva tráfego de *pod* (AC-08); RTT medido pelo `bond1` × `bond0`: 03 → 02, 0,311 × 0,348 ms; 01 → 02, 0,236 × 0,319 ms (56 trocas × 0,236 ms ≥ 13,2 ms por *token* `[cálculo]`, contra 20,3 ms de TPOT com 1 GPU). **Pôr os *pods* no `bond1` não salva o *tensor parallel*** (AC-21): a latência, não a banda, é o custo dominante; para *pipeline parallel* a banda maior ajuda pouco, porque o tráfego já é pequeno `[hipótese]`. (0c) **2026-10-28: o administrador já roda o arranjo, e ele é candidato ao MVP** (AC-19: Llama-3.1-8B, `--pipeline-parallel-size 3`, `v0.5.4`): medir como está, com a carga da B-001c, pelo [runbook B-003](runbooks/medicao-ray-pp3.md) `[não executado]`. Não é uma variável por vez (modelo, versão, nº de GPUs e `--enforce-eager` mudam juntos). (1) PD-15 fechada; com as GPUs de 01 e 02 livres: o mesmo `Qwen/Qwen2.5-7B-Instruct` FP16 e a carga da B-001c com `--pipeline-parallel-size 2` entre 01 e 02, contra 1 GPU (47 e 680 *tok*/s) e 2 réplicas. Esperado: perto de 1 GPU com 1 usuário, abaixo de 2 réplicas com 32. `--tensor-parallel-size 2` só se for preciso confirmar o AC-21 com número |
+| PD-31 | **Dividir um modelo entre dois nós vale a pena nesta rede?** Proposta do administrador: com Ray, dividir entre 2 nós um modelo que não cabe numa V100S. A divisão soma memória (64 GB), mas cada *token* passa pela rede de 1 GbE (AC-08), e o custo disso nunca foi medido aqui. Um modelo de 60 GB não carrega nem nas duas: 0,90 × 64 GB = 57,6 GB `[cálculo]` | se um modelo maior que 32 GB entra pelo multinó (Ray), por 2 GPUs no mesmo nó (PD-22) ou por *quantization*/MoE numa GPU (PD-19) | ~~(0) RTT~~ feito em 2026-10-27: 0,247 ms → *tensor parallel* entre nós descartado por cálculo (AC-21). (0b) **Rede nova (2026-10-28):** o `bond1` de 4 × 10 GbE não leva tráfego de *pod* (AC-08); RTT medido pelo `bond1` × `bond0`: 03 → 02, 0,311 × 0,348 ms; 01 → 02, 0,236 × 0,319 ms (56 trocas × 0,236 ms ≥ 13,2 ms por *token* `[cálculo]`, contra 20,3 ms de TPOT com 1 GPU). **Pôr os *pods* no `bond1` não salva o *tensor parallel*** (AC-21): a latência, não a banda, é o custo dominante; para *pipeline parallel* a banda maior ajuda pouco, porque o tráfego já é pequeno `[hipótese]`. (0c) **2026-10-28: o administrador já roda o arranjo, e ele é candidato ao MVP** (AC-19: Llama-3.1-8B, `--pipeline-parallel-size 3`, `v0.5.4`): medir como está, com a carga da B-001c, pelo [runbook B-003](runbooks/medicao-ray-pp3.md) `[não executado]`. Não é uma variável por vez (modelo, versão, nº de GPUs e `--enforce-eager` mudam juntos). ~~(1) Qwen2.5-7B com `--pipeline-parallel-size 2` entre 01 e 02 contra 1 GPU~~ **feito em 2026-10-29 (AC-23): perde 22-25 % de vazão; para modelo que cabe em 32 GB, a resposta é não.** Falta, para modelos maiores: (2) o custo num modelo que precise das 2 GPUs, contra 2 GPUs no mesmo nó (PD-22) e *quantization*/MoE numa GPU (PD-19); (3) 2 réplicas de 1 GPU medidas, se a D-04 precisar do número (hoje ~1.360 *tok*/s é cálculo). `--tensor-parallel-size 2` só se for preciso confirmar o AC-21 com número |
 | PD-29 | **Atualizada 2026-10-28: o Ray está em *pods* com as 3 GPUs reservadas e a produção em `0/0` (AC-19). Modelo e paralelismo respondidos às 15:22: Llama-3.1-8B com `--pipeline-parallel-size 3`. Falta: é experimento ou serviço, por quanto tempo ocupa as GPUs, e o deepseek volta?** Antes: **O que o Ray do administrador rodou às 12:14, e quando volta a usar as GPUs?** Já se sabe (AC-19): vLLM `0.5.4`, Ray `2.38.0`, não foi o `deploy.py` pelo Serve, e às 14:20 só o *head* seguia no ar. Faltam o modelo, se foi *tensor* ou *pipeline parallel* entre 01 e 02, e se é experimento ou serviço permanente | quais GPUs ficam para o estudo e em que horários (D-02); se a divisão entre nós (contra AC-01 e AC-08) vira uma medição a fazer ou sai de cena | conversa com o administrador (mais barata); ou leitura dos logs da sessão `session_2026-10-27_12-10-38_728215_577731` em `/tmp/ray` de 01 e 02 (`Loading model weights took`, `tensor_parallel_size`) |
 | PD-24 | **A refrigeração das GPUs.** **`sabdiia01` resolvido em 2026-10-22** (ajuste do administrador; B-001c sem estrangulamento, AC-17). A 2ª intervenção, na sala (10-23), não mudou a GPU (B-001d): o ajuste que valeu foi o de 10-22. Falta saber o que foi mudado, para repetir nos outros nós, e se `sabdiia01` aguenta carga de 20 min ou mais (B-002). As de `sabdiia02` e `sabdiia03` estrangulam sob carga? O que muda no servidor (perfil térmico e ventoinhas no gerenciador do servidor, posição da placa, fluxo de ar) para a GPU sustentar o *clock*? | **toda medição de desempenho depende disto**; onde rodar a linha de base; se a topologia de 2 GPUs por nó é viável termicamente (PD-22) | (1) ~~Bloco D~~ feito em 2026-10-15: limites iguais nos 3 (83/87/90 °C); `ipmitool` ausente, ventoinhas só pelo iDRAC; (1b) teste térmico curto em `sabdiia02`, hoje fria, para saber se o problema é do nó ou dos três (exige liberar espaço para a imagem `v0.19.1` em `sabdiia02`); (2) com o administrador, ajuste de refrigeração em `sabdiia01`; (3) repetir o Bloco C: o critério é `SW Thermal Slowdown` inativo e *clock* perto de 1597 MHz durante a carga |
 | PD-10 | **Linha de base de concorrência na V100S (B-001):** com um modelo sem *quantization*, quanto a vazão total cresce de 1 a 64 requisições simultâneas, e quanto pioram TTFT e TPOT por usuário? (O deepseek em produção fica para depois: a API tem 1 requisição em 10 dias.) | se o vLLM serve vários usuários nesta GPU (objetivo do estudo, definido pelo usuário em 2026-10-14); contra o que medir cada alavanca | [runbooks/teste-concorrencia-vllm.md](runbooks/teste-concorrencia-vllm.md): `Qwen/Qwen2.5-7B-Instruct` em FP16 em `sabdiia01`, `vllm bench serve` dentro do *pod*, concorrência 1/4/8/16/32/64, 512 → 256 *tokens*, p50/p95/p99 |
@@ -1238,6 +1287,8 @@ Alavancas **candidatas**, a medir contra a linha de base de AC-05:
 
 | Data | Correção | Mecanismo do erro |
 |---|---|---|
+| 2026-10-29 | AC-21 "*pipeline parallel* custa ~5 %" → perde 22-25 % de vazão e +31 % de tempo por *token* contra 1 GPU (AC-23) | a estimativa contou só a transferência na fronteira entre as etapas, com o RTT de ICMP como custo inteiro, e ignorou a espera entre as etapas e a coordenação do Ray a cada passo |
+| 2026-10-29 | Runbook B-004: o log do *head* guardou só as últimas 600 linhas e perdeu o arranque, e com ele a prova de captura dos *CUDA graphs* → logs completos em arquivo próprio | o `tail` foi dimensionado para o arranque, mas o *head* grava uma linha por requisição, e a carga empurrou o arranque para fora |
 | 2026-10-28 | Bloco "produção e rede nova" titulado para `sabdiia01` rodou em `sabdiia03` e gravou o log com o nome de 01 → arquivo renomeado para `-sabdiia03-`; os blocos passam a usar `$(hostname -s)` no nome e a abortar se o nó for outro | o nome do nó estava fixo no `tee` e o bloco não conferia `hostname`: o log mentiria sobre a origem se não tivesse o cabeçalho `== $(hostname -s)` |
 | 2026-10-28 | PD-15 fechada sem executar o [runbook](runbooks/mover-containerd-para-home.md): o administrador redimensionou o LVM e `/` passou a 631 G em 01 e 02; `imageFs` com 677,5 GB (AC-09) | — |
 | 2026-10-28 | "*bond* de 40 G" informado → em 01 e 02 são 4 × 10 GbE (`speed=40000`), mas o `layer2` limita a 10 Gbps por destino; em 03, 20 G ativos. E o `bond1` só tem IPv6 da VLAN 302: **os *pods* continuam no `bond0` de 1 GbE** (AC-08) | velocidade somada do agregado tomada como velocidade entre dois nós; o caminho do tráfego de *pod* depende do IP que o Calico anuncia, não das placas instaladas |
@@ -1274,7 +1325,10 @@ Alavancas **candidatas**, a medir contra a linha de base de AC-05:
 
 | Arquivo em `logs-analysis/` | Prova |
 |---|---|
+| [B-004-ray-pp2-qwen25-7b-sabdiia01-2026-10-29-1039.log](logs-analysis/B-004-ray-pp2-qwen25-7b-sabdiia01-2026-10-29-1039.log), [testes/2026-10-29-1113-Qwen_Qwen2.5-7B-Instruct/](logs-analysis/testes/2026-10-29-1113-Qwen_Qwen2.5-7B-Instruct/), [ray-pp2-qwen25-7b.yaml](logs-analysis/ray-pp2-qwen25-7b.yaml) | Ray do estudo em 01 + 02 (`ray 2.48.0`, `cupy 13.6.0`), `2.0/2.0 GPU`; `v0.19.1`, `--pipeline-parallel-size 2`, sem `--enforce-eager`; 7,13 GiB de pesos por GPU, *KV cache* 762.928 *tokens* (93,13×); c=1 36,7 *tok*/s, TPOT 26,6 ms; c=16 324,4; c=32 510,6, TTFT p50 1,10 s; 0 falhas, 0 preempções; sem estrangulamento (máx. 56 °C); uso médio em c=32: 60 % (01) e 81 % (02); arranque do *head* perdido no log (§9) (AC-23) |
 | [pull-v0191-sabdiia02-2026-10-29-1101.log](logs-analysis/pull-v0191-sabdiia02-2026-10-29-1101.log) | `image_pull_progress_timeout = '5m0s'` em 02; `ctr images pull` da `v0.19.1` em 6 min 30 s, saída 0; `/` de 101 para 114 G durante o `ctr` (84 G às 10:36) (AC-24) |
+| [pronto-para-teste-sabdiia01-2026-10-29-1035.log](logs-analysis/pronto-para-teste-sabdiia01-2026-10-29-1035.log), [02](logs-analysis/pronto-para-teste-sabdiia02-2026-10-29-1036.log) | GPUs de 01 e 02 livres (0 MiB, `0 0`), sem estrangulamento; `vllms` e `vllm-estudo` vazios; MTU 1500 em 01 e 02, `ping` de 1472 *bytes* passa entre os 3; imagens `v0.19.0`/`v0.19.1` em 01 e nenhuma `v0.19.x` em 02 (§2) |
+| [B-004-ray-pp2-qwen25-7b-sabdiia01-2026-10-29-1032.log](logs-analysis/B-004-ray-pp2-qwen25-7b-sabdiia01-2026-10-29-1032.log) | 1ª tentativa da B-004 abortada antes de criar qualquer *pod*: faltava o `teste-protocolo.sh` |
 | [ray-docker-inventario-sabdiia01-...](logs-analysis/ray-docker-inventario-sabdiia01-2026-10-27-1214.log), [02](logs-analysis/ray-docker-inventario-sabdiia02-2026-10-27-1218.log), [03](logs-analysis/ray-docker-inventario-sabdiia03-2026-10-27-1218.log) | Docker e Podman nos 3 nós; Ray do administrador no *host* (*venv*, `root`), *head* em 01 e *worker* em 02, mesma sessão; 8.162 MiB por GPU com o Kubernetes em `0 0`; painel `0.0.0.0:8265` e GCS `*:6379`; contêineres do projeto parados; `/` 100 % em 01 e 02, *pods* `Evicted` (MetalLB, `node-exporter`); `sabdiia03` redimensionado e com `kubectl` quebrado (OIDC); 27.882 MiB em 03 (AC-19, AC-20, §2) |
 | [containerd-config-sabdiia01-2026-10-27-1602.log](logs-analysis/containerd-config-sabdiia01-2026-10-27-1602.log) | o containerd de 01 ainda guarda as imagens em `/var/lib/containerd`, no `/` de 70 G (`ol-root`); o `imageFs` do *kubelet* confirma (75,1 GB de capacidade, 41,2 GB livres): PD-15 não feita. Arquivos de configuração regravados em 2026-10-26 18:39, `99-nvidia.toml` com 5226 *bytes* e três chaves ignoradas pelo containerd (§2) |
 | [estado-disco-rede-sabdiia01-...](logs-analysis/estado-disco-rede-sabdiia01-2026-10-28-1419.log), [02](logs-analysis/estado-disco-rede-sabdiia02-2026-10-28-1420.log), [03](logs-analysis/estado-disco-rede-sabdiia03-2026-10-28-1421.log) | depois da manutenção: `/` 631 G e `/home` 200 G nos 3 (LVM sem folga), `imageFs` 677,5 GB, `DiskPressure False` (PD-15 fechada, AC-09); novo `bond1` 4 × 10 GbE `layer2`, só VLAN 302 IPv6, 40000 em 01/02 e 20000 em 03; IP do nó, rota *default* e Calico em `bond0.500` (1 GbE); `bond0` de 03 com MTU 9000; `enp65s0f1` de 01 ainda a 100 Mbps (AC-08); Kubernetes `v1.37.1`, containerd `2.4.2`; **as 3 GPUs com 0 MiB, inclusive 03** (§2) |

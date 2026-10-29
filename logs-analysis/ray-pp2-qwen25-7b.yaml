@@ -1,0 +1,91 @@
+# Ray próprio do estudo (vllm-estudo): head em sabdiia01, worker em sabdiia02, PP 2.
+# Pods de teste (restartPolicy Never), apagados no fim do bloco. Sem Service e sem autenticação.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ray-pp2-worker
+  namespace: vllm-estudo
+  labels: {app: ray-pp2}
+spec:
+  nodeSelector: {kubernetes.io/hostname: sabdiia02}
+  hostNetwork: true
+  restartPolicy: Never
+  containers:
+  - name: ray
+    image: vllm/vllm-openai:v0.19.1
+    command: ["/bin/bash", "-c"]
+    args:
+    - |
+      set -e
+      python3 -c "import ray" 2>/dev/null || uv pip install --system "ray[cgraph,default]==2.48.0" "cupy-cuda12x==13.6.0" || python3 -m pip install "ray[cgraph,default]==2.48.0" "cupy-cuda12x==13.6.0"
+      python3 -c "import ray, cupy; print('ray', ray.__version__, 'cupy', cupy.__version__)"
+      HF_HUB_OFFLINE=0 python3 -c "from huggingface_hub import snapshot_download as s; print('pesos em', s('Qwen/Qwen2.5-7B-Instruct'))"
+      until timeout 3 bash -c '</dev/tcp/192.168.50.151/6379'; do echo "aguardando o head..."; sleep 5; done
+      exec ray start --address=192.168.50.151:6379 --node-ip-address=192.168.50.152 --num-gpus=1 --object-store-memory=4000000000 --block
+    env:
+    - {name: HF_HOME, value: /hf-cache}
+    - {name: HF_HUB_OFFLINE, value: "1"}
+    - {name: VLLM_HOST_IP, value: "192.168.50.152"}
+    - {name: NCCL_SOCKET_IFNAME, value: bond0.500}
+    - {name: GLOO_SOCKET_IFNAME, value: bond0.500}
+    resources:
+      requests: {cpu: "8", memory: 32Gi, nvidia.com/gpu: 1}
+      limits: {cpu: "16", memory: 64Gi, nvidia.com/gpu: 1}
+    volumeMounts:
+    - {name: hf-cache, mountPath: /hf-cache}
+    - {name: shm, mountPath: /dev/shm}
+  volumes:
+  - name: hf-cache
+    hostPath: {path: /home/utec/vllm-estudo/hf-cache, type: DirectoryOrCreate}
+  - name: shm
+    emptyDir: {medium: Memory, sizeLimit: 16Gi}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ray-pp2-head
+  namespace: vllm-estudo
+  labels: {app: ray-pp2}
+spec:
+  nodeSelector: {kubernetes.io/hostname: sabdiia01}
+  hostNetwork: true
+  restartPolicy: Never
+  containers:
+  - name: vllm
+    image: vllm/vllm-openai:v0.19.1
+    command: ["/bin/bash", "-c"]
+    args:
+    - |
+      set -e
+      python3 -c "import ray" 2>/dev/null || uv pip install --system "ray[cgraph,default]==2.48.0" "cupy-cuda12x==13.6.0" || python3 -m pip install "ray[cgraph,default]==2.48.0" "cupy-cuda12x==13.6.0"
+      python3 -c "import ray, cupy; print('ray', ray.__version__, 'cupy', cupy.__version__)"
+      HF_HUB_OFFLINE=0 python3 -c "from huggingface_hub import snapshot_download as s; print('pesos em', s('Qwen/Qwen2.5-7B-Instruct'))" || echo "aviso: sem rede para conferir o cache; segue com o cache local"
+      ray start --head --node-ip-address=192.168.50.151 --port=6379 --num-gpus=1 --object-store-memory=4000000000
+      echo "aguardando 2 GPUs no Ray..."
+      until python3 -c "import ray, sys; ray.init(address='auto', logging_level='ERROR'); sys.exit(0 if ray.cluster_resources().get('GPU', 0) >= 2 else 1)" 2>/dev/null; do sleep 10; done
+      ray status
+      echo "2 GPUs no Ray; subindo o vLLM"
+      exec vllm serve Qwen/Qwen2.5-7B-Instruct \
+        --pipeline-parallel-size 2 --distributed-executor-backend ray \
+        --dtype float16 --max-model-len 8192 --gpu-memory-utilization 0.90 \
+        --generation-config vllm --host 0.0.0.0 --port 8000
+    env:
+    - {name: HF_HOME, value: /hf-cache}
+    - {name: HF_HUB_OFFLINE, value: "1"}
+    - {name: VLLM_HOST_IP, value: "192.168.50.151"}
+    - {name: NCCL_SOCKET_IFNAME, value: bond0.500}
+    - {name: GLOO_SOCKET_IFNAME, value: bond0.500}
+    readinessProbe:
+      httpGet: {path: /health, port: 8000}
+      periodSeconds: 10
+    resources:
+      requests: {cpu: "8", memory: 32Gi, nvidia.com/gpu: 1}
+      limits: {cpu: "16", memory: 64Gi, nvidia.com/gpu: 1}
+    volumeMounts:
+    - {name: hf-cache, mountPath: /hf-cache}
+    - {name: shm, mountPath: /dev/shm}
+  volumes:
+  - name: hf-cache
+    hostPath: {path: /home/utec/vllm-estudo/hf-cache, type: DirectoryOrCreate}
+  - name: shm
+    emptyDir: {medium: Memory, sizeLimit: 16Gi}

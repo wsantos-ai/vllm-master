@@ -1,0 +1,61 @@
+== sabdiia01  2026-10-29T10:35:34-03:00
+### 1. GPU: memória, uso, temperatura, potência, clock
+name, memory.used [MiB], memory.total [MiB], utilization.gpu [%], temperature.gpu, power.draw [W], clocks.current.sm [MHz], clocks.max.sm [MHz]
+Tesla V100S-PCIE-32GB, 0 MiB, 32768 MiB, 0 %, 27, 25.28 W, 135 MHz, 1597 MHz
+### 1b. processos na GPU (vazio = livre)
+(nenhum)
+### 1c. motivos de redução de clock agora
+        Idle                                           : Active
+        SW Power Cap                                   : Not Active
+        HW Slowdown                                    : Not Active
+            HW Thermal Slowdown                        : Not Active
+            HW Power Brake Slowdown                    : Not Active
+        SW Thermal Slowdown                            : Not Active
+        SW Power Capping                               : 14860327174858451 us
+        SW Thermal Slowdown                            : 0 us
+        HW Thermal Slowdown                            : 0 us
+### 2. disco
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/ol-root  631G  125G  506G  20% /
+/dev/mapper/ol-home  200G  102G   99G  51% /home
+### 3. imagens do vLLM no containerd
+REF                                                                                                                           TYPE                              
+docker.io/vllm/vllm-openai:v0.19.0                                                                                            application/vnd.docker.distributio
+docker.io/vllm/vllm-openai:v0.19.1                                                                                            application/vnd.docker.distributio
+docker.io/vllm/vllm-openai:v0.5.4                                                                                             application/vnd.docker.distributio
+docker.io/vllm/vllm-openai@sha256:2622f38a0aa646c15ccc27bd5033911a58fd94ac69fd8f86aba0692d77cfe5b9                            application/vnd.docker.distributio
+docker.io/vllm/vllm-openai@sha256:7ab0cf7b287876cec65752a1b7ac99790ecd2a609da80c4d1dd1fbeaf987abf6                            application/vnd.docker.distributio
+docker.io/vllm/vllm-openai@sha256:d9a5c1c1614c959fde8d2a4d68449db184572528a6055afdd0caf1e66fb51504                            application/vnd.docker.distributio
+### 4. Ray ou vLLM fora do Kubernetes, e portas 8000/8265/6379
+nada escutando em 8000/8265/6379
+### 5. rede: MTU e IPv4 das interfaces usadas pelos pods e pelo Ray
+bond0: mtu 1500 
+bond0.500: mtu 1500 192.168.50.151/24
+bond1: mtu 1500 
+bond1.20: mtu 1500 
+bond1.302: mtu 1500 
+tunl0: mtu 1480 10.244.179.64/32
+### 5b. ping sem fragmentar aos outros nós (1472 = MTU 1500; 8972 = MTU 9000)
+192.168.50.150  1472 bytes: passa
+192.168.50.150  8972 bytes: FALHA
+192.168.50.152  1472 bytes: passa
+192.168.50.152  8972 bytes: FALHA
+MTU de bond0.500 neste nó: 1500 (01 e 02 tinham 1500, 03 tinha 9000)
+### 6. Kubernetes (falha em sabdiia03 por OIDC)
+NAME        STATUS   ROLES           AGE   VERSION   INTERNAL-IP      EXTERNAL-IP   OS-IMAGE                  KERNEL-VERSION                             CONTAINER-RUNTIME
+sabdiia01   Ready    control-plane   44d   v1.37.1   192.168.50.151   <none>        Oracle Linux Server 9.8   6.12.0-207.111.5.6.el9uek.x86_64 (amd64)   containerd://2.4.2
+sabdiia02   Ready    control-plane   44d   v1.37.1   192.168.50.152   <none>        Oracle Linux Server 9.8   6.12.0-207.111.5.6.el9uek.x86_64 (amd64)   containerd://2.4.2
+sabdiia03   Ready    control-plane   44d   v1.37.1   192.168.50.150   <none>        Oracle Linux Server 9.8   6.12.0-207.111.5.6.el9uek.x86_64 (amd64)   containerd://2.4.2
+## GPU reservada por nó (Requests Limits; 0 0 = livre)
+Name:               sabdiia01
+  nvidia.com/gpu     0           0
+Name:               sabdiia02
+  nvidia.com/gpu     0           0
+Name:               sabdiia03
+  nvidia.com/gpu     0            0
+## pods que pedem GPU, em qualquer namespace
+NS               POD                                                           NODE        PHASE       GPU
+## namespaces vllms e vllm-estudo
+No resources found in vllms namespace.
+No resources found in vllm-estudo namespace.
+### VEREDITO sabdiia01: PRONTO (GPU livre, sem estrangulamento, disco ok, ping 1472 ok)
