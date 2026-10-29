@@ -27,16 +27,23 @@ resumo que muda o jeito de trabalhar é este:
   `kubectl` falha em `sabdiia03` (OIDC): blocos com `kubectl` rodam em 01 ou 02.
 - **Há produção no *namespace* `vllms`**: `vllm-deepseek-33b` (`v0.6.4`, GPTQ) em `sabdiia03`, exposto
   em `192.168.50.160:8001` sem autenticação (AC-05, AC-06). **Desde 2026-10-28 o deepseek e o
-  llama estão em `0/0`** (não apagados), e o Ray do administrador roda em 3 *pods* em `vllms` (`ray-head`,
-  `ray-worker-2`, `ray-worker-3`, `v0.5.4`), **um por nó, cada um com `nvidia.com/gpu: 1`: nenhuma GPU
-  livre para o estudo** (AC-19). **Nunca proponha parar, reiniciar, editar
+  llama estão em `0/0`** (não apagados). O Ray do administrador rodou em 3 *pods* em `vllms` (`v0.5.4`, 1 GPU
+  cada) de 2026-10-28 ~14:50 a 17:10 e foi removido (AC-19). **Em 2026-10-29 10:35, GPUs de 01 e 02 livres e
+  `vllms` vazio** (§2); o estado muda de um dia para o outro: rode o Bloco 0 de
+  [runbooks/teste-protocolo-modelos.md](runbooks/teste-protocolo-modelos.md) antes de usar GPU. **Nunca proponha parar, reiniciar, editar
   ou apagar recursos de `vllms` sem o usuário pedir explicitamente.** Experimentos vão para uma GPU livre,
   com `Service` `ClusterIP`. O Ray do administrador roda no *host* e, quando liga, ocupa as GPUs de
   `sabdiia01` e `sabdiia02` sem o Kubernetes saber, que continua mostrando as duas como livres (AC-19;
   ocupadas às 12:14 e vazias às 14:20 de 2026-10-27). Em 2026-10-28 14:21 a GPU de `sabdiia03` também
   estava vazia (o deepseek usava 27.882 MiB na véspera): confira o *pod* antes de supor produção no ar. Livre é `0 0`
   no Kubernetes **e** `nvidia-smi --query-compute-apps` vazio ("Qual GPU está livre?" do COMANDOS.md).
-  O Ray do administrador segue a mesma regra de `vllms`: não proponha pará-lo sem o usuário pedir.
+  O Ray do administrador segue a mesma regra de `vllms`: não proponha pará-lo sem o usuário pedir. O estudo
+  sobe o **próprio** Ray em `vllm-estudo`, criado e apagado pelo
+  [runbook](runbooks/teste-ray-pp2-qwen25-7b.md) (AC-23). Antes do 1º *pod* com uma imagem do vLLM num nó,
+  baixe-a com `ctr -n k8s.io images pull`: pelo *kubelet*, o *pull* da `v0.19.1` cai por limite de 5 min (AC-24).
+- **Testes de modelos da equipe** seguem um protocolo fixo (512 → 256 *tokens*, `temperature 0`, c=1/16/32)
+  e são registrados em `C:\www\vllm-config\docs\registro-de-testes.md` (repositório compartilhado, `T-xxx`);
+  o procedimento é o [runbook do protocolo](runbooks/teste-protocolo-modelos.md).
 
 **Produto final:** [ESTUDO-DE-CASO.md](ESTUDO-DE-CASO.md). Quem chegar com hardware parecido lê em vinte
 minutos e sai sabendo que versão instalar, que manifesto aplicar, quanto cabe na GPU e quais alavancas
@@ -268,8 +275,9 @@ A lista viva e priorizada está em §7 do estudo; esta é só a ordem de ataque:
 4. **Linha de base.** **Objetivo do estudo (usuário, 2026-10-14): vLLM servindo várias requisições
    simultâneas.** Medição B-001 em [runbooks/teste-concorrencia-vllm.md](runbooks/teste-concorrencia-vllm.md):
    `Qwen/Qwen2.5-7B-Instruct` FP16, `vllm bench serve` dentro do *pod*, concorrência 1 a 64.
-5. **As GPUs.** 3 réplicas independentes (1 por nó) atrás de um `Service`; paralelismo multinó só se
-   um modelo necessário não couber em 1 GPU, e depois de medir a rede.
+5. **As GPUs.** 3 réplicas independentes (1 por nó) atrás de um `Service` (D-04). Dividir entre nós pelo
+   Ray foi medido em 2026-10-29: o 7B em 2 GPUs (*pipeline parallel* 2) rende 22-25 % **menos** que em 1
+   (AC-23). Multinó só para um modelo necessário que não caiba em 1 GPU, aceitando essa perda.
 6. **Maior modelo útil.** Quais *quantizations* têm *kernel* em `sm_70`.
 7. **Contexto × concorrência.** `--max-model-len`, `--max-num-seqs`, `--gpu-memory-utilization` medidos.
 8. **Operação.** *Probes*, reinício, arranque a frio, atualização sem queda.
