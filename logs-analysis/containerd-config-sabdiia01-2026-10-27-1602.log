@@ -1,0 +1,50 @@
+### host
+sabdiia01
+### configuração efetiva (mesclada)
+time="2026-10-27T16:02:59-03:00" level=warning msg="Ignoring unknown key in TOML for plugin" error="strict mode: fields in the document are missing in the target struct" key=enable_cdi plugin=io.containerd.cri.v1.runtime
+time="2026-10-27T16:02:59-03:00" level=warning msg="Ignoring unknown key in TOML for plugin" error="strict mode: fields in the document are missing in the target struct" key=enable_experimental_restore_via_create plugin=io.containerd.cri.v1.runtime
+time="2026-10-27T16:02:59-03:00" level=warning msg="Ignoring unknown key in TOML for plugin" error="strict mode: fields in the document are missing in the target struct" key="cni bin_dir" plugin=io.containerd.cri.v1.runtime
+1:version = 4
+2:root = '/var/lib/containerd'
+3:state = '/run/containerd'
+8:imports = ['/etc/containerd/conf.d/*.toml']
+17:    snapshotter = 'overlayfs'
+75:          snapshotter = ''
+102:          snapshotter = ''
+129:          snapshotter = ''
+156:          snapshotter = ''
+292:    root_path = ''
+299:    root_path = ''
+308:    root_path = ''
+317:    root_path = ''
+320:    root_path = ''
+327:    root_path = ''
+### arquivos de configuração
+/etc/containerd/:
+total 12
+drwxr-xr-x  2 root root   28 Oct 26 18:39 conf.d
+-rw-r--r--. 1 root root 8518 Oct 26 18:39 config.toml
+
+/etc/containerd/conf.d/:
+total 8
+-rw-r--r-- 1 root root 5226 Oct 26 18:39 99-nvidia.toml
+### root no arquivo principal
+2:imports = ["/etc/containerd/conf.d/*.toml"]
+5:root = "/var/lib/containerd"
+6:state = "/run/containerd"
+time="2026-10-27T16:02:59-03:00" level=warning msg="Ignoring unknown key in TOML for plugin" error="strict mode: fields in the document are missing in the target struct" key=enable_cdi plugin=io.containerd.cri.v1.runtime
+time="2026-10-27T16:02:59-03:00" level=warning msg="Ignoring unknown key in TOML for plugin" error="strict mode: fields in the document are missing in the target struct" key=enable_experimental_restore_via_create plugin=io.containerd.cri.v1.runtime
+time="2026-10-27T16:02:59-03:00" level=warning msg="Ignoring unknown key in TOML for plugin" error="strict mode: fields in the document are missing in the target struct" key="cni bin_dir" plugin=io.containerd.cri.v1.runtime
+### root aponta para
+/var/lib/containerd
+### em que disco está
+TARGET SOURCE              FSTYPE
+/      /dev/mapper/ol-root xfs
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/ol-root   70G   32G   39G  46% /
+### disco das imagens visto pelo kubelet
+   "imageFs": {
+    "time": "2026-10-27T19:02:58Z",
+    "availableBytes": 41248714752,
+    "capacityBytes": 75094818816,
+    "usedBytes": 2536853504,

@@ -1,0 +1,59 @@
+== sabdiia01  2026-10-28T15:00:30-03:00
+### produção
+NAME                         READY   STATUS    RESTARTS        AGE   IP               NODE        NOMINATED NODE   READINESS GATES
+ray-head-85bcdd9859-p65sd    1/1     Running   0               10m   10.244.179.83    sabdiia01   <none>           <none>
+ray-worker-5b5488995-gjcgb   1/1     Running   2 (69s ago)     10m   10.244.50.176    sabdiia03   <none>           <none>
+ray-worker-5b5488995-qpl84   0/1     Error     2 (4m32s ago)   10m   10.244.182.171   sabdiia02   <none>           <none>
+10m         Normal    SuccessfulCreate        replicaset/ray-worker-5b5488995      Created pod: ray-worker-5b5488995-gjcgb
+10m         Normal    SuccessfulCreate        replicaset/ray-head-85bcdd9859       Created pod: ray-head-85bcdd9859-p65sd
+10m         Normal    ScalingReplicaSet       deployment/ray-head                  Scaled up replica set ray-head-85bcdd9859 from 0 to 1
+10m         Normal    SuccessfulCreate        replicaset/ray-worker-5b5488995      Created pod: ray-worker-5b5488995-qpl84
+10m         Normal    Pulling                 pod/ray-worker-5b5488995-gjcgb       Pulling image "vllm/vllm-openai:v0.5.4"
+10m         Normal    Pulling                 pod/ray-worker-5b5488995-qpl84       Pulling image "vllm/vllm-openai:v0.5.4"
+10m         Normal    Pulling                 pod/ray-head-85bcdd9859-p65sd        Pulling image "vllm/vllm-openai:v0.5.4"
+8m41s       Normal    Created                 pod/ray-head-85bcdd9859-p65sd        Container created
+8m41s       Normal    Started                 pod/ray-head-85bcdd9859-p65sd        Container started
+8m41s       Normal    Pulled                  pod/ray-head-85bcdd9859-p65sd        Successfully pulled image "vllm/vllm-openai:v0.5.4" in 1m48.358s (1m48.358s including waiting). Image size: 5481170488 bytes.
+5m32s       Normal    Pulled                  pod/ray-worker-5b5488995-gjcgb       Successfully pulled image "vllm/vllm-openai:v0.5.4" in 5m0.043s (5m0.043s including waiting). Image size: 5481170488 bytes.
+5m31s       Normal    Pulled                  pod/ray-worker-5b5488995-qpl84       Successfully pulled image "vllm/vllm-openai:v0.5.4" in 5m0.81s (5m0.81s including waiting). Image size: 5481170488 bytes.
+4m19s       Normal    Created                 pod/ray-worker-5b5488995-qpl84       Container created
+4m19s       Normal    Started                 pod/ray-worker-5b5488995-qpl84       Container started
+4m19s       Normal    Pulled                  pod/ray-worker-5b5488995-qpl84       Container image "vllm/vllm-openai:v0.5.4" already present on machine and can be accessed by the pod
+69s         Warning   BackOff                 pod/ray-worker-5b5488995-gjcgb       Back-off restarting failed container vllm-worker in pod ray-worker-5b5488995-gjcgb_vllms(4c7f02bc-c405-46f8-b412-f54a0b2b23f2)
+57s         Normal    Pulled                  pod/ray-worker-5b5488995-gjcgb       Container image "vllm/vllm-openai:v0.5.4" already present on machine and can be accessed by the pod
+57s         Normal    Started                 pod/ray-worker-5b5488995-gjcgb       Container started
+57s         Normal    Created                 pod/ray-worker-5b5488995-gjcgb       Container created
+15s         Warning   BackOff                 pod/ray-worker-5b5488995-qpl84       Back-off restarting failed container vllm-worker in pod ray-worker-5b5488995-qpl84_vllms(f3b69414-70c1-4784-a297-27758d674172)
+### rota para o NFS
+2801:80:f8c:302::aa dev bond1.302 proto kernel src 2801:80:f8c:302:c8:1f:66fa:fe55 metric 401 pref medium
+### MTU das interfaces
+lo: mtu 65536
+eno1: mtu 1500
+eno2: mtu 1500
+eno3: mtu 1500
+eno4: mtu 1500
+enp66s0f0: mtu 9000
+enp65s0f0: mtu 1500
+enp4s0f0: mtu 9000
+enp66s0f1: mtu 9000
+enp65s0f1: mtu 1500
+enp4s0f1: mtu 9000
+idrac: mtu 1500
+bond1: mtu 1500
+bond1.302@bond1: mtu 1500
+bond0: mtu 1500
+bond0.500@bond0: mtu 1500
+docker0: mtu 1500
+tunl0@NONE: mtu 1480
+### RTT a 02 pela rede antiga (1 GbE)
+PING 192.168.50.152 (192.168.50.152) 56(84) bytes of data.
+
+--- 192.168.50.152 ping statistics ---
+100 packets transmitted, 100 received, 0% packet loss, time 20587ms
+rtt min/avg/max/mdev = 0.219/0.319/0.482/0.044 ms
+### RTT a 02 pela rede nova (10 GbE, IPv6)
+PING 2801:80:f8c:302:b8:2a:72d5:2599(2801:80:f8c:302:b8:2a:72d5:2599) 56 data bytes
+
+--- 2801:80:f8c:302:b8:2a:72d5:2599 ping statistics ---
+100 packets transmitted, 100 received, 0% packet loss, time 20588ms
+rtt min/avg/max/mdev = 0.148/0.236/0.679/0.058 ms

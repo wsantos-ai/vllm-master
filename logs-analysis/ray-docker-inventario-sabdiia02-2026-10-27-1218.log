@@ -1,0 +1,49 @@
+== nó: sabdiia02  2026-10-27T12:18:08-03:00
+== motores de contêiner
+docker: /bin/docker
+podman: /bin/podman
+nerdctl: ausente
+== processos Ray no host
+ 522743 root           01:03 /home/utec/llm_lhama_prototype/venv/lib/python3.9/site-packages/ray/core/src/ray/raylet/raylet --raylet_socket_name=/tmp/ray/session_2026-10-27_12-10-38_728215_577731/sockets/raylet.1 --store
+ 522850 root           01:02 /home/utec/llm_lhama_prototype/venv/bin/python3 -u /home/utec/llm_lhama_prototype/venv/lib/python3.9/site-packages/ray/dashboard/agent.py --node-ip-address=192.168.50.152 --metrics-export-por
+== portas
+== quem usa a GPU (PID do host)
+pid, process_name, used_gpu_memory [MiB]
+523371, ray::RayWorkerWrapper.execute_method, 8162 MiB
+memory.used [MiB], memory.total [MiB], utilization.gpu [%]
+8166 MiB, 32768 MiB, 0 %
+== contêineres
+NAMES             IMAGE                            STATUS                      PORTS
+ray-worker-node   llm_lhama_prototype-ray-worker   Exited (1) 45 minutes ago   
+== disco
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          1         1         17.82GB   0B (0%)
+Containers      1         0         6.497GB   6.497GB (100%)
+Local Volumes   0         0         0B        0B
+Build Cache     0         0         0B        0B
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/ol-root   70G   70G  1.1M 100% /
+/dev/mapper/ol-home  761G   45G  717G   6% /home
+/dev/mapper/ol-home  761G   45G  717G   6% /home
+== cópia do projeto no disco
+/home/utec/llm_lhama_prototype/docker-compose-head.yml
+== GPU vista pelo Kubernetes
+  nvidia.com/gpu     0           0
+NAMESPACE        NAME                                               READY   STATUS      RESTARTS        AGE     IP               NODE        NOMINATED NODE   READINESS GATES
+gpu-operator     gpu-feature-discovery-8cbdj                        1/1     Running     4 (17h ago)     39d     10.244.182.179   sabdiia02   <none>           <none>
+gpu-operator     gpu-operator-node-feature-discovery-worker-9brcw   1/1     Running     5 (17h ago)     39d     10.244.182.149   sabdiia02   <none>           <none>
+gpu-operator     nvidia-container-toolkit-daemonset-ct76m           1/1     Running     4 (17h ago)     39d     10.244.182.136   sabdiia02   <none>           <none>
+gpu-operator     nvidia-dcgm-exporter-lfnzq                         1/1     Running     4 (17h ago)     39d     10.244.182.155   sabdiia02   <none>           <none>
+gpu-operator     nvidia-device-plugin-daemonset-82jth               1/1     Running     4 (17h ago)     39d     10.244.182.151   sabdiia02   <none>           <none>
+gpu-operator     nvidia-operator-validator-m7zpz                    1/1     Running     3 (17h ago)     39d     10.244.182.183   sabdiia02   <none>           <none>
+kube-system      calico-node-s4gsm                                  1/1     Running     9 (17h ago)     42d     192.168.50.152   sabdiia02   <none>           <none>
+kube-system      csi-nfs-node-h28xj                                 3/3     Running     30 (17h ago)    42d     192.168.50.152   sabdiia02   <none>           <none>
+kube-system      etcd-sabdiia02                                     1/1     Running     165 (17h ago)   42d     192.168.50.152   sabdiia02   <none>           <none>
+kube-system      kube-apiserver-sabdiia02                           1/1     Running     210 (17h ago)   42d     192.168.50.152   sabdiia02   <none>           <none>
+kube-system      kube-controller-manager-sabdiia02                  1/1     Running     10 (17h ago)    42d     192.168.50.152   sabdiia02   <none>           <none>
+kube-system      kube-proxy-jzncl                                   1/1     Running     10 (17h ago)    42d     192.168.50.152   sabdiia02   <none>           <none>
+kube-system      kube-scheduler-sabdiia02                           1/1     Running     10 (17h ago)    42d     192.168.50.152   sabdiia02   <none>           <none>
+kube-system      node-shell-7524fd90-9c17-4d4d-bd79-7780d46567a8    1/1     Running     0               4h      192.168.50.152   sabdiia02   <none>           <none>
+kube-system      node-shell-e56e8335-cf56-4a0d-a7b0-2201539c8af1    0/1     Unknown     0               3d14h   192.168.50.152   sabdiia02   <none>           <none>
+metallb-system   speaker-ckzd4                                      0/1     Evicted     0               88s     <none>           sabdiia02   <none>           <none>
+monitoring       monitoring-prometheus-node-exporter-7pmtv          0/1     Evicted     0               74s     <none>           sabdiia02   <none>           <none>

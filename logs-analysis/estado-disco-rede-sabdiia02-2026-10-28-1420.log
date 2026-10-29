@@ -1,0 +1,198 @@
+== sabdiia02  2026-10-28T14:20:39-03:00
+### disco
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/ol-root  631G   69G  563G  11% /
+/dev/mapper/ol-home  200G  124G   77G  62% /home
+/dev/mapper/ol-root  631G   69G  563G  11% /
+/dev/mapper/ol-root  631G   69G  563G  11% /
+NAME          SIZE ROTA TYPE MOUNTPOINT
+sda         836.6G    1 disk 
+├─sda1        600M    1 part /boot/efi
+├─sda2          1G    1 part /boot
+└─sda3        835G    1 part 
+  ├─ol-root   631G    1 lvm  /
+  ├─ol-swap     4G    1 lvm  
+  └─ol-home   200G    1 lvm  /home
+sdb             0B    0 disk 
+sr0          1024M    0 rom  
+### LVM
+  VG #PV #LV #SN Attr   VSize    VFree
+  ol   1   3   0 wz--n- <835.04g    0 
+  LV   VG LSize   
+  home ol  200.00g
+  root ol <631.04g
+  swap ol    4.00g
+### onde ficam imagens e etcd
+TARGET SOURCE              FSTYPE
+/      /dev/mapper/ol-root xfs
+/dev/mapper/ol-home     /home                   xfs     defaults        0 0
+### placas de rede
+01:00.0 Ethernet controller: Broadcom Inc. and subsidiaries NetXtreme BCM5720 Gigabit Ethernet PCIe
+01:00.1 Ethernet controller: Broadcom Inc. and subsidiaries NetXtreme BCM5720 Gigabit Ethernet PCIe
+02:00.0 Ethernet controller: Broadcom Inc. and subsidiaries NetXtreme BCM5720 Gigabit Ethernet PCIe
+02:00.1 Ethernet controller: Broadcom Inc. and subsidiaries NetXtreme BCM5720 Gigabit Ethernet PCIe
+04:00.0 Ethernet controller: Broadcom Inc. and subsidiaries NetXtreme II BCM57810 10 Gigabit Ethernet (rev 10)
+04:00.1 Ethernet controller: Broadcom Inc. and subsidiaries NetXtreme II BCM57810 10 Gigabit Ethernet (rev 10)
+41:00.0 Ethernet controller: Intel Corporation 82571EB/82571GB Gigabit Ethernet Controller D0/D1 (copper applications) (rev 06)
+41:00.1 Ethernet controller: Intel Corporation 82571EB/82571GB Gigabit Ethernet Controller D0/D1 (copper applications) (rev 06)
+42:00.0 Ethernet controller: Intel Corporation 82599ES 10-Gigabit SFI/SFP+ Network Connection (rev 01)
+42:00.1 Ethernet controller: Intel Corporation 82599ES 10-Gigabit SFI/SFP+ Network Connection (rev 01)
+### interfaces e IPs
+lo               UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP> 
+eno1             UP             b8:2a:72:d5:25:99 <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> 
+eno2             UP             b8:2a:72:d5:25:99 <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> 
+eno3             UP             b8:2a:72:d5:25:99 <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> 
+eno4             UP             b8:2a:72:d5:25:99 <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> 
+enp65s0f0        UP             b8:2a:72:d5:25:99 <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> 
+enp66s0f0        UP             00:0a:f7:70:e0:f0 <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> 
+enp4s0f0         UP             00:0a:f7:70:e0:f0 <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> 
+enp65s0f1        UP             b8:2a:72:d5:25:99 <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> 
+enp66s0f1        UP             00:0a:f7:70:e0:f0 <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> 
+enp4s0f1         UP             00:0a:f7:70:e0:f0 <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> 
+idrac            UNKNOWN        5c:f9:dd:fe:c7:4d <BROADCAST,MULTICAST,UP,LOWER_UP> 
+bond0            UP             b8:2a:72:d5:25:99 <BROADCAST,MULTICAST,MASTER,UP,LOWER_UP> 
+bond0.500@bond0  UP             b8:2a:72:d5:25:99 <BROADCAST,MULTICAST,UP,LOWER_UP> 
+bond1            UP             00:0a:f7:70:e0:f0 <BROADCAST,MULTICAST,MASTER,UP,LOWER_UP> 
+docker0          DOWN           4a:f2:da:79:fd:16 <NO-CARRIER,BROADCAST,MULTICAST,UP> 
+cali7324a506d37@if2 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+bond1.302@bond1  UP             00:0a:f7:70:e0:f0 <BROADCAST,MULTICAST,UP,LOWER_UP> 
+tunl0@NONE       UNKNOWN        0.0.0.0 <NOARP,UP,LOWER_UP> 
+cali49d9b24219d@if3 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+cali52f57783903@if3 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+cali7abe1e34b3b@if3 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+caliab45e6cd374@if3 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+cali889fb3621c2@if3 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+bond1.2@bond1    UP             00:0a:f7:70:e0:f0 <BROADCAST,MULTICAST,UP,LOWER_UP> 
+lo               UNKNOWN        127.0.0.1/8 ::1/128 
+eno1             UP             
+eno2             UP             
+eno3             UP             
+eno4             UP             
+enp65s0f0        UP             
+enp66s0f0        UP             
+enp4s0f0         UP             
+enp65s0f1        UP             
+enp66s0f1        UP             
+enp4s0f1         UP             
+idrac            UNKNOWN        
+bond0            UP             
+bond0.500@bond0  UP             192.168.50.152/24 2801:80:f8c:500:25a2:763e:c3e7:a5f8/64 fe80::505a:4386:e6ac:4e64/64 
+bond1            UP             
+docker0          DOWN           172.17.0.1/16 
+cali7324a506d37@if2 UP             fe80::ecee:eeff:feee:eeee/64 
+bond1.302@bond1  UP             2801:80:f8c:302:b8:2a:72d5:2599/64 fe80::8a5b:2ef3:2a72:80df/64 
+tunl0@NONE       UNKNOWN        10.244.182.128/32 
+cali49d9b24219d@if3 UP             fe80::ecee:eeff:feee:eeee/64 
+cali52f57783903@if3 UP             fe80::ecee:eeff:feee:eeee/64 
+cali7abe1e34b3b@if3 UP             fe80::ecee:eeff:feee:eeee/64 
+caliab45e6cd374@if3 UP             fe80::ecee:eeff:feee:eeee/64 
+cali889fb3621c2@if3 UP             fe80::ecee:eeff:feee:eeee/64 
+bond1.2@bond1    UP             fe80::b196:d609:4abf:7ea2/64 
+### rotas
+default via 192.168.50.254 dev bond0.500 proto static metric 400 
+10.244.50.128/26 via 192.168.50.150 dev tunl0 proto bird onlink 
+10.244.179.64/26 via 192.168.50.151 dev tunl0 proto bird onlink 
+blackhole 10.244.182.128/26 proto bird 
+10.244.182.131 dev cali7324a506d37 scope link 
+10.244.182.137 dev cali889fb3621c2 scope link 
+10.244.182.153 dev cali49d9b24219d scope link 
+10.244.182.165 dev cali7abe1e34b3b scope link 
+10.244.182.172 dev cali52f57783903 scope link 
+10.244.182.190 dev caliab45e6cd374 scope link 
+172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1 linkdown 
+192.168.50.0/24 dev bond0.500 proto kernel scope link src 192.168.50.152 metric 400 
+### /proc/net/bonding/bond0
+Bonding Mode: IEEE 802.3ad Dynamic link aggregation
+Transmit Hash Policy: layer2 (0)
+MII Status: up
+	Aggregator ID: 2
+	Number of ports: 6
+Slave Interface: eno1
+MII Status: up
+Speed: 1000 Mbps
+Duplex: full
+Link Failure Count: 0
+Aggregator ID: 2
+Slave Interface: eno2
+MII Status: up
+Speed: 1000 Mbps
+Duplex: full
+Link Failure Count: 0
+Aggregator ID: 2
+Slave Interface: eno3
+MII Status: up
+Speed: 1000 Mbps
+Duplex: full
+Link Failure Count: 0
+Aggregator ID: 2
+Slave Interface: eno4
+MII Status: up
+Speed: 1000 Mbps
+Duplex: full
+Link Failure Count: 0
+Aggregator ID: 2
+Slave Interface: enp65s0f0
+MII Status: up
+Speed: 1000 Mbps
+Duplex: full
+Link Failure Count: 1
+Aggregator ID: 2
+Slave Interface: enp65s0f1
+MII Status: up
+Speed: 1000 Mbps
+Duplex: full
+Link Failure Count: 0
+Aggregator ID: 2
+### /proc/net/bonding/bond1
+Bonding Mode: IEEE 802.3ad Dynamic link aggregation
+Transmit Hash Policy: layer2 (0)
+MII Status: up
+	Aggregator ID: 1
+	Number of ports: 4
+Slave Interface: enp4s0f0
+MII Status: up
+Speed: 10000 Mbps
+Duplex: full
+Link Failure Count: 0
+Aggregator ID: 1
+Slave Interface: enp4s0f1
+MII Status: up
+Speed: 10000 Mbps
+Duplex: full
+Link Failure Count: 0
+Aggregator ID: 1
+Slave Interface: enp66s0f0
+MII Status: up
+Speed: 10000 Mbps
+Duplex: full
+Link Failure Count: 0
+Aggregator ID: 1
+Slave Interface: enp66s0f1
+MII Status: up
+Speed: 10000 Mbps
+Duplex: full
+Link Failure Count: 1
+Aggregator ID: 1
+### MTU e velocidade de cada bond
+bond0 mtu=1500 speed=6000
+bond1 mtu=1500 speed=40000
+### GPU
+name, memory.used [MiB]
+Tesla V100S-PCIE-32GB, 0 MiB
+pid, process_name, used_gpu_memory [MiB]
+### Kubernetes (falha em sabdiia03 por OIDC)
+NAME        STATUS   ROLES           AGE   VERSION   INTERNAL-IP      EXTERNAL-IP   OS-IMAGE                  KERNEL-VERSION                             CONTAINER-RUNTIME
+sabdiia01   Ready    control-plane   44d   v1.37.1   192.168.50.151   <none>        Oracle Linux Server 9.8   6.12.0-207.111.5.6.el9uek.x86_64 (amd64)   containerd://2.4.2
+sabdiia02   Ready    control-plane   44d   v1.37.1   192.168.50.152   <none>        Oracle Linux Server 9.8   6.12.0-207.111.5.6.el9uek.x86_64 (amd64)   containerd://2.4.2
+sabdiia03   Ready    control-plane   44d   v1.37.1   192.168.50.150   <none>        Oracle Linux Server 9.8   6.12.0-207.111.5.6.el9uek.x86_64 (amd64)   containerd://2.4.2
+NO          CALICO_IPV4
+sabdiia01   192.168.50.151/24
+sabdiia02   192.168.50.152/24
+sabdiia03   192.168.50.150/24
+   "imageFs": {
+    "time": "2026-10-28T17:20:33Z",
+    "availableBytes": 603835871232,
+    "capacityBytes": 677501730816,
+    "usedBytes": 2529017856,
+  DiskPressure         False   Wed, 28 Oct 2026 14:20:10 -0300   Tue, 27 Oct 2026 19:02:06 -0300   KubeletHasNoDiskPressure     kubelet has no disk pressure
+  Ready                True    Wed, 28 Oct 2026 14:20:10 -0300   Tue, 27 Oct 2026 19:02:06 -0300   KubeletReady                 kubelet is posting ready status

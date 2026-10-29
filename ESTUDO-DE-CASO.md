@@ -42,38 +42,69 @@ ambiente, e quanto cada escolha ganha ou custa?
 ## 2. Ficha do ambiente
 
 Fonte: [runbooks/inventario-do-ambiente.md](runbooks/inventario-do-ambiente.md). Versão da ficha:
-**F3** (2026-09-29, Blocos 1, 1b e 2). Logs do Bloco 2:
+**F4** (2026-10-27: Docker, disco e GPUs mudaram; o resto é da F3, 2026-09-29, Blocos 1, 1b e 2). Logs
+do Bloco 2:
 [sabdiia01](logs-analysis/inventario-no-sabdiia01-2026-09-29-1006.log),
 [sabdiia02](logs-analysis/inventario-no-sabdiia02-2026-09-29-1006.log),
-[sabdiia03](logs-analysis/inventario-no-sabdiia03-2026-09-29-1004.log).
+[sabdiia03](logs-analysis/inventario-no-sabdiia03-2026-09-29-1004.log). Logs de 2026-10-27:
+[01](logs-analysis/ray-docker-inventario-sabdiia01-2026-10-27-1214.log),
+[02](logs-analysis/ray-docker-inventario-sabdiia02-2026-10-27-1218.log),
+[03](logs-analysis/ray-docker-inventario-sabdiia03-2026-10-27-1218.log).
 
 | Item | Valor | Comando / log |
 |---|---|---|
-| Kubernetes | `v1.37.0` (cliente, servidor e kubelet) | `kubectl version` · [cluster](logs-analysis/inventario-cluster-2026-09-28.txt) |
+| Kubernetes | **`v1.37.1`** nos 3 *kubelets* em 2026-10-28 (era `v1.37.0` em 2026-09-28; data da troca `[não verificado]`); *kernel* `6.12.0-207.111.5.6.el9uek`, Oracle Linux 9.8. `sabdiia01` voltou `Ready` em 2026-10-28 00:53 e `sabdiia02` em 2026-10-27 19:02 (reinício `[hipótese]`) | `get nodes -o wide`, `describe node` ([01](logs-analysis/estado-disco-rede-sabdiia01-2026-10-28-1419.log), 2026-10-28) · `kubectl version` · [cluster](logs-analysis/inventario-cluster-2026-09-28.txt) |
 | Nós | 3 Dell PowerEdge R720: `sabdiia01` (.151), `sabdiia02` (.152), `sabdiia03` (.150) em 192.168.50.0/24; todos `control-plane`, sem *taints* | `get nodes -o wide`, `describe nodes` · [vllms](logs-analysis/inventario-vllms-2026-09-28.txt) |
 | SO / *kernel* | Oracle Linux Server 9.8 / `6.12.0-206.104.3.3.el9uek.x86_64` | idem |
 | CPU | 2 × Xeon E5-2690 (Sandy Bridge-EP, 2,90 GHz), 8 núcleos por *socket*, HT, 32 *threads*, 2 nós NUMA. **Sem AVX2** (só `avx`) | `lscpu`; *flags* de `/proc/cpuinfo` (Bloco 2) |
 | RAM | 755 GiB por nó, sem *swap* ativo | `free -h` |
 | CPU livre | *requests* já alocados: 1,4 a 5,4 vCPU por nó; *control plane* pesa pouco | `describe nodes` (Allocated) |
-| Disco local | 1 disco `sda` 836,6 G, `ROTA=1` (rotacional, ou volume de RAID que se declara assim `[hipótese]`). `/` 70 G com **20 G** (`sabdiia01`), 28 G (02) e 27 G (03) livres, onde ficam as imagens do containerd. `/home` 761 G com **755 G livres** em cada nó | `df -h`, `lsblk` (Bloco 2) — AC-09 |
-| *Runtime* | `containerd://2.3.5`; NVIDIA Container Toolkit `1.20.0`; **Docker não instalado** (`docker: command not found` nos 3) | `get nodes -o wide`; Bloco 2 |
+| Disco local | 1 disco `sda` 836,6 G, `ROTA=1` (rotacional, ou volume de RAID que se declara assim `[hipótese]`). **2026-10-28 14:19, os 3 nós iguais: `/` 631 G e `/home` 200 G** (LVM `ol`, sem espaço livre no VG). `/` livre: **580 G (01), 563 G (02), 534 G (03)**; `/home` livre: 99 G (01), 77 G (02), 156 G (03). Imagens (`/var/lib/containerd`) e `etcd` seguem em `/`; o `imageFs` do *kubelet* tem 677,5 GB de capacidade; `DiskPressure False` (AC-09, PD-15 fechada). Histórico, **2026-10-27 14:20:** `/` (70 G) com **39 G livres em `sabdiia01`** (46 %) e 22 G em `sabdiia02` (70 %), depois de chegar a 100 % nos dois às 12:14 e ser limpo pelo administrador; `/var/lib/etcd` fica em `/`. `/home` 761 G com 652 G (01) e 717 G (02) livres às 12:14. **`sabdiia03` foi redimensionado:** `/` 631 G com 537 G livres, `/home` 200 G com 168 G livres. Em 2026-09-29: `/` com 20-28 G livres e `/home` com 755 G nos 3 | `df -h`, `du` (2026-10-27) — AC-09, AC-20 |
+| *Runtime* | **`containerd://2.4.2`** nos 3 nós em 2026-10-28 (era `2.3.5` em 2026-09-29; data da troca `[não verificado]`); NVIDIA Container Toolkit `1.20.0` `[não reconferido]`. A regravação da configuração em 2026-10-26 (abaixo) pode ser parte dessa atualização `[hipótese]`. **Docker e Podman instalados nos 3 nós** desde alguma data entre 2026-09-29 (ausentes) e 2026-10-27, fora do Kubernetes; `data-root` do Docker em `/home/utec/docker_data` (01 e 02, 14:20). **Nenhuma imagem `vllm-openai` no containerd de 01 e 02** (a `v0.19.1` de 01 foi apagada). **Em `sabdiia01`, a configuração do containerd foi regravada em 2026-10-26 18:39**: `99-nvidia.toml` passou de 5124 para 5226 *bytes*, e o `config dump` agora avisa `Ignoring unknown key` para `enable_cdi`, `enable_experimental_restore_via_create` e `cni bin_dir` (nenhum aviso em 2026-10-02). Efeito na entrega de GPU: `[não verificado]`, conferir no próximo arranque de *pod* com GPU em 01 | `command -v`, `docker info`, `ctr images ls` (2026-10-27) — AC-20 |
+| `kubectl` nos nós | funciona em 01 e 02; **em `sabdiia03` falha** (`apiVersion must be specified for oidc to use exec authentication plugin`): rode blocos com `kubectl` em 01 ou 02 | log de 03, 2026-10-27 |
 | Gestão de GPU | NVIDIA GPU Operator (*device plugin*, *toolkit*, GFD, NFD, DCGM *exporter*); *driver* `pre-installed` no *host* | *labels* `nvidia.com/gpu.deploy.*` |
 | GPU | `Tesla-V100S-PCIE-32GB`, 32768 MiB, `compute 7.0`, família `volta`; sem MIG, sem MPS, `sharing-strategy=none` | *labels* GFD |
 | *Driver* / CUDA | `580.173.02` / `13.0` nos 3 nós | *labels* `nvidia.com/cuda.*` |
 | RuntimeClasses | `nvidia`, `nvidia-cdi`, `nvidia-legacy` | `get runtimeclass` |
 | GPU no *host* | PCIe Gen3, largura máx. x16 nos 3; **`sabdiia03` negociou x8** com a GPU em uso. ECC ligado em 01 e 02, **desligado em 03**. *Persistence mode* **desligado em 01**, ligado em 02 e 03. Limite de potência 250 W | `nvidia-smi`, `--query-gpu` (Bloco 2) |
 | Armazenamento | só `nfs-storage` (`nfs.csi.k8s.io`, `Retain`, RWX). Servidor `[2801:80:f8c:302::aa]:/SABDIIAK8S_NFS01` (IPv6), NFS 4.1, `rsize=wsize=65536`, sem `nconnect`. Exportação de 500 G com **17 G usados** (todos os PVCs somados) | `get storageclass`, `get pv`; `findmnt`, `df` (Bloco 2) |
-| Rede | `bond0` 802.3ad com 6 *links* de 1 GbE; **em `sabdiia01`, `enp65s0f1` está a 100 Mbps**. VLANs `bond0.302` e `bond0.500` (IP do nó) | `/proc/net/bonding/bond0` (Bloco 2) — AC-08 |
+| Rede | **Dois *bonds* desde 2026-10-28**, ambos 802.3ad com `Transmit Hash Policy: layer2`. **`bond0`** (6 × 1 GbE): VLAN `bond0.500`, IP do nó (`192.168.50.150/151/152`), rota *default* e **IP que o Calico usa para os *pods***; em `sabdiia01`, `enp65s0f1` segue a 100 Mbps fora do agregado (5 portas ativas, `speed=5000`). **`bond1`** (novo, 4 × 10 GbE, placas BCM57810 e Intel 82599ES): só a VLAN `bond1.302`, **só IPv6** (`2801:80:f8c:302::/64`, mesma rede do servidor NFS); `speed=40000` em 01 e 02, **`20000` em 03** (duas portas em outro agregador). MTU 1500, exceto **`bond0`/`bond0.500` de 03 com 9000 e o Calico de 03 com 8980**. **17:12: nova VLAN `bond1.20` nos 3 nós, `UP`, sem nenhum endereço** (nem IPv4, nem IPv6 de *link*), MTU 1500; as portas físicas do `bond1` estão com 9000 e o `bond1` com 1500. RTT 03 → 02: 0,311 ms (`bond1`) × 0,348 ms (`bond0`) | `/proc/net/bonding/*`, `ip -br addr`, `ip route`, anotação `projectcalico.org/IPv4Address` (2026-10-28) — AC-08 |
 | Rede / borda | Calico; MetalLB (pool `pool-publico`); Kong no *namespace* `kong` | *pods* e anotações |
 | Observabilidade | kube-prometheus (Prometheus, Alertmanager), `dcgm-exporter`, `metrics-server` | *pods* em `monitoring` e `gpu-operator` |
 
-### Ocupação das GPUs e o *namespace* `vllms` (2026-09-28)
+### Ocupação das GPUs e o *namespace* `vllms` (2026-10-27)
 
-| Nó | GPU | Ocupante | Estado |
+As GPUs de 01 e 02 estavam **ocupadas às 12:14 e vazias às 14:20**, sempre com `0 0` no Kubernetes: o Ray do
+administrador roda fora dele e liga e desliga sem aviso (AC-19). Confira as duas perguntas de "Qual GPU
+está livre?" imediatamente antes de usar qualquer uma.
+
+| Nó | GPU às 12:14-12:18 (`nvidia-smi`) | GPU às 14:20 | Ocupante |
 |---|---|---|---|
-| `sabdiia01` | **livre desde 2026-10-02 12:50** | `vllm-llama31-8b` (`v0.12.0`, `meta-llama/Llama-3.1-8B-Instruct`) **desligado com `--replicas=0`** pelo usuário, depois de 2853 reinícios em 10 dias (`401` no Hugging Face, AC-07). O *deployment* continua existindo | reservada pelo *pod* em *loop* até então; para religar: `kubectl scale deploy/vllm-llama31-8b -n vllms --replicas=1` |
-| `sabdiia02` | **livre** | `open-webui` (sem GPU) | `CreateContainerConfigError`: referencia o Secret `open-webui-secret`, que não existe no *namespace* |
-| `sabdiia03` | alocada | `vllm-deepseek-33b`: `vllm/vllm-openai:v0.6.4`, `TheBloke/deepseek-coder-33B-instruct-GPTQ` | `Running` desde 2026-09-18 após 18 reinícios. `/metrics` em 2026-09-29: `request_success_total` = **1** (75 *tokens* de entrada, 158 de saída) |
+| `sabdiia01` | **8.162 MiB**, `python3` (PID 579011), 0 % de uso | sem processo | *head* do Ray do administrador (*venv* no *host*, `root`), ainda no ar às 14:20 com a GPU registrada no Ray (`0.0/1.0 GPU`). `vllm-llama31-8b` segue com `--replicas=0` desde 2026-10-02 `[não reconferido]` |
+| `sabdiia02` | **8.162 MiB**, `ray::RayWorkerWrapper.execute_method`, 0 % de uso | sem processo; Ray parado | *worker* do Ray às 12:18; fora do *cluster* Ray às 14:22 |
+| `sabdiia03` | 27.882 MiB, `/usr/bin/python3` | `[não lido]` | `vllm-deepseek-33b` (`v0.6.4`, GPTQ), `Running` há 26 h, 0 reinícios, IP `192.168.50.160:8001`. `open-webui` em `CreateContainerConfigError` |
+
+**2026-10-28 14:19-14:21: as 3 GPUs com 0 MiB e nenhum processo, inclusive a de `sabdiia03`**, onde o
+deepseek de produção ocupava 27.882 MiB na véspera. Estado do *pod* `vllm-deepseek-33b`: `[não verificado]`
+(o `kubectl` de 03 falha por OIDC e o bloco de 01 não listou `vllms`). Os nós reiniciaram na manutenção
+`[hipótese]`; um *pod* do vLLM leva minutos para recarregar o modelo, e pode estar subindo ou parado.
+
+**2026-10-28 15:00 (`sabdiia01`): o *namespace* `vllms` não lista mais o `vllm-deepseek-33b`** (nem
+`vllm-llama31-8b`, nem `open-webui`). Só há o **Ray do administrador, agora dentro do Kubernetes**: três
+*Deployments* simples (não KubeRay), imagem `vllm/vllm-openai:v0.5.4`, criados às ~14:50
+([log](logs-analysis/producao-rede-nova-sabdiia01-2026-10-28-1500.log)). Se o *Deployment* do deepseek foi
+apagado ou escalado a 0, e se os *pods* do Ray pedem `nvidia.com/gpu`: respondido às 15:11 (AC-19):
+deepseek e llama em `0/0`, e os três *pods* do Ray com 1 GPU cada.
+
+```
+ray-head-85bcdd9859-p65sd    1/1   Running   0               10m   sabdiia01
+ray-worker-5b5488995-gjcgb   1/1   Running   2 (69s ago)     10m   sabdiia03
+ray-worker-5b5488995-qpl84   0/1   Error     2 (4m32s ago)   10m   sabdiia02
+Warning   BackOff   Back-off restarting failed container vllm-worker in pod ray-worker-...
+```
+
+Em 2026-09-29, o `/metrics` do deepseek registrava `request_success_total` = **1** desde 09-18 (75
+*tokens* de entrada, 158 de saída).
 
 Os logs de `kubectl logs` do deepseek começam em 09-27: o arranque foi perdido na rotação de logs do
 *kubelet* `[hipótese]`. **Guarde o log de arranque de todo *pod* novo logo que ele subir.**
@@ -109,6 +140,20 @@ Os logs de `kubectl logs` do deepseek começam em 09-27: o arranque foi perdido 
 | 2026-10-22 | Administrador ajusta a refrigeração de `sabdiia01`. Rearranque do 7B cai: o *pod* não resolve `huggingface.co`, e a `v0.19.1` consulta o Hub mesmo com o modelo em cache ([F-024]) | PD-24; Bloco A2 (`HF_HUB_OFFLINE=1`) |
 | 2026-10-22 | Rearranque com `HF_HUB_OFFLINE=1`: `Ready` em 2 min 44 s. Os *pods* de `sabdiia01` estão sem DNS, inclusive o do *cluster* | AC-18, PD-28 |
 | 2026-10-22 | **Reteste térmico B-001c**: sem estrangulamento (72 °C máx. a 250 W); 47 *tok*/s com 1 usuário e 680 *tok*/s com 32, contra 10 e 114 antes do ajuste | AC-17, PD-24 (`sabdiia01` resolvido) |
+| 2026-10-23 | 2ª intervenção, na refrigeração da sala. Reteste B-001d: curva de temperatura e vazão iguais às de 10-22 (72 °C, 680 *tok*/s); sem efeito mensurável na GPU, e o *benchmark* se repete entre dias | AC-17 |
+| 2026-10-27 | Análise do projeto Ray do administrador (`llm_lhama_prototype`) e inventário dos 3 nós: Ray no *host* ocupa as GPUs de 01 e 02 sem o Kubernetes saber; `/` cheio em 01 e 02, com *pods* expulsos; Docker instalado | AC-19, AC-20, D-02 suspensa, PD-29, PD-30 |
+| 2026-10-27 | Depois da limpeza do administrador: `/` em 46 % (01) e 70 % (02), *pods* de volta, GPUs vazias, Ray só com o *head*; vLLM `0.5.4` no *venv*; a `v0.19.1` foi apagada de 01 | AC-19, AC-20 (ampliados), PD-30 fechada, PD-15 volta a bloquear |
+| 2026-10-27 | Proposta do administrador (dividir modelo entre nós com Ray) confrontada com o RTT medido (0,247 ms) e o código da `v0.19.1` | AC-21, AC-08 (corrigido), PD-31 |
+| 2026-10-27 | Pergunta: dividir entre nós aproxima o resultado do gpt-oss no Ollama? *Model card* e código MXFP4 da `v0.19.1` | AC-22 |
+| 2026-10-27 | Arquitetura de produção: réplicas de 1 GPU por nó, sem Ray; `Qwen3-30B-A3B-GPTQ-Int4` como primeiro candidato (~16,2 GB) | D-04 (provisória), PD-19 |
+| 2026-10-28 | Manutenção do administrador conferida nos 3 nós: `/` passou a 631 G em 01 e 02 (como em 03), `/home` a 200 G; novo `bond1` de 4 × 10 GbE só com IPv6 da VLAN 302 (rede do NFS); Kubernetes `v1.37.1`, containerd `2.4.2`. Os *pods* continuam na rede de 1 GbE; GPU de 03 vazia | PD-15 fechada, AC-08 e AC-09 atualizados, PD-31 |
+| 2026-10-28 | RTT pela rede nova ~0,24-0,31 ms, quase igual ao da antiga. Às 15:00, `vllms` sem o deepseek de produção e com o Ray do administrador em 3 *pods* (`v0.5.4`), *workers* reiniciando | AC-08, §2, PD-29 |
+| 2026-10-28 | 15:11: Ray refeito em 3 *Deployments* com 1 GPU cada, todos no ar; deepseek e llama em `0/0`; nenhuma GPU livre para o estudo | AC-19 (atualizado), PD-29 |
+| 2026-10-28 | 15:22: o Ray roda `Meta-Llama-3.1-8B-Instruct` (vLLM `0.5.4`) com *pipeline parallel* 3, um pedaço por nó, servidor iniciado à mão, `hostNetwork`, sem Ray Serve | AC-19, AC-21, PD-29 |
+| 2026-10-28 | Análise do repositório `llm_lhama_prototype` (`45efe37`, pasta `k8s/`): servidor subido por `kubectl exec -it`, NCCL/Gloo em `bond0.500`, *token* do HF em `ConfigMap` versionado | AC-19 |
+| 2026-10-28 | 17:12: nada do Ray/vLLM em execução nos 3 nós (nem *pod*, nem processo, nem contêiner; GPUs 0 MiB). A rede ganhou a VLAN `bond1.20` nos 3 nós, sem endereço: suspeita principal do erro de subida `[hipótese]` | AC-19, §2 |
+| 2026-10-28 | 17:10: os *Deployments* `ray-head`/`ray-worker-2`/`ray-worker-3` foram removidos de `vllms` (nenhum *pod* no *namespace*); o administrador ajusta a rede e a nova subida da API dá erro `[erro não visto]` | AC-19 |
+| 2026-10-28 | 16:51: a API do Ray não responde (porta 8000 recusada), GPUs com 0 MiB, *pods* `Running` sem reinício: o servidor saiu e o Kubernetes não viu. B-003 bloqueada até o administrador subir de novo | AC-19 |
 
 ## 4. Achados
 
@@ -334,6 +379,242 @@ para pelo menos 20 min. Antes de servir a usuários, configure o *reasoning pars
 **Validade.** `v0.19.1`, `sabdiia01`, 2026-10-02, duas tentativas, uma geração. Não medido: carga
 concorrente, entrada de imagem, qualidade das respostas em 4 bits, contexto perto de 8192 *tokens*.
 
+### AC-22 — O gpt-oss não roda no vLLM na V100S, com ou sem divisão entre nós: o MXFP4 exige *compute capability* 8.0 {#ac-22}
+
+**O que é.** Os dois gpt-oss são MoE com os *weights* de MoE em MXFP4 [F-028]. Na `v0.19.1`, o método
+MXFP4 declara capacidade mínima 80 [F-029], e a V100S é 70 (AC-04): o vLLM recusa o modelo
+`[inferência pelo código; não executado]`. Dividir entre nós não muda isso, e o 120b nem caberia: o
+*model card* fala de uma GPU de 80 GB, contra 57,6 GB úteis em 2 V100S (PD-31). No outro servidor, o
+Ollama rodou o 120b com 2 V100S e ainda ~4 % na CPU (PD-21): o llama.cpp tem *kernels* próprios para esse
+formato, o vLLM não. **A velocidade do gpt-oss vem de ser MoE** (5,1 B parâmetros ativos por *token* no
+120b), não da divisão. E dividir não muda a resposta: o mesmo modelo dividido responde igual ao inteiro.
+A qualidade vem do modelo escolhido.
+
+**Evidência.** [F-029], [F-028]:
+
+```
+    def get_min_capability(cls) -> int:
+        return 80
+"117B parameters with 5.1B active parameters" ... "on a single 80GB GPU"
+"21B parameters with 3.6B active parameters" ... "within 16GB of memory"
+```
+
+**Regra prática.** Para o perfil do gpt-oss (MoE, poucos parâmetros ativos) no vLLM desta GPU, o
+candidato é um MoE com *quantization* que tem *kernel* em `sm_70`, inteiro numa V100S e com uma réplica por
+nó: `Qwen/Qwen3-30B-A3B-GPTQ-Int4` (PD-19, com o cuidado do AC-15). O próprio gpt-oss só pelo Ollama (o 20b
+cabe numa GPU, PD-21). A comparação de qualidade se faz com as perguntas da aplicação (PD-25), não pelo
+tamanho.
+
+**Validade.** 2026-10-27, `v0.19.1`. Onde o mínimo é aplicado e se o *backend* de MoE (`oracle.mxfp4`) tem
+caminho para `sm_70`: `[não verificado]`. Fecha-se de vez com um arranque (falha esperada em segundos).
+
+### AC-21 — Entre dois nós, *tensor parallel* sai mais lento que 1 GPU só pela rede; *pipeline parallel* custa ~5 % {#ac-21}
+
+**O que é.** Com *tensor parallel*, o vLLM `v0.19.1` faz **2 *all-reduce* por camada** (saída da atenção e
+do MLP) a cada passo de *decode* [F-027]. No `Qwen/Qwen2.5-7B-Instruct` (28 camadas, `hidden_size`
+3584, [F-026]) são 56 por passo, cada um esperando ao menos uma ida e volta na rede. Com o RTT medido
+entre 01 e 02 (0,247 ms), **só a espera soma ≥ 13,8 ms por *token***. Uma GPU sozinha gasta 20,3 ms por
+*token* com 1 usuário (B-001c). Mesmo que cada GPU fizesse metade do trabalho em ~10 ms `[hipótese
+otimista]`, o total (≥ 23,8 ms) já supera a GPU sozinha. Com 32 usuários, cada *all-reduce* leva 229 KB
+(3584 × 32 × 2 *bytes*), 1,8-2,3 ms a 98-125 MB/s (AC-08): **a rede limita a vazão a ≤ 245-310 *tok*/s**,
+contra 680 de uma GPU e ~1360 de duas réplicas `[cálculo; 2× é hipótese]`. *Pipeline parallel* manda
+pela rede só uma passagem por passo, na fronteira entre as metades (~2,6 ms em 32 usuários, ~5 % de um
+passo de ~47 ms) `[cálculo]`. Não acelera nada, mas é a forma barata de juntar 64 GB para um modelo que
+não cabe em 32.
+
+**Evidência.** [rtt-sabdiia01-02-2026-10-27-1446.log](logs-analysis/rtt-sabdiia01-02-2026-10-27-1446.log);
+código [F-027]; configuração [F-026]:
+
+```
+100 packets transmitted, 100 received, 0% packet loss, time 20586ms
+rtt min/avg/max/mdev = 0.177/0.247/0.340/0.032 ms
+if self.reduce_results and self.tp_size > 1:
+    output = tensor_model_parallel_all_reduce(output_parallel)
+```
+
+**Regra prática.** Não divida modelo entre nós com *tensor parallel* nesta rede. Para um modelo de 33-57 GB
+que não caiba numa V100S, o arranjo entre nós a testar é `--pipeline-parallel-size 2` (PD-31), e ele
+compete com 2 GPUs no mesmo nó (PD-22) e com *quantization*/MoE numa GPU (PD-19). Para vazão com um modelo
+que cabe em 32 GB: réplicas independentes (AC-01).
+
+**Validade.** 2026-10-27; `v0.19.1`, Qwen2. O RTT é de ICMP, um piso: o NCCL sobre TCP acrescenta pilha e
+cópias `[não medido]`. Vale para modelos com o mesmo padrão de 2 *all-reduce* por camada. Nada disso foi
+executado no vLLM: *pipeline parallel* entre nós em `sm_70` e na `v0.19.1` é `[não executado]`.
+
+### AC-19 — O Ray do administrador rodava no *host*, invisível ao Kubernetes; desde 2026-10-28 roda em *pods* que reservam as 3 GPUs, com a produção desligada {#ac-19}
+
+**O que é.** O projeto `llm_lhama_prototype` do administrador sobe um *cluster* Ray com *head* em
+`sabdiia01` e *worker* em `sabdiia02`, num *venv* Python 3.9 em `/home/utec/llm_lhama_prototype/venv`,
+como `root`. Os contêineres Docker do projeto (`ray-head-node`, `ray-worker-node`) estão parados com
+`Exited (1)`. Como a GPU não passa pelo *device plugin*, o Kubernetes continua anunciando `0 0` nos dois
+nós e pode agendar um *pod* com `nvidia.com/gpu: 1` numa GPU que já tem 8 GB ocupados. Na hora da coleta,
+nenhum dos dois servia nada: 0 % de uso e nada escutando na porta 8000. O padrão dos processos indica
+**um modelo dividido entre as duas GPUs** (*tensor* ou *pipeline parallel*, executor Ray do vLLM), e não
+réplicas independentes `[inferência]`. Indícios: `RayWorkerWrapper` é o *worker* do executor distribuído
+do vLLM, o `python3` comum que segura a GPU em 01 é o padrão do motor V0, e 8.162 MiB por GPU batem com
+metade dos ~15 GiB do Llama-3.1-8B FP16 `[cálculo; modelo não confirmado]`. Os scripts versionados não
+rodam como estão (`deploy.py` tem `arg_utilss` e `num_replcas`, e pede 3 réplicas com `tensor_parallel_size=1`),
+então o que roda não é o `deploy.py` do repositório `[hipótese]`. O painel do Ray (`0.0.0.0:8265`) e o GCS
+(`*:6379`) ficam abertos na rede, sem autenticação `[não verificado na versão em uso]`, num nó `control-plane`.
+
+**Evidência.** [01](logs-analysis/ray-docker-inventario-sabdiia01-2026-10-27-1214.log),
+[02](logs-analysis/ray-docker-inventario-sabdiia02-2026-10-27-1218.log):
+
+```
+sabdiia01  577807 root 03:44 /home/utec/llm_lhama_prototype/venv/.../ray/gcs/gcs_server --log_dir=/tmp/ray/session_2026-10-27_12-10-38_728215_577731/logs
+           LISTEN 0.0.0.0:8265 (python3)    LISTEN *:6379 (gcs_server)
+           579011, python3, 8162 MiB        nvidia.com/gpu     0           0
+           ray-head-node   llm_lhama_prototype-ray-head   Exited (1) 41 minutes ago
+sabdiia02  522743 root 01:03 .../ray/raylet/raylet --raylet_socket_name=/tmp/ray/session_2026-10-27_12-10-38_728215_577731/sockets/raylet.1
+           523371, ray::RayWorkerWrapper.execute_method, 8162 MiB      nvidia.com/gpu     0           0
+```
+
+**Regra prática.** Antes de qualquer experimento ou medição, uma GPU só conta como livre se passar nas
+duas perguntas de "Qual GPU está livre?" ([COMANDOS.md](COMANDOS.md)): `0 0` no Kubernetes **e**
+`nvidia-smi --query-compute-apps` vazio. Não use `sabdiia01` nem `sabdiia02` enquanto o Ray estiver no ar
+(D-02 suspensa). O paralelismo que o estudo recomenda continua o de AC-01: réplicas de 1 GPU por nó.
+Dividir um 8B, que cabe numa V100S, entre dois nós em 1 GbE (AC-08) só acrescenta tráfego de rede por
+*token* `[hipótese: não medido]`.
+
+**Às 14:20 o quadro era outro** ([01](logs-analysis/ray-pd29-pd30-sabdiia01-2026-10-27-1420.log),
+[02](logs-analysis/ray-pd29-pd30-sabdiia02-2026-10-27-1422.log)): as duas GPUs estavam sem processo, o
+Ray tinha só o *head* em 01 (`1 node`, `0.0/1.0 GPU`), nenhuma aplicação Serve, e nada rodava em 02. O
+*venv* tem **vLLM `0.5.4`**, Ray `2.38.0` e torch `2.4.0+cu121`; o `requirements.txt` pede `0.6.2`. Os
+`.py` do servidor têm o mesmo *hash* dos versionados, inclusive o `deploy.py` com erros: o que ocupava as
+GPUs às 12:14 não foi o `deploy.py` pelo Serve `[confirmado]`, e o que foi continua sem registro. **O Ray
+liga e desliga sem aviso:** a GPU que está livre agora pode não estar daqui a pouco.
+
+**Atualização 2026-10-28: o Ray foi para dentro do Kubernetes e ocupa as 3 GPUs; a produção foi
+desligada.** Às 15:11, `vllms` tinha `ray-head` (01), `ray-worker-2` (02) e `ray-worker-3` (03), três
+*Deployments* simples (não KubeRay) com `vllm/vllm-openai:v0.5.4`, **cada um pedindo `nvidia.com/gpu: 1`**, todos
+`1/1`. O Kubernetes passa a ver o uso: `nvidia.com/gpu 1 1` nos 3 nós, nenhuma GPU livre para o estudo. O
+`vllm-deepseek-33b` e o `vllm-llama31-8b` estão **escalados a `0/0`, não apagados**. O `Service`
+`LoadBalancer` `192.168.50.160:8001` continua, mas sem *pod*: a API de produção não responde `[inferência:
+seletor sem pod; não testado]`. Os *Deployments* `ray-worker-*` das 15:03 substituíram o `ray-worker` único
+das 14:50, que caía em `BackOff`; a causa daquelas quedas não ficou registrada
+([log](logs-analysis/vllms-ray-k8s-sabdiia01-2026-10-28-1511.log)):
+
+```
+deployment.apps/ray-worker-3        1/1   ...  vllm/vllm-openai:v0.5.4
+deployment.apps/vllm-deepseek-33b   0/0   ...  vllm/vllm-openai:v0.6.4
+service/vllm-deepseek-33b   LoadBalancer   10.102.231.75   192.168.50.160   8001:30191/TCP
+ray-worker-3-7cfd96f894-ckb8n   sabdiia03   1     vllm/vllm-openai:v0.5.4
+  nvidia.com/gpu     1           1          (sabdiia01, 02 e 03)
+587107, python3, 5664 MiB                   (GPU de sabdiia01, no host)
+```
+
+**O que roda (2026-10-28 15:22):** `meta-llama/Meta-Llama-3.1-8B-Instruct` com **`--pipeline-parallel-size 3
+--tensor-parallel-size 1`** e `--distributed-executor-backend ray`, isto é, **um 8B, que cabe numa V100S,
+dividido em 3 pedaços, um por nó**. Mais: `--dtype half --enforce-eager --gpu-memory-utilization 0.98
+--max-model-len 4096 --max-num-seqs 16 --enable-chunked-prefill=False`. Detalhes que pesam:
+
+- O servidor do vLLM **não está no manifesto**: os *Deployments* só rodam `ray start ... --block`, e o
+  `api_server` foi iniciado à mão dentro do *head* (`kubectl exec` `[inferência]`). Se o *pod* reiniciar, o
+  modelo não volta sozinho, e o Kubernetes não sabe se a API está de pé.
+- `hostNetwork: true`: a API (`:8000`) e o painel do Ray (`:8265`) ficam no IP do nó, `192.168.50.151`, sem
+  `Service` e sem autenticação. A rede entre os pedaços é a do nó, `bond0` (`--node-ip-address 192.168.50.x`);
+  os valores de `NCCL_SOCKET_IFNAME`/`GLOO_SOCKET_IFNAME` não foram lidos.
+- **Não é Ray Serve**: `serve status` falha com `No module named 'grpc'` dentro da imagem.
+- GPUs: 26.026 / 30.928 / 25.024 MiB com 0 % de uso (ocioso na coleta). A maior parte é *KV cache*, por causa
+  do `0.98`; os *weights* do 8B em FP16 são ~15 GiB no total `[cálculo]`.
+- Volume do cache: PVC `hf-cache-pvc` (o AC-03 registra `hf-cache`; se é o mesmo, `[não verificado]`).
+
+```
+438  13:54 python3 -m vllm.entrypoints.openai.api_server --model meta-llama/Meta-Llama-3.1-8B-Instruct
+     --pipeline-parallel-size 3 --tensor-parallel-size 1 --distributed-executor-backend ray --dtype half ...
+command: ["/bin/bash","-c","ray start --head --node-ip-address=192.168.50.151 --port=6379 --dashboard-host=0.0.0.0 --num-gpus=1 --block"]
+ 3.0/3.0 GPU (3.0 used of 3.0 reserved in placement groups)
+ray-head: 26026 MiB, 0 %    ray-worker-2: 30928 MiB, 0 %    ray-worker-3: 25024 MiB, 0 %
+```
+
+([log](logs-analysis/ray-k8s-modelo-sabdiia01-2026-10-28-1522.log).) Pelo AC-21, dividir em camadas um modelo
+que cabe numa GPU não deixa uma resposta mais rápida e ocupa 3 GPUs para o trabalho de uma; três réplicas
+independentes do mesmo 8B atenderiam ~3× mais requisições simultâneas `[hipótese, não medido aqui]`. Com
+`--enforce-eager`, qualquer número medido nessa configuração é piso (CLAUDE.md).
+
+**16:51: o servidor caiu e ninguém percebeu.** Os três *pods* seguiam `Running` havia 108 min com 0
+reinícios, mas a porta 8000 recusava conexão, não havia `api_server` no *head* e as 3 GPUs estavam com
+**0 MiB**. Só o GCS (`:6379`) escutava; o painel (`:8265`) também não. As GPUs continuam reservadas no
+Kubernetes (`nvidia.com/gpu: 1` por *pod*) sem servir nada. É a fragilidade prevista acima: o servidor está
+fora do manifesto, então nem o Kubernetes nem uma *probe* veem a queda. Por que caiu (encerrado pelo
+administrador, morto com a sessão do `kubectl exec`, ou erro): `[não verificado]`
+([log](logs-analysis/api-ray-diagnostico-sabdiia01-2026-10-28-1651.log)):
+
+```
+curl: (7) Failed to connect to 192.168.50.151 port 8000: Connection refused
+LISTEN 0  4096  *:6379  *:*  users:(("gcs_server",pid=583733,fd=19))
+ray-head-545cc769b9-7sjvc   1/1   Running   0   108m   192.168.50.151   sabdiia01
+ray-head: 0 MiB, 0 %    ray-worker-2: 0 MiB, 0 %    ray-worker-3: 0 MiB, 0 %
+```
+
+**O repositório do administrador confirma o mecanismo (commit `45efe37`, 2026-10-28 15:48, `k8s/`).** O
+`k8s/README.txt` sobe o servidor com `kubectl exec -it pod/ray-head-... -- python3 -m
+vllm.entrypoints.openai.api_server ...`: o processo é filho de uma sessão interativa e morre quando ela fecha
+`[hipótese forte para a queda das 16:51]`. O `02-ray-cluster.yaml` fixa cada *pod* com `nodeName`, usa
+`hostNetwork: true` e `NCCL_SOCKET_IFNAME`/`GLOO_SOCKET_IFNAME` = `bond0.500` (a rede de 1 GbE com IPv4). Se a
+subida das 17:10 usou outra interface, por exemplo a `bond1.20` sem endereço, a mudança não está no
+repositório `[não verificado]`. **O `01-fundacao.yaml` põe um *token* real do Hugging Face num `ConfigMap`**
+(`envFrom` nos 3 *pods*), versionado e enviado ao remoto: qualquer um que leia o repositório ou os
+`ConfigMaps` de `vllms` o vê. O *token* deve ser revogado no Hugging Face e passar a `Secret` criado fora do
+repositório (CLAUDE.md, "Segredos").
+
+**Regra prática para o MVP, qualquer que seja o arranjo:** o comando que serve o modelo vai no manifesto
+(`command`/`args` do contêiner), com `readinessProbe`/`livenessProbe` em `/health`, para o Kubernetes
+reiniciar o que cair e tirar do `Service` o que não responde. Proposta entregue ao administrador para o
+arranjo do Ray, já na `v0.19.1`: [configs/proposta-ray-cluster-pp3.yaml](configs/proposta-ray-cluster-pp3.yaml)
+`[não executado]`. A `v0.19.1` **não traz Ray na imagem** e o executor Ray dela exige `ray >= 2.43.0` com
+Compiled Graph [F-034]: subir o arranjo na versão do estudo custa instalar o Ray em cada contêiner.
+
+**Validade.** 2026-10-27, 12:14-14:22; atualização 2026-10-28 15:11, 15:22 e 16:51. Modelo e grau de paralelismo do que rodou às 12:14: `[não
+verificado]` (PD-29). Não se sabe desde quando o Ray usa as GPUs. A B-001d (2026-10-23) não gravou
+`--query-compute-apps`, então a exclusividade da GPU naquela medição também não está provada.
+
+### AC-20 — `/` encheu (100 %) em `sabdiia01` e `sabdiia02`, o *kubelet* expulsou *pods* e a `v0.19.1` sumiu de `sabdiia01` {#ac-20}
+
+**O que é.** Às 12:14, `/` (70 G) estava cheio em 01 e 02, com imagens e contêineres Docker do projeto Ray
+somados ao containerd (AC-09). O *kubelet* expulsou o `speaker` do MetalLB (em 01 e 02, o que anuncia os IPs
+de LoadBalancer, inclusive o da produção, AC-06) e o `node-exporter`. A condição `DiskPressure` voltou a
+`False` às 12:40 (01) e 12:41 (02), o horário da limpeza, o que confirma a pressão de disco antes dela
+`[inferência pelo lastTransitionTime; o motivo das expulsões sumiu com os pods]`. Às 14:20, `/` estava em
+46 % (01) e 70 % (02), o `data-root` do Docker era `/home/utec/docker_data` (se foi movido na limpeza ou
+já estava lá: `[não verificado]`), os três `speaker` e o deepseek estavam `Running` em produção, e **nenhum
+nó tinha mais imagem `vllm-openai`**: a `v0.19.1` de 01, sem uso desde a B-001d, foi apagada (pelo GC do
+*kubelet* ou na limpeza). O `etcd` dos nós `control-plane` grava em `/` (`/var/lib/etcd`, 490 M em 01): o
+disco cheio atinge o *cluster* inteiro, não só os *pods* do nó.
+
+**Evidência.** [01](logs-analysis/ray-docker-inventario-sabdiia01-2026-10-27-1214.log),
+[02](logs-analysis/ray-docker-inventario-sabdiia02-2026-10-27-1218.log):
+
+```
+sabdiia01  /dev/mapper/ol-root   70G   70G  5.9M 100% /
+           Images 3 2 18.39GB 15.18kB (0%)    Containers 2 0 16.35GB 16.35GB (100%)
+           metallb-system speaker-nls5d  0/1 Evicted 0 12m
+           monitoring monitoring-prometheus-node-exporter-snzst  0/1 Evicted 0 12m
+sabdiia02  /dev/mapper/ol-root   70G   70G  1.1M 100% /
+           Images 1 1 17.82GB 0B (0%)        Containers 1 0 6.497GB 6.497GB (100%)
+           metallb-system speaker-ckzd4  0/1 Evicted 0 88s
+```
+
+Às 14:20 ([01](logs-analysis/ray-pd29-pd30-sabdiia01-2026-10-27-1420.log),
+[02](logs-analysis/ray-pd29-pd30-sabdiia02-2026-10-27-1422.log)):
+
+```
+sabdiia01  DiskPressure False ... Tue, 27 Oct 2026 12:40:47 -0300   KubeletHasNoDiskPressure
+           /dev/mapper/ol-root   70G   32G   39G  46% /     15G /var/lib/containerd   490M /var/lib/etcd
+           /home/utec/docker_data          nenhuma imagem vllm-openai
+sabdiia02  /dev/mapper/ol-root   70G   49G   22G  70% /     31G /var/lib/containerd   426M /var/lib/etcd
+pod/vllm-deepseek-33b-67754f4465-fwv4p   1/1   Running   0   26h   10.244.50.184   sabdiia03
+```
+
+**Regra prática.** Docker em nó do *cluster* fica com `data-root` em `/home`, nunca em `/`. **A `v0.19.1`
+não cabe de volta em `/` com segurança:** ~30 G (AC-09) sobre os 39 G livres de 01 deixariam 9 G, abaixo
+dos 10,5 G (15 %) em que o *kubelet* entra em `DiskPressure` `[cálculo]`; em 02 (22 G livres) não cabe.
+Voltar a testar exigia primeiro mover o *root* do containerd para `/home` (PD-15). **Superado em
+2026-10-28:** `/` passou a 631 G em 01 e 02 (AC-09).
+
+**Validade.** 2026-10-27, 12:14-14:22. O que exatamente encheu `/` e o que a limpeza removeu: `[não
+verificado]` (os contêineres Docker parados somavam 22,85 G recuperáveis às 12:14).
+
 ### AC-17 — A V100S de `sabdiia01` estrangulava por temperatura (~400 MHz em 2 min); depois do ajuste de refrigeração, sustenta 250 W a 72 °C e rende 4 a 6 vezes mais {#ac-17}
 
 **O que é.** A GPU de `sabdiia01` fica a 72 °C parada, só com o modelo carregado. Sob carga ela chega a
@@ -391,6 +672,16 @@ Na concorrência 32, as cargas não são idênticas (512 requisições com a sem
 semente 32): ordem de grandeza. A comparação formal é a B-002 (Bloco F).
 Log: [B-001c-reteste-termico-sabdiia01-2026-10-22-1552.log](logs-analysis/B-001c-reteste-termico-sabdiia01-2026-10-22-1552.log).
 
+**Depois da 2ª intervenção, na sala (2026-10-23).** Mesma carga, mesmo *pod* (rodando havia 24 h), B-001d:
+**nada mudou na GPU**. A curva de temperatura coincide com a de ontem amostra a amostra (31 °C parada,
+43 °C aos 20 s, 64 °C aos 2 min, 72 °C no fim), com a mesma potência média (235,5 contra 235,9 W) e o
+contador `SW Thermal Slowdown` em 0 µs. Vazão: 48,2 e 680,5 *tok*/s (ontem, 47,0 e 680,4). Duas
+consequências: a temperatura da GPU sob carga não depende da sala nesta faixa `[hipótese: a V100S
+PCIe é passiva e depende do fluxo de ar das ventoinhas do chassi, não verificado]`; e o
+`vllm bench serve` repete a fase 2 com diferença de 0,01 % entre dias, então diferenças de alguns
+por cento numa alavanca (PD-27) já são sinal, não ruído (uma repetição só).
+Log: [B-001d-reteste-termico-sabdiia01-2026-10-23-1635.log](logs-analysis/B-001d-reteste-termico-sabdiia01-2026-10-23-1635.log).
+
 **Regra prática.** Antes de qualquer medição, vigie `clocks.current.sm`, `temperature.gpu` e
 `nvidia-smi -q -d PERFORMANCE` **durante a carga**. O critério é o **contador** `SW Thermal Slowdown`
 (e `HW Thermal Slowdown`) parado durante a carga e a temperatura abaixo de 83 °C, não um piso de *clock*:
@@ -399,7 +690,8 @@ vale como número do motor. Ao avaliar 2 GPUs no mesmo nó (PD-22), conte com ma
 
 **Validade.** `sabdiia01`: estrangulamento em 2026-10-14 (3 min, concorrência 1); sem estrangulamento em
 2026-10-22 (1 min a concorrência 1 + 3 min 25 s a concorrência 32), com a temperatura ainda subindo
-devagar no fim (71 → 72 °C no último minuto). Carga de 20 min ou mais: `[não medido]` (B-002).
+devagar no fim (71 → 72 °C no último minuto); repetido igual em 2026-10-23 (B-001d), com 72 °C nos
+últimos 40 s. Carga de 20 min ou mais: `[não medido]` (B-002).
 `sabdiia02` e `sabdiia03` sob carga: `[não medido]`.
 
 ### AC-18 — Com o modelo em cache, a `v0.19.1` ainda precisa de rede para arrancar; com `HF_HUB_OFFLINE=1`, não {#ac-18}
@@ -638,8 +930,8 @@ injetam o `HF_TOKEN`**.
 porta de saída é escolhida pelo **endereço MAC de destino**. Todo o tráfego de um nó para um mesmo
 destino sai por uma única porta de 1 Gbps (≈ 125 MB/s), **mesmo com várias conexões em paralelo**.
 Consequências: (1) ler 17 G de *weights* do NFS leva pelo menos ~140 s `[cálculo, não medido]`, e
-`nconnect` não ajudaria na saída; (2) *tensor* ou *pipeline parallel* entre nós fica fora de questão
-`[hipótese]`. Em `sabdiia01`, a porta `enp65s0f1` negociou 100 Mbps, mas o LACP a pôs num agregador à
+`nconnect` não ajudaria na saída; (2) *tensor parallel* entre nós fica fora de questão, e *pipeline
+parallel* só serve para caber um modelo maior, não para acelerar (AC-21). Em `sabdiia01`, a porta `enp65s0f1` negociou 100 Mbps, mas o LACP a pôs num agregador à
 parte (ID 1), e o agregador ativo é o 2: ela **não carrega dados**, só quadros de controle. O nó opera com
 5 portas em vez de 6, sem conexão lenta. Placa e *switch* anunciam 1000baseT e não há erros nem quedas de
 *link*: o padrão típico de **cabo com par defeituoso** `[hipótese]`.
@@ -666,14 +958,45 @@ cifra os dados, então o número é um piso para a rede, não o teto:
 3145728000 bytes (3.1 GB, 2.9 GiB) copied, 31.9909 s, 98.3 MB/s
 ```
 
-**Regra prática.** Descarte paralelismo multinó enquanto a rede for 1 GbE. Para arranque rápido, compare
+**Atualização 2026-10-28: o `bond1` de 40 G existe, mas os *pods* não passam por ele.** O administrador
+criou `bond1` (4 × 10 GbE, 802.3ad, também `layer2`) só com a VLAN 302 e só endereços IPv6
+`2801:80:f8c:302::/64`, a mesma rede do servidor NFS (`[2801:80:f8c:302::aa]`, §2). O IP do nó, a rota
+*default* e o IP que o Calico usa para levar tráfego de *pod* entre nós continuam em `bond0.500`
+(192.168.50.x, 1 GbE); as rotas de *pod* saem por `tunl0` para esses IPs. Logo: (1) o **NFS** deve ter
+passado para o `bond1`, com teto de **10 Gbps por destino** por causa do `layer2`. A rota foi
+confirmada em `sabdiia03` (`2801:80:f8c:302::aa dev bond1.302`); em 01 e 02, `[não verificado]`; (2) **entre *pods*,
+a rede segue 1 GbE**, e o AC-21 vale como antes. **O RTT quase não muda na rede nova** (`sabdiia03` →
+`sabdiia02`, 100 pacotes cada, 2026-10-28 14:52): **0,311 ms** pelo `bond1` contra **0,348 ms** pelo `bond0`
+([log](logs-analysis/producao-rede-nova-sabdiia03-2026-10-28-1452.log)); de `sabdiia01` a `sabdiia02`
+(15:00), **0,236 ms** contra **0,319 ms** ([log](logs-analysis/producao-rede-nova-sabdiia01-2026-10-28-1500.log)).
+A mesma medida pelo `bond0` deu 0,247 ms em 2026-10-27: a variação entre dias é do tamanho do ganho. Mais banda não reduz a espera por
+troca, que é o custo do *tensor parallel*. **MTU desigual:** em 03, `bond0.500` tem 9000 e o túnel do Calico
+(`tunl0`, `cali*`) 8980; em 01 e 02, `bond0` tem 1500. Em 01, conferido: `bond0` 1500 e `tunl0` **1480**, contra 8980 em 03. *Pods* de 03 podem mandar a 01/02 pacotes maiores do
+que eles aceitam `[hipótese; TCP negocia o tamanho, UDP grande e ICMP não]`: levar ao administrador.
+Em `sabdiia03`, duas portas do `bond1` ficaram num agregador inativo (`speed=20000`, configuração do
+*switch* `[hipótese]`) e o `bond0` tem MTU 9000 contra 1500 nos outros dois. Em `sabdiia01`, a porta a 100
+Mbps continua fora do agregado. Evidência: [01](logs-analysis/estado-disco-rede-sabdiia01-2026-10-28-1419.log),
+[02](logs-analysis/estado-disco-rede-sabdiia02-2026-10-28-1420.log),
+[03](logs-analysis/estado-disco-rede-sabdiia03-2026-10-28-1421.log):
+
+```
+bond1.302@bond1  UP   2801:80:f8c:302:c8:1f:66fa:fe55/64          (sabdiia01; sem IPv4)
+bond0.500@bond0  UP   192.168.50.151/24 ...
+10.244.182.128/26 via 192.168.50.152 dev tunl0 proto bird onlink
+sabdiia01   192.168.50.151/24                                     (CALICO_IPV4)
+bond0 mtu=1500 speed=5000 / bond1 mtu=1500 speed=40000            (01)
+bond0 mtu=9000 speed=6000 / bond1 mtu=1500 speed=20000            (03)
+```
+
+**Regra prática.** Descarte *tensor parallel* multinó enquanto a rede **dos *pods*** for 1 GbE; *pipeline parallel*
+entre nós só para modelos que não cabem em 32 GB, depois de medido (AC-21, PD-31). Para arranque rápido, compare
 NFS × cópia local em `/home` (AC-09, PD-04). A porta a 100 Mbps **não invalida medições em `sabdiia01`**;
 trocar o cabo devolve a sexta porta (PD-13). Num *bond* LACP, confira `Aggregator ID` além de `Speed`.
 
 **Validade.** 2026-10-02, `sabdiia01`. Vazão de saída medida uma vez, com `ssh` (n = 1). Política de
 *hash* do *switch* (tráfego de entrada) e banda real do NFS: `[não medido]`. `Transmit Hash Policy` de 02 e 03: `[não verificado]`.
 
-### AC-09 — `/` tem 20-28 G livres e guarda as imagens; `/home` tem 755 G livres em cada nó {#ac-09}
+### AC-09 — `/` guarda as imagens e o `etcd`: era 70 G (apertado) e desde 2026-10-28 é 631 G nos 3 nós; `/home` caiu para 200 G {#ac-09}
 
 **O que é.** O containerd guarda as imagens em `/var/lib/containerd`, dentro de `/` (70 G), que já está
 61-72 % ocupado. A imagem `vllm/vllm-openai:v0.6.4` tem **5,62 GB** no registro, mas desempacotada
@@ -758,6 +1081,20 @@ referências com o mesmo *digest*** (Passo 3 do
 containerd para `/home` (PD-15) continua sendo a saída estrutural. Para cache local de modelos, use
 `/home`, não `/`.
 
+**Atualização 2026-10-28: a falta de espaço em `/` acabou.** O administrador redimensionou o LVM de 01
+e 02 como já tinha feito em 03: `/` com **631 G** (534-580 G livres) e `/home` com **200 G** (77-156 G
+livres). O `imageFs` do *kubelet* passou de 75,1 GB para **677,5 GB** de capacidade (622,8 GB livres em 01),
+e o limiar de 15 % fica em ~102 GB. Cabem várias imagens do vLLM por nó; a regra "uma imagem por vez"
+e o cálculo de folga abaixo ficam como histórico. O que mudou de lado: **`/home` encolheu de 761 G para 200
+G**, com 102 G (01) e 124 G (02) já usados (Docker em `/home/utec/docker_data`). Cache local de modelos em
+`/home` agora tem limite; em `/` cabe mais.
+
+```
+/dev/mapper/ol-root  631G   51G  580G   9% /        (sabdiia01)
+/dev/mapper/ol-home  200G  102G   99G  51% /home
+"capacityBytes": 677501730816   "availableBytes": 622752088064   (imageFs)
+```
+
 **Medida da `v0.19.1` (2026-10-02, `sabdiia01`):** `/` foi de 24 G para **54 G usados** (+30 G) e
 `/var/lib/containerd` de 5,8 G para 37 G, para uma imagem de 9,0 GiB comprimida: razão de ~3,4×. Sobram
 17 G livres (77 %), a **5,5 G** do ponto em que o *kubelet* reage. Nenhuma outra imagem grande cabe em
@@ -772,7 +1109,8 @@ disco local: `[não medido]`.
 |---|---|---|---|---|
 | D-01 | Imagem de referência: `vllm/vllm-openai:v0.19.1` | `v0.20.0`+ (CUDA 13, sem `sm_70`); `v0.12.0` (7 versões mais antiga, também com `sm_70`); variantes `-cu129` de `v0.20.0`+ (Dockerfile sem `7.0`) | última versão com `sm_70` no Dockerfile (AC-11) | **confirmada** em 2026-10-02 pelo primeiro arranque (AC-13) |
 | D-03 | **Descartado** como modelo de produção: `Qwen/Qwen3.8-27B` com bitsandbytes 4 bits, na configuração de AC-14 | — | ~3 *tokens*/s e 12 min de arranque (AC-14) não atendem ao uso pretendido (decisão do usuário, 2026-10-13); sem GPTQ do 3.8, e o GPTQ do 3.5-27B não cabe (AC-15) | em vigor; **antes de apagar o *pod*, testar as alavancas da PD-20**; substituto: PD-19 |
-| D-02 | `sabdiia01` é o nó de testes; `vllm-llama31-8b` desligado (`--replicas=0`) e imagem `v0.12.0` removida | testar em `sabdiia02` (imagem não cabia, e a remoção por nome não liberou espaço) | abriu GPU e 27 G de disco sem tirar nenhum serviço que funcionasse (AC-09) | em vigor desde 2026-10-02 |
+| D-04 | **Escalar com réplicas de 1 GPU por nó, sem Ray**: um `Deployment` do vLLM por GPU atrás de um `Service`; modelo que caiba inteiro em 32 GB. Primeiro candidato: `Qwen/Qwen3-30B-A3B-GPTQ-Int4` (PD-19) | Ray com modelo dividido entre nós (*tensor parallel*: a rede custa mais que o ganho; *pipeline parallel*: só para modelo > 32 GB, PD-31); Ray Serve na frente das réplicas (sem medida de ganho sobre o `Service`); gpt-oss no vLLM (MXFP4 exige CC 8.0) | AC-01, AC-21, AC-22; réplicas não passam pela rede durante a geração | **provisória** (2026-10-27): o modelo depende de arranque, qualidade (AC-15) e *tool calling* (PD-25); hoje são 2 réplicas possíveis (01 e 02), porque 03 tem a produção |
+| D-02 | `sabdiia01` é o nó de testes; `vllm-llama31-8b` desligado (`--replicas=0`) e imagem `v0.12.0` removida | testar em `sabdiia02` (imagem não cabia, e a remoção por nome não liberou espaço) | abriu GPU e 27 G de disco sem tirar nenhum serviço que funcionasse (AC-09) | **suspensa em 2026-10-27**: a GPU de 01 é disputada pelo Ray do administrador, que liga sem aviso (AC-19), e a `v0.19.1` foi apagada e não cabe de volta em `/` (AC-20). Volta com a PD-15 (containerd em `/home`) e um acordo sobre a GPU (PD-29) |
 
 ## 6. Configuração de referência
 
@@ -821,7 +1159,9 @@ Alavancas **candidatas**, a medir contra a linha de base de AC-05:
 
 | ID | Pergunta | Que decisão destrava | Como fechar |
 |---|---|---|---|
-| PD-24 | **A refrigeração das GPUs.** **`sabdiia01` resolvido em 2026-10-22** (ajuste do administrador; B-001c sem estrangulamento, AC-17). Falta saber o que foi mudado, para repetir nos outros nós, e se `sabdiia01` aguenta carga de 20 min ou mais (B-002). As de `sabdiia02` e `sabdiia03` estrangulam sob carga? O que muda no servidor (perfil térmico e ventoinhas no gerenciador do servidor, posição da placa, fluxo de ar) para a GPU sustentar o *clock*? | **toda medição de desempenho depende disto**; onde rodar a linha de base; se a topologia de 2 GPUs por nó é viável termicamente (PD-22) | (1) ~~Bloco D~~ feito em 2026-10-15: limites iguais nos 3 (83/87/90 °C); `ipmitool` ausente, ventoinhas só pelo iDRAC; (1b) teste térmico curto em `sabdiia02`, hoje fria, para saber se o problema é do nó ou dos três (exige liberar espaço para a imagem `v0.19.1` em `sabdiia02`); (2) com o administrador, ajuste de refrigeração em `sabdiia01`; (3) repetir o Bloco C: o critério é `SW Thermal Slowdown` inativo e *clock* perto de 1597 MHz durante a carga |
+| PD-31 | **Dividir um modelo entre dois nós vale a pena nesta rede?** Proposta do administrador: com Ray, dividir entre 2 nós um modelo que não cabe numa V100S. A divisão soma memória (64 GB), mas cada *token* passa pela rede de 1 GbE (AC-08), e o custo disso nunca foi medido aqui. Um modelo de 60 GB não carrega nem nas duas: 0,90 × 64 GB = 57,6 GB `[cálculo]` | se um modelo maior que 32 GB entra pelo multinó (Ray), por 2 GPUs no mesmo nó (PD-22) ou por *quantization*/MoE numa GPU (PD-19) | ~~(0) RTT~~ feito em 2026-10-27: 0,247 ms → *tensor parallel* entre nós descartado por cálculo (AC-21). (0b) **Rede nova (2026-10-28):** o `bond1` de 4 × 10 GbE não leva tráfego de *pod* (AC-08); RTT medido pelo `bond1` × `bond0`: 03 → 02, 0,311 × 0,348 ms; 01 → 02, 0,236 × 0,319 ms (56 trocas × 0,236 ms ≥ 13,2 ms por *token* `[cálculo]`, contra 20,3 ms de TPOT com 1 GPU). **Pôr os *pods* no `bond1` não salva o *tensor parallel*** (AC-21): a latência, não a banda, é o custo dominante; para *pipeline parallel* a banda maior ajuda pouco, porque o tráfego já é pequeno `[hipótese]`. (0c) **2026-10-28: o administrador já roda o arranjo, e ele é candidato ao MVP** (AC-19: Llama-3.1-8B, `--pipeline-parallel-size 3`, `v0.5.4`): medir como está, com a carga da B-001c, pelo [runbook B-003](runbooks/medicao-ray-pp3.md) `[não executado]`. Não é uma variável por vez (modelo, versão, nº de GPUs e `--enforce-eager` mudam juntos). (1) PD-15 fechada; com as GPUs de 01 e 02 livres: o mesmo `Qwen/Qwen2.5-7B-Instruct` FP16 e a carga da B-001c com `--pipeline-parallel-size 2` entre 01 e 02, contra 1 GPU (47 e 680 *tok*/s) e 2 réplicas. Esperado: perto de 1 GPU com 1 usuário, abaixo de 2 réplicas com 32. `--tensor-parallel-size 2` só se for preciso confirmar o AC-21 com número |
+| PD-29 | **Atualizada 2026-10-28: o Ray está em *pods* com as 3 GPUs reservadas e a produção em `0/0` (AC-19). Modelo e paralelismo respondidos às 15:22: Llama-3.1-8B com `--pipeline-parallel-size 3`. Falta: é experimento ou serviço, por quanto tempo ocupa as GPUs, e o deepseek volta?** Antes: **O que o Ray do administrador rodou às 12:14, e quando volta a usar as GPUs?** Já se sabe (AC-19): vLLM `0.5.4`, Ray `2.38.0`, não foi o `deploy.py` pelo Serve, e às 14:20 só o *head* seguia no ar. Faltam o modelo, se foi *tensor* ou *pipeline parallel* entre 01 e 02, e se é experimento ou serviço permanente | quais GPUs ficam para o estudo e em que horários (D-02); se a divisão entre nós (contra AC-01 e AC-08) vira uma medição a fazer ou sai de cena | conversa com o administrador (mais barata); ou leitura dos logs da sessão `session_2026-10-27_12-10-38_728215_577731` em `/tmp/ray` de 01 e 02 (`Loading model weights took`, `tensor_parallel_size`) |
+| PD-24 | **A refrigeração das GPUs.** **`sabdiia01` resolvido em 2026-10-22** (ajuste do administrador; B-001c sem estrangulamento, AC-17). A 2ª intervenção, na sala (10-23), não mudou a GPU (B-001d): o ajuste que valeu foi o de 10-22. Falta saber o que foi mudado, para repetir nos outros nós, e se `sabdiia01` aguenta carga de 20 min ou mais (B-002). As de `sabdiia02` e `sabdiia03` estrangulam sob carga? O que muda no servidor (perfil térmico e ventoinhas no gerenciador do servidor, posição da placa, fluxo de ar) para a GPU sustentar o *clock*? | **toda medição de desempenho depende disto**; onde rodar a linha de base; se a topologia de 2 GPUs por nó é viável termicamente (PD-22) | (1) ~~Bloco D~~ feito em 2026-10-15: limites iguais nos 3 (83/87/90 °C); `ipmitool` ausente, ventoinhas só pelo iDRAC; (1b) teste térmico curto em `sabdiia02`, hoje fria, para saber se o problema é do nó ou dos três (exige liberar espaço para a imagem `v0.19.1` em `sabdiia02`); (2) com o administrador, ajuste de refrigeração em `sabdiia01`; (3) repetir o Bloco C: o critério é `SW Thermal Slowdown` inativo e *clock* perto de 1597 MHz durante a carga |
 | PD-10 | **Linha de base de concorrência na V100S (B-001):** com um modelo sem *quantization*, quanto a vazão total cresce de 1 a 64 requisições simultâneas, e quanto pioram TTFT e TPOT por usuário? (O deepseek em produção fica para depois: a API tem 1 requisição em 10 dias.) | se o vLLM serve vários usuários nesta GPU (objetivo do estudo, definido pelo usuário em 2026-10-14); contra o que medir cada alavanca | [runbooks/teste-concorrencia-vllm.md](runbooks/teste-concorrencia-vllm.md): `Qwen/Qwen2.5-7B-Instruct` em FP16 em `sabdiia01`, `vllm bench serve` dentro do *pod*, concorrência 1/4/8/16/32/64, 512 → 256 *tokens*, p50/p95/p99 |
 | PD-28 | **Por que os *pods* de `sabdiia01` não resolvem nomes desde a manutenção?** De dentro do *pod*, falham `kubernetes.default.svc.cluster.local` e `huggingface.co`; o nó resolve. O `resolv.conf` do *pod* aponta para o *Service* do CoreDNS (`10.96.0.10`), e as duas réplicas do CoreDNS estão em `sabdiia03`. O nó tem 3 dias de *uptime*, e o `calico-node` dele reiniciou há 3d1h. Hipótese: o tráfego de *pod* de `sabdiia01` para *pods* de outro nó ou para IPs de *Service* não passa `[hipótese]` | se `sabdiia01` pode receber uma réplica de produção (um *pod* sem DNS de *cluster* não alcança *Services* pelo nome) e se a rede de *pods* entre nós está íntegra antes de montar o `Service` com 3 réplicas | com o administrador: estado do Calico e das rotas em `sabdiia01`; de dentro do `vllm-conc`, testar o IP do CoreDNS e um IP de *pod* de `sabdiia03` |
 | PD-27 | **Quanto custa `--enforce-eager` na V100S?** Com o mesmo `Qwen/Qwen2.5-7B-Instruct` FP16, quanto caem a vazão total e o tempo por *token* com os *CUDA graphs* desligados? No arranque, os *graphs* custaram 0,32-0,44 GiB e 9-12 s (AC-13, B-001); o ganho de velocidade `[não medido]` | se vale aceitar `--enforce-eager` quando a memória aperta (como no 27B, AC-14) ou trocar de modelo; quanto a configuração do deepseek em produção (`--enforce-eager`, AC-05) deixa de ganhar | depois da PD-24 e da B-001 refeita: repetir o Bloco B de [runbooks/teste-concorrencia-vllm.md](runbooks/teste-concorrencia-vllm.md) com `--enforce-eager` como **única** mudança, concorrência 1, 8 e 64, vigiando *clock* e temperatura (AC-17); comparar vazão total e TPOT p50/p99 |
@@ -830,12 +1170,11 @@ Alavancas **candidatas**, a medir contra a linha de base de AC-05:
 | PD-05 | O pool `pool-publico` é alcançável de fora? Quem consome a API hoje? | autenticação na borda (Kong) ou `--api-key`; risco aceito | conversa com o dono do ambiente; regras de MetalLB e *firewall* |
 | PD-26 | **Como a aplicação nos servidores 10 e 11, fora do *cluster*, alcança o vLLM, e com que autenticação?** Um `Service` `ClusterIP` não serve; `NodePort`, `LoadBalancer` ou Ingress (Kong) expõem a API, que hoje sobe sem `--api-key` (AC-06). A arquitetura ([F-023]) promete "sem rota pública ao vLLM" sem dizer como | o tipo do `Service` e o uso de `--api-key` no manifesto de produção; se o SSE atravessa o Kong (*buffering* desligado na rota) | com a infraestrutura e o responsável pela arquitetura: caminho de rede 10/11 → *cluster*, alcance do `pool-publico` (PD-05); depois, teste de *streaming* a partir de um dos servidores 10/11 com a chave |
 | PD-04 | Quanto leva carregar os *weights*: NFS (1 conexão, `rsize` 64 KiB) × cópia local em `/home`? | onde fica o cache de modelos; `startupProbe` | cronometrar o carregamento no log de arranque, nas duas origens, com o mesmo modelo (AC-08, AC-09) |
-| PD-15 | **Bloqueia o primeiro arranque.** Onde colocar as imagens: mover o *root* do containerd para `/home` (755 G livres), ou liberar as camadas órfãs da `v0.6.4` em `sabdiia02` (~16 G)? | se dá para baixar a `v0.19.1` (27-32 G em disco) | com o administrador: (a) `root` do containerd em `/home`, com o nó drenado e o containerd reiniciado; ou (b) descobrir o que segura as camadas órfãs (*leases*) e deixar o GC do containerd coletá-las. O `config.toml` do nó ([cópia](docs-analysis/config.toml), 2026-10-02) confirma `root = "/var/lib/containerd"`, `root_path = ""` no `overlayfs` (tudo sob o `root`) e `discard_unpacked_layers = false`, que é o que faz a imagem ocupar ~3× (guarda as camadas comprimidas depois de desempacotar). Ligar essa opção reduziria o custo por imagem em cerca de um terço `[hipótese, não testado]`. **Hipótese nova (2026-10-02) para as camadas "órfãs" de `sabdiia02`:** o containerd guarda três referências por imagem (*tag*, *digest* e `sha256:<id>`), e só duas foram removidas; a terceira ainda seguraria as camadas. O Passo 1 do runbook confirmou em `sabdiia01` que a `v0.12.0` tem **três referências com o mesmo *digest*** (*tag*, *digest* e `sha256:0c19f07f...`). Falta o Passo 3 confirmar que remover as três libera o espaço; se liberar, o mesmo comando resolve os ~16 G de `sabdiia02`. A configuração em vigor é idêntica nos 3 nós (2026-10-02), então a mudança é a mesma em todos; os arquivos têm contexto SELinux, a conferir com `getenforce` antes de mover dados para `/home` |
 | PD-17 | Quanto a imagem `v0.19.1` consome de `/` de fato, e o que o nó faz quando falta espaço? | troca a estimativa de AC-09 por medida; argumento para a PD-15 | [runbooks/teste-queda-disco-v0.19.1.md](runbooks/teste-queda-disco-v0.19.1.md): aplica [configs/vllm-qwen38-27b.yaml](configs/vllm-qwen38-27b.yaml) em `sabdiia02` e para sozinho em 15 G livres. **Arriscado: combinar com o administrador** |
 | PD-21 | Num nó do *cluster* (1 V100S), o Ollama/llama.cpp é mais rápido que o vLLM **com o mesmo modelo e a mesma carga**? | motor de produção: vLLM (forte em concorrência) × Ollama (forte em um usuário por vez nesta GPU) | o mesmo modelo inteiro em 32 GB nos dois motores (ex.: `Qwen3.8-27B` em GGUF 4 bits, F-010), 1 e N requisições simultâneas. Referência externa, **outro servidor com as mesmas placas** (as V100S foram tiradas dele para montar este *cluster*): o usuário mediu 10 → 50 *tokens*/s com `gpt-oss:120b` no Ollama, com as 2 V100S na mesma máquina, sem Kubernetes, ajustando `num_ctx`, Flash Attention e quantização q8. O ganho acompanhou a queda do *offload* para a CPU (40 % → 4 %), com 64 GB de VRAM num servidor só, arranjo que não existe aqui |
 | PD-22 | **Topologia das GPUs:** manter 1 V100S por nó (até 3 cópias de modelos de até ~32 GB; tolera falha de um nó) ou juntar 2 V100S num nó (64 GB para um modelo maior, *tensor parallel* no vLLM ou divisão de camadas no Ollama; menos cópias)? | o tamanho máximo de modelo e a forma de escalar o serviço | decisão do usuário e do administrador, com base no uso (modelo grande e capaz × muitos usuários simultâneos), nos resultados da PD-20/PD-21 e em conferir se o nó comporta 2 placas (espaço, *riser*, energia). Evidência a favor de 2 por nó: PD-21 (gpt-oss-120b a ~50 *tokens*/s com 2 V100S juntas) |
 | PD-20 | **Parcial (2026-10-14): concorrência não ajuda e raciocínio desligado funciona (AC-16).** Restam R1 (*CUDA graphs* via `--kv-cache-memory-bytes`) e R2 (entrada de imagem desligada). Alguma parametrização tira o `Qwen/Qwen3.8-27B` dos ~3 a 5 *tokens*/s? | se o modelo pedido volta a ser viável (reabre D-03) ou não | Passo 1b de [runbooks/teste-qwen38-27b-bnb.md](runbooks/teste-qwen38-27b-bnb.md) no *pod* em execução; depois R1 e R2, um por vez |
-| PD-19 | Qual modelo entrega a velocidade necessária na V100S com saída correta? Candidatos: `Qwen/Qwen3-30B-A3B-GPTQ-Int4` (MoE, 3B ativos), `Qwen/Qwen2.5-14B-Instruct-GPTQ-Int8` (núcleo 8 bits, fora do alerta), `Qwen/Qwen2.5-32B-Instruct-GPTQ-Int4` (núcleo 4 bits sob alerta), `Qwen/Qwen2.5-7B-Instruct` em FP16 (controle, sem *quantization*) | o modelo de produção que substitui o Qwen3.8-27B (D-03) | definir com o usuário a velocidade mínima e o uso; testar um candidato por vez em `sabdiia01` com o mesmo bloco de AC-14 (imagem já no nó; só o modelo baixa para `/home`), conferindo *tokens*/s **e** se a resposta faz sentido (AC-15) |
+| PD-19 | Qual modelo entrega a velocidade necessária na V100S com saída correta? Candidatos: `Qwen/Qwen3-30B-A3B-GPTQ-Int4` (MoE, 3B ativos; **primeiro a testar**, D-04; ~16,2 GB de *weights* [F-030] `[cálculo]`, cabe numa V100S com ~12 GB para *KV cache*; especialistas no `MoeWNA16`, atenção no `gptq_gemm` de 4 bits sob alerta, AC-15), `Qwen/Qwen2.5-14B-Instruct-GPTQ-Int8` (núcleo 8 bits, fora do alerta), `Qwen/Qwen2.5-32B-Instruct-GPTQ-Int4` (núcleo 4 bits sob alerta), `Qwen/Qwen2.5-7B-Instruct` em FP16 (controle, sem *quantization*) | o modelo de produção que substitui o Qwen3.8-27B (D-03) | definir com o usuário a velocidade mínima e o uso; testar um candidato por vez em `sabdiia01` com o mesmo bloco de AC-14 (imagem já no nó; só o modelo baixa para `/home`), conferindo *tokens*/s **e** se a resposta faz sentido (AC-15) |
 | PD-13 | Por que `sabdiia03` negociou PCIe x8, tem ECC desligado, e `sabdiia01` tem *persistence mode* desligado? | se os 3 nós são equivalentes para réplicas e comparações | `nvidia-smi -q` sob carga para o PCIe; decidir ECC e *persistence* iguais nos 3. A porta a 100 Mbps de `sabdiia01` saiu desta pendência: está fora do agregado e não afeta medições (AC-08); a troca do cabo `enp65s0f1` fica com a equipe de rede |
 
 ## 8. Lições
@@ -854,6 +1193,11 @@ Alavancas **candidatas**, a medir contra a linha de base de AC-05:
   Flash Attention e *KV cache* quantizado liberam VRAM para mais camadas na GPU. O vLLM não divide o
   modelo com a CPU por padrão; nele, `--max-model-len` não acelera, e na V100S não há FlashAttention
   (AC-13). Os parâmetros com o mesmo nome não têm o mesmo efeito nos dois motores.
+- **Dividir um modelo muda onde ele cabe, não o que ele responde.** Qualidade vem do modelo; velocidade
+  de um MoE vem dos poucos parâmetros ativos; a divisão só acrescenta comunicação (AC-21, AC-22).
+- **O Kubernetes só conhece a GPU que ele mesmo entregou.** Processo rodando direto no *host* ocupa a
+  GPU e ela continua aparecendo como livre. A pergunta "está livre?" se responde no `nvidia-smi` do nó,
+  não no *scheduler* (AC-19).
 - **Agregar portas não soma a banda de uma conexão.** 6 × 1 GbE em LACP continuam dando 1 Gbps para um
   único fluxo, como o de um *mount* NFS sem `nconnect` (AC-08).
 
@@ -861,6 +1205,11 @@ Alavancas **candidatas**, a medir contra a linha de base de AC-05:
 
 | Data | Correção | Mecanismo do erro |
 |---|---|---|
+| 2026-10-28 | Bloco "produção e rede nova" titulado para `sabdiia01` rodou em `sabdiia03` e gravou o log com o nome de 01 → arquivo renomeado para `-sabdiia03-`; os blocos passam a usar `$(hostname -s)` no nome e a abortar se o nó for outro | o nome do nó estava fixo no `tee` e o bloco não conferia `hostname`: o log mentiria sobre a origem se não tivesse o cabeçalho `== $(hostname -s)` |
+| 2026-10-28 | PD-15 fechada sem executar o [runbook](runbooks/mover-containerd-para-home.md): o administrador redimensionou o LVM e `/` passou a 631 G em 01 e 02; `imageFs` com 677,5 GB (AC-09) | — |
+| 2026-10-28 | "*bond* de 40 G" informado → em 01 e 02 são 4 × 10 GbE (`speed=40000`), mas o `layer2` limita a 10 Gbps por destino; em 03, 20 G ativos. E o `bond1` só tem IPv6 da VLAN 302: **os *pods* continuam no `bond0` de 1 GbE** (AC-08) | velocidade somada do agregado tomada como velocidade entre dois nós; o caminho do tráfego de *pod* depende do IP que o Calico anuncia, não das placas instaladas |
+| 2026-10-27 | AC-08 "*tensor* ou *pipeline parallel* entre nós fica fora de questão" → só *tensor parallel*; *pipeline parallel* passa pouco pela rede e fica como opção de capacidade (AC-21) | as duas formas de dividir o modelo foram tratadas como uma só, sem contar o tráfego de cada uma |
+| 2026-10-27 | PD-30 fechada pelo bloco das 14:20 (→ AC-20): `DiskPressure` voltou a `False` às 12:40, `etcd` em `/`, `data-root` do Docker em `/home`, `v0.19.1` apagada de 01 | — |
 | 2026-09-28 | Premissa "Kubernetes + Docker" → *runtime* containerd (AC-02) | premissa informada tomada como fato antes do inventário |
 | 2026-09-28 | Premissa "≥ 2 GPUs" → 3 GPUs em 3 nós, 1 por nó (AC-01) | idem |
 | 2026-09-28 | "V100 32 GB" → V100S-PCIE-32GB (AC-04) | nome comercial aproximado; o GFD dá o produto exato |
@@ -892,6 +1241,18 @@ Alavancas **candidatas**, a medir contra a linha de base de AC-05:
 
 | Arquivo em `logs-analysis/` | Prova |
 |---|---|
+| [ray-docker-inventario-sabdiia01-...](logs-analysis/ray-docker-inventario-sabdiia01-2026-10-27-1214.log), [02](logs-analysis/ray-docker-inventario-sabdiia02-2026-10-27-1218.log), [03](logs-analysis/ray-docker-inventario-sabdiia03-2026-10-27-1218.log) | Docker e Podman nos 3 nós; Ray do administrador no *host* (*venv*, `root`), *head* em 01 e *worker* em 02, mesma sessão; 8.162 MiB por GPU com o Kubernetes em `0 0`; painel `0.0.0.0:8265` e GCS `*:6379`; contêineres do projeto parados; `/` 100 % em 01 e 02, *pods* `Evicted` (MetalLB, `node-exporter`); `sabdiia03` redimensionado e com `kubectl` quebrado (OIDC); 27.882 MiB em 03 (AC-19, AC-20, §2) |
+| [containerd-config-sabdiia01-2026-10-27-1602.log](logs-analysis/containerd-config-sabdiia01-2026-10-27-1602.log) | o containerd de 01 ainda guarda as imagens em `/var/lib/containerd`, no `/` de 70 G (`ol-root`); o `imageFs` do *kubelet* confirma (75,1 GB de capacidade, 41,2 GB livres): PD-15 não feita. Arquivos de configuração regravados em 2026-10-26 18:39, `99-nvidia.toml` com 5226 *bytes* e três chaves ignoradas pelo containerd (§2) |
+| [estado-disco-rede-sabdiia01-...](logs-analysis/estado-disco-rede-sabdiia01-2026-10-28-1419.log), [02](logs-analysis/estado-disco-rede-sabdiia02-2026-10-28-1420.log), [03](logs-analysis/estado-disco-rede-sabdiia03-2026-10-28-1421.log) | depois da manutenção: `/` 631 G e `/home` 200 G nos 3 (LVM sem folga), `imageFs` 677,5 GB, `DiskPressure False` (PD-15 fechada, AC-09); novo `bond1` 4 × 10 GbE `layer2`, só VLAN 302 IPv6, 40000 em 01/02 e 20000 em 03; IP do nó, rota *default* e Calico em `bond0.500` (1 GbE); `bond0` de 03 com MTU 9000; `enp65s0f1` de 01 ainda a 100 Mbps (AC-08); Kubernetes `v1.37.1`, containerd `2.4.2`; **as 3 GPUs com 0 MiB, inclusive 03** (§2) |
+| [ray-onde-erro-sabdiia01-...](logs-analysis/ray-onde-erro-sabdiia01-2026-10-28-1712.log), [02](logs-analysis/ray-onde-erro-sabdiia02-2026-10-28-1713.log), [03](logs-analysis/ray-onde-erro-sabdiia03-2026-10-28-1713.log) | nenhum Ray/vLLM em *pod*, processo ou contêiner nos 3 nós; nada em 8000/8265/6379; GPUs 0 MiB; `vllm-deepseek-33b` e `vllm-llama31-8b` seguem `0/0`. Rede: **`bond1.20@bond1` `UP` sem endereço nos 3**; MTU igual ao das 14:19 (03 com 9000 no `bond0`); `bond1` de 03 ainda com 2 portas em outro agregador; `enp65s0f1` de 01 ainda a 100 Mbps (§2) |
+| [ray-erro-rede-sabdiia01-2026-10-28-1710.log](logs-analysis/ray-erro-rede-sabdiia01-2026-10-28-1710.log) | `No resources found in vllms namespace`; `deployments.apps "ray-head" not found` (e os dois *workers*): o Ray saiu de `vllms` entre 16:51 e 17:10. Os `FALHOU` de porta são do `kubectl exec` sem *pod*, não da rede (o bloco não abortava sem *pods*) |
+| [api-ray-diagnostico-sabdiia01-2026-10-28-1651.log](logs-analysis/api-ray-diagnostico-sabdiia01-2026-10-28-1651.log) | `curl: (7) ... port 8000: Connection refused`; só `gcs_server` em `:6379` (nem `:8000` nem `:8265`); *pods* do Ray `Running`, 0 reinícios, 108 min; nenhum `api_server` no *head*; 3 GPUs com 0 MiB (AC-19). O "`curl saiu com 0`" é do `echo` anterior, não do `curl` (erro do bloco) |
+| [ray-k8s-modelo-sabdiia01-2026-10-28-1522.log](logs-analysis/ray-k8s-modelo-sabdiia01-2026-10-28-1522.log) | os *Deployments* do Ray só rodam `ray start` (`hostNetwork: true`, PVC `hf-cache-pvc`, `/dev/shm` 16 Gi, 1 GPU); o `api_server` do vLLM foi iniciado à parte: `Meta-Llama-3.1-8B-Instruct`, `--pipeline-parallel-size 3 --tensor-parallel-size 1`, `--enforce-eager`, `0.98`, `--max-model-len 4096`, `--max-num-seqs 16`; `ray status` 3 nós, `3.0/3.0 GPU`; `serve` sem `grpc`; GPUs 26.026/30.928/25.024 MiB a 0 %; log do *head* sem a linha de configuração (AC-19) |
+| [vllms-ray-k8s-sabdiia01-2026-10-28-1511.log](logs-analysis/vllms-ray-k8s-sabdiia01-2026-10-28-1511.log) | `ray-head`, `ray-worker-2` e `ray-worker-3` (`v0.5.4`), um por nó, **cada um com `nvidia.com/gpu: 1`**, todos `1/1`; `nvidia.com/gpu 1 1` nos 3 nós; `vllm-deepseek-33b` e `vllm-llama31-8b` em `0/0` (não apagados); `Service` `192.168.50.160:8001` sem *pod*; `python3` com 5.664 MiB na GPU de 01; sem log de queda anterior nos *workers* novos (AC-19) |
+| [producao-rede-nova-sabdiia01-2026-10-28-1500.log](logs-analysis/producao-rede-nova-sabdiia01-2026-10-28-1500.log) | **`vllms` sem o `vllm-deepseek-33b`**: só `ray-head` (01, `Running`) e dois `ray-worker` (03 e 02, reiniciando em `BackOff`), imagem `vllm/vllm-openai:v0.5.4` (5,48 GB, *pull* de 1m48s a 5m), criados ~14:50 (§2, AC-19, PD-29); NFS por `bond1.302` em 01; MTU 1500 e `tunl0` 1480 em 01; RTT a 02: 0,319 ms (`bond0`) × 0,236 ms (`bond1`) (AC-08, PD-31) |
+| [producao-rede-nova-sabdiia03-2026-10-28-1452.log](logs-analysis/producao-rede-nova-sabdiia03-2026-10-28-1452.log) | rodado em **`sabdiia03`** (o bloco era para 01; arquivo renomeado para o nó real, §9): `kubectl` falha (OIDC), estado da produção não lido; NFS sai por `bond1.302`; MTU 9000 em `bond0`/`bond0.500` e 8980 no Calico; RTT a 02: 0,260/0,348/0,441 ms pelo `bond0` e 0,220/0,311/0,706 ms pelo `bond1` (AC-08, PD-31) |
+| [rtt-sabdiia01-02-2026-10-27-1446.log](logs-analysis/rtt-sabdiia01-02-2026-10-27-1446.log) | RTT `sabdiia01` → `sabdiia02`: 0,177/0,247/0,340 ms (mín./média/máx.), 0 % de perda em 100 pacotes (AC-21) |
+| [ray-pd29-pd30-sabdiia01-...](logs-analysis/ray-pd29-pd30-sabdiia01-2026-10-27-1420.log), [02](logs-analysis/ray-pd29-pd30-sabdiia02-2026-10-27-1422.log) | depois da limpeza: `DiskPressure False` desde 12:40/12:41; `/` 46 % e 70 %; `etcd` em `/`; `data-root` do Docker em `/home/utec/docker_data`; nenhuma imagem `vllm-openai`; deepseek e `speaker` do MetalLB `Running`; GPUs sem processo; Ray com só o *head* em 01, sem aplicações Serve; vLLM `0.5.4`, Ray `2.38.0`, torch `2.4.0+cu121`; `.py` com o mesmo *hash* dos versionados (AC-19, AC-20, §2) |
 | [inventario-cluster-2026-09-28.txt](logs-analysis/inventario-cluster-2026-09-28.txt) | versão do K8s, nós, *runtime*, GPU Operator, GPUs alocáveis, RuntimeClasses, StorageClass e PVs (AC-01, AC-02, AC-03) |
 | [inventario-vllms-2026-09-28.txt](logs-analysis/inventario-vllms-2026-09-28.txt) | *labels* GFD (GPU, *driver*, CUDA), *taints*, recursos por nó, estado e manifestos de `vllms` (AC-04, AC-05, AC-06). A primeira seção (consumidores de GPU) não foi executada: o bloco não foi colado inteiro (`syntax error near unexpected token '}'`). A ocupação veio de `Allocated resources` |
 | [inventario-vllms-logs-2026-09-29.txt](logs-analysis/inventario-vllms-logs-2026-09-29.txt) | queda do `vllm-llama31-8b` por `401`/*gated* (AC-07); arranque de 09-18 do deepseek (XFormers, GPTQ, *cast* BF16→FP16) e `/metrics` (*KV cache*, 1 requisição) (AC-05); API sem credencial (AC-06). Convertido de uma captura de terminal em RTF (`bloco_c1.rtf`); a seção "arranque até o servidor subir" veio vazia por causa da rotação do log |
@@ -909,6 +1270,7 @@ Alavancas **candidatas**, a medir contra a linha de base de AC-05:
 | [teste-concorrencia-arranque-sabdiia01-2026-10-14-1657.log](logs-analysis/teste-concorrencia-arranque-sabdiia01-2026-10-14-1657.log) | arranque do `Qwen/Qwen2.5-7B-Instruct` FP16 na `v0.19.1`: *download* de 15 GB em 125 s, modelo 14,25 GiB, *KV cache* 13,14 GiB / 246.016 *tokens*, 86 *CUDA graphs* em 12 s, *prefix caching* ligado (PD-10) |
 | [teste-concorrencia-arranque-sabdiia01-2026-10-22-1521.log](logs-analysis/teste-concorrencia-arranque-sabdiia01-2026-10-22-1521.log) | depois da intervenção do administrador: imagem já no nó, GPU livre (`0 0`), mas o *pod* cai em 3 min com `Temporary failure in name resolution` ao listar o repositório do modelo no Hugging Face |
 | [teste-concorrencia-arranque-offline-sabdiia01-2026-10-22-1541.log](logs-analysis/teste-concorrencia-arranque-offline-sabdiia01-2026-10-22-1541.log) | arranque com `HF_HUB_OFFLINE=1`: `Ready` em 2 min 44 s, pesos lidos de `/home` (disco local) em 47 s, mesmo *KV cache* do dia 14 (246.016 *tokens*); nome servido = caminho no cache (AC-18). DNS: o nó resolve `huggingface.co`; de dentro do *pod* falham o nome do *cluster* e o externo; CoreDNS só em `sabdiia03`; `calico-node` de 01 reiniciado há 3d1h (PD-28) |
+| [B-001d-reteste-termico-sabdiia01-2026-10-23-1635.log](logs-analysis/B-001d-reteste-termico-sabdiia01-2026-10-23-1635.log), [gpu-amostras-b001d.csv](logs-analysis/gpu-amostras-b001d.csv), [gpu-performance-b001d.txt](logs-analysis/gpu-performance-b001d.txt) | depois da intervenção na sala: mesma carga da B-001c, mesmos números (31 → 72 °C, 235,5 W médios, contador `SW Thermal Slowdown` em 0 µs antes e depois; 48,2 e 680,5 *tok*/s); 2 min depois da carga, 32 °C (AC-17) |
 | [B-001c-reteste-termico-sabdiia01-2026-10-22-1552.log](logs-analysis/B-001c-reteste-termico-sabdiia01-2026-10-22-1552.log), [gpu-amostras-b001c.csv](logs-analysis/gpu-amostras-b001c.csv), [gpu-performance-b001c.txt](logs-analysis/gpu-performance-b001c.txt) | depois do ajuste de refrigeração: GPU parada a 31 °C, máx. 72 °C a 240-250 W, contador `SW Thermal Slowdown` em 0 µs; concorrência 1 a 47 *tok*/s (TPOT 20,3 ms), concorrência 32 a 680 *tok*/s (TTFT p50 1,09 s); quedas de *clock* a ~1260 MHz a cada ~12 s com potência menor, sem estrangulamento; `/v1/models` anuncia `Qwen/Qwen2.5-7B-Instruct` com o modo *offline* (AC-17, AC-18) |
 | [alavancas-qwen38-2026-10-14-1625.log](logs-analysis/alavancas-qwen38-2026-10-14-1625.log) | Qwen3.8-27B + bitsandbytes com 1, 4 e 8 requisições simultâneas: vazão total ~4 *tokens*/s em todos os níveis; raciocínio desligado por `chat_template_kwargs` (AC-16) |
 | [teste-qwen38-27b-bnb-sabdiia01-2026-10-02-1509.log](logs-analysis/teste-qwen38-27b-bnb-sabdiia01-2026-10-02-1509.log) | **`Qwen/Qwen3.8-27B` no ar** com bitsandbytes + `--enforce-eager`: `Ready` em 12 min 24 s, *KV cache* 5,0 GiB / 20.384 *tokens*, 28.728 MiB de GPU, 200 *tokens* em 71,1 s (TTFT 13,5 s), raciocínio dentro de `content` (AC-14) |

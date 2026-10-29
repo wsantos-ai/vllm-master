@@ -1,0 +1,189 @@
+== nó: sabdiia02  2026-10-27T14:22:31-03:00
+== condições dos nós
+Name:               sabdiia01
+  MemoryPressure       False   Tue, 27 Oct 2026 14:21:37 -0300   Tue, 27 Oct 2026 12:40:47 -0300   KubeletHasSufficientMemory   kubelet has sufficient memory available
+  DiskPressure         False   Tue, 27 Oct 2026 14:21:37 -0300   Tue, 27 Oct 2026 12:40:47 -0300   KubeletHasNoDiskPressure     kubelet has no disk pressure
+  PIDPressure          False   Tue, 27 Oct 2026 14:21:37 -0300   Tue, 27 Oct 2026 12:40:47 -0300   KubeletHasSufficientPID      kubelet has sufficient PID available
+Name:               sabdiia02
+  MemoryPressure       False   Tue, 27 Oct 2026 14:19:44 -0300   Mon, 26 Oct 2026 19:05:12 -0300   KubeletHasSufficientMemory   kubelet has sufficient memory available
+  DiskPressure         False   Tue, 27 Oct 2026 14:19:44 -0300   Tue, 27 Oct 2026 12:41:34 -0300   KubeletHasNoDiskPressure     kubelet has no disk pressure
+  PIDPressure          False   Tue, 27 Oct 2026 14:19:44 -0300   Mon, 26 Oct 2026 19:05:12 -0300   KubeletHasSufficientPID      kubelet has sufficient PID available
+Name:               sabdiia03
+  MemoryPressure       False   Tue, 27 Oct 2026 14:19:15 -0300   Mon, 26 Oct 2026 17:16:32 -0300   KubeletHasSufficientMemory   kubelet has sufficient memory available
+  DiskPressure         False   Tue, 27 Oct 2026 14:19:15 -0300   Mon, 26 Oct 2026 17:16:32 -0300   KubeletHasNoDiskPressure     kubelet has no disk pressure
+  PIDPressure          False   Tue, 27 Oct 2026 14:19:15 -0300   Mon, 26 Oct 2026 17:16:32 -0300   KubeletHasSufficientPID      kubelet has sufficient PID available
+== pods Failed (motivo da expulsão)
+NS            POD                                               NODE        REASON   MSG
+kube-system   node-shell-c2e067f3-6e39-4ef4-bd3f-6f31ecc99c13   sabdiia03   <none>   <none>
+kube-system   node-shell-c3326fc6-ab30-4730-8a5e-2d25f12bb457   sabdiia01   <none>   <none>
+kube-system   node-shell-e56e8335-cf56-4a0d-a7b0-2201539c8af1   sabdiia02   <none>   <none>
+== vllms
+NAME                                     READY   STATUS                       RESTARTS   AGE   IP              NODE        NOMINATED NODE   READINESS GATES
+pod/open-webui-566c8b6bd7-trr6x          0/1     CreateContainerConfigError   0          21h   10.244.50.158   sabdiia03   <none>           <none>
+pod/vllm-deepseek-33b-67754f4465-fwv4p   1/1     Running                      0          26h   10.244.50.184   sabdiia03   <none>           <none>
+
+NAME                        TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)          AGE   SELECTOR
+service/vllm-deepseek-33b   LoadBalancer   10.102.231.75   192.168.50.160   8001:30191/TCP   38d   app=vllm-deepseek-33b
+== metallb
+NAME                          READY   STATUS    RESTARTS   AGE    IP               NODE        NOMINATED NODE   READINESS GATES
+controller-5d66678cc4-jzbcv   1/1     Running   0          21h    10.244.50.149    sabdiia03   <none>           <none>
+speaker-92kh5                 1/1     Running   0          95m    192.168.50.152   sabdiia02   <none>           <none>
+speaker-cjqcl                 1/1     Running   0          101m   192.168.50.151   sabdiia01   <none>           <none>
+speaker-swxl8                 1/1     Running   0          21h    192.168.50.150   sabdiia03   <none>           <none>
+== disco em /
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/ol-root   70G   49G   22G  70% /
+31G	/var/lib/containerd
+426M	/var/lib/etcd
+0	/root/.cache
+== data-root do Docker
+/home/utec/docker_data
+== imagem do vLLM no containerd
+nenhuma imagem vllm-openai
+== versões no venv
+Name: vllm
+Version: 0.5.4
+Name: ray
+Version: 2.38.0
+Name: torch
+Version: 2.4.0+cu121
+== ray status
+Traceback (most recent call last):
+  File "/home/utec/llm_lhama_prototype/venv/bin/ray", line 6, in <module>
+    sys.exit(main())
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/ray/scripts/scripts.py", line 2614, in main
+    return cli()
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/click/core.py", line 1161, in __call__
+    return self.main(*args, **kwargs)
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/click/core.py", line 1082, in main
+    rv = self.invoke(ctx)
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/click/core.py", line 1697, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/click/core.py", line 1443, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/click/core.py", line 788, in invoke
+    return __callback(*args, **kwargs)
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/ray/scripts/scripts.py", line 2005, in status
+    address = services.canonicalize_bootstrap_address_or_die(address)
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/ray/_private/services.py", line 584, in canonicalize_bootstrap_address_or_die
+    raise ConnectionError(
+ConnectionError: Could not find any running Ray instance. Please specify the one to connect to by setting the `--address` flag or `RAY_ADDRESS` environment variable.
+== serve status
+Traceback (most recent call last):
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/urllib3/connection.py", line 204, in _new_conn
+    sock = connection.create_connection(
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    raise err
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/urllib3/util/connection.py", line 73, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/urllib3/connectionpool.py", line 493, in _make_request
+    conn.request(
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/urllib3/connection.py", line 500, in request
+    self.endheaders()
+  File "/usr/lib64/python3.9/http/client.py", line 1280, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/usr/lib64/python3.9/http/client.py", line 1040, in _send_output
+    self.send(msg)
+  File "/usr/lib64/python3.9/http/client.py", line 980, in send
+    self.connect()
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/urllib3/connection.py", line 331, in connect
+    self.sock = self._new_conn()
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/urllib3/connection.py", line 219, in _new_conn
+    raise NewConnectionError(
+urllib3.exceptions.NewConnectionError: HTTPConnection(host='localhost', port=8265): Failed to establish a new connection: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/requests/adapters.py", line 644, in send
+    resp = conn.urlopen(
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/urllib3/connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/urllib3/util/retry.py", line 535, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='localhost', port=8265): Max retries exceeded with url: /api/ray/version (Caused by NewConnectionError("HTTPConnection(host='localhost', port=8265): Failed to establish a new connection: [Errno 111] Connection refused"))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/ray/dashboard/modules/dashboard_sdk.py", line 262, in _check_connection_and_version_with_url
+    r = self._do_request("GET", url)
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/ray/dashboard/modules/dashboard_sdk.py", line 303, in _do_request
+    return requests.request(
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/requests/api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/requests/adapters.py", line 677, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='localhost', port=8265): Max retries exceeded with url: /api/ray/version (Caused by NewConnectionError("HTTPConnection(host='localhost', port=8265): Failed to establish a new connection: [Errno 111] Connection refused"))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/utec/llm_lhama_prototype/venv/bin/serve", line 6, in <module>
+    sys.exit(cli())
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/click/core.py", line 1161, in __call__
+    return self.main(*args, **kwargs)
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/click/core.py", line 1082, in main
+    rv = self.invoke(ctx)
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/click/core.py", line 1697, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/click/core.py", line 1443, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/click/core.py", line 788, in invoke
+    return __callback(*args, **kwargs)
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/ray/serve/scripts.py", line 690, in status
+    **ServeSubmissionClient(address).get_serve_details()
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/ray/dashboard/modules/serve/sdk.py", line 61, in __init__
+    self._check_connection_and_version_with_url(
+  File "/home/utec/llm_lhama_prototype/venv/lib64/python3.9/site-packages/ray/dashboard/modules/dashboard_sdk.py", line 278, in _check_connection_and_version_with_url
+    raise ConnectionError(
+ConnectionError: Failed to connect to Ray at address: http://localhost:8265.
+== processo que segura a GPU
+== configuração do motor vLLM
+== scripts no servidor (md5)
+7d7660e38909b090551a9a6f8f2adc0e  /home/utec/llm_lhama_prototype/chat_ui.py
+d4a156fff0022fef241e970ecb46749d  /home/utec/llm_lhama_prototype/deploy_local.py
+eb259dec5ccaffa5e3105af59b1df59a  /home/utec/llm_lhama_prototype/deploy.py
+a3ba6c0744d84607167cbda814692d2e  /home/utec/llm_lhama_prototype/download_hf.py
+6d3301fb99d1904a77dd675cf9e8497c  /home/utec/llm_lhama_prototype/rag_connector.py
+c8e7df10167221641aa555f6099ce5bd  /home/utec/llm_lhama_prototype/run_test.py
+d6961dcac4742188e76415a09b1e1b7f  /home/utec/llm_lhama_prototype/sft_manager.py
+== parâmetros nos scripts
+/home/utec/llm_lhama_prototype/chat_ui.py:13:MODELO_ATUAL = os.getenv("LLM_MODEL", "Qwen/Qwen2.5-3B-Instruct")
+/home/utec/llm_lhama_prototype/chat_ui.py:29:        "modelo": MODELO_ATUAL,
+/home/utec/llm_lhama_prototype/chat_ui.py:77:    st.info(f"**🧠 Modelo Ativo:**\n`{MODELO_ATUAL}`")
+/home/utec/llm_lhama_prototype/deploy_local.py:13:MODELO_ATUAL = os.getenv("LLM_MODEL", "Qwen/Qwen2.5-3B-Instruct")
+/home/utec/llm_lhama_prototype/deploy_local.py:16:@serve.deployment(num_replicas=1, ray_actor_options={"num_gpus": 1})
+/home/utec/llm_lhama_prototype/deploy_local.py:21:            model=MODELO_ATUAL,
+/home/utec/llm_lhama_prototype/deploy_local.py:22:            dtype="half",
+/home/utec/llm_lhama_prototype/deploy_local.py:23:            gpu_memory_utilization=0.65, # Ajuste fino para sobrar VRAM pro Windows
+/home/utec/llm_lhama_prototype/deploy_local.py:24:            max_model_len=4096,          # Mantém o cache baixo para não congelar
+/home/utec/llm_lhama_prototype/deploy_local.py:25:            tensor_parallel_size=1,
+/home/utec/llm_lhama_prototype/deploy_local.py:26:            enforce_eager=True           # Bloqueia a compilação que trava o WSL2
+/home/utec/llm_lhama_prototype/deploy.py:13:@serve.deployment(num_replcas=3, ray_actor_options={"num_gpus": 1})
+/home/utec/llm_lhama_prototype/deploy.py:19:            model="meta-llama/Meta-Llama-3.1-8B-Instruct",
+/home/utec/llm_lhama_prototype/deploy.py:20:            dtype="float16",                # Para a V100 (Não suporta bfloat16)
+/home/utec/llm_lhama_prototype/deploy.py:21:            gpu_memory_utilization=0.90,    # Reserva 90% da VRAM (28.8GB de 32GB)
+/home/utec/llm_lhama_prototype/deploy.py:22:            max_model_len=8192,             # Limite de tokens de contexto
+/home/utec/llm_lhama_prototype/deploy.py:23:            tensor_parallel_size=1          # 1 GPU por modelo
+/home/utec/llm_lhama_prototype/download_hf.py:7:MODEL_NAME = os.environ.get("MODEL_NAME", "meta-llama/Meta-Llama-3.1-8B-Instruct")
+/home/utec/llm_lhama_prototype/download_hf.py:13:if "llama" in MODEL_NAME.lower() and not HF_TOKEN:
+/home/utec/llm_lhama_prototype/download_hf.py:14:    print(f"ERRO: O modelo '{MODEL_NAME}' é restrito e exige autenticação.")
+/home/utec/llm_lhama_prototype/download_hf.py:19:print(f"Iniciando a verificação/download do modelo: {MODEL_NAME}")
+/home/utec/llm_lhama_prototype/download_hf.py:27:        repo_id=MODEL_NAME,
+/home/utec/llm_lhama_prototype/download_hf.py:32:    print(f"\n✅ Sucesso! Modelo '{MODEL_NAME}' validado e armazenado em {CACHE_DIR}")
+/home/utec/llm_lhama_prototype/run_test.py:25:MODELO_ATUAL = os.getenv("LLM_MODEL", "Qwen/Qwen2.5-3B-Instruct")
+/home/utec/llm_lhama_prototype/run_test.py:160:    "modelo_alvo": MODELO_ATUAL,
+== LLM_MODEL no .env
+LLM_MODEL=hugging-quants/Meta-Llama-3.1-8B-Instruct-AWQ-INT4

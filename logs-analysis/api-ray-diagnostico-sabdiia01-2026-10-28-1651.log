@@ -1,0 +1,24 @@
+== sabdiia01  2026-10-28T16:51:11-03:00
+### 1. curl com o erro visível (7 = recusado, 28 = tempo esgotado, 52 = resposta vazia)
+*   Trying 192.168.50.151:8000...
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0* connect to 192.168.50.151 port 8000 failed: Connection refused
+* Failed to connect to 192.168.50.151 port 8000: Connection refused
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+* Closing connection 0
+curl: (7) Failed to connect to 192.168.50.151 port 8000: Connection refused
+
+curl saiu com 0
+### 2. quem escuta nas portas do Ray e da API, no nó
+LISTEN 0      4096                *:6379             *:*    users:(("gcs_server",pid=583733,fd=19))                   
+### 3. pods do Ray
+NAME                            READY   STATUS    RESTARTS   AGE    IP               NODE        NOMINATED NODE   READINESS GATES
+ray-head-545cc769b9-7sjvc       1/1     Running   0          108m   192.168.50.151   sabdiia01   <none>           <none>
+ray-worker-2-6749656654-29w9x   1/1     Running   0          108m   192.168.50.152   sabdiia02   <none>           <none>
+ray-worker-3-7cfd96f894-ckb8n   1/1     Running   0          108m   192.168.50.150   sabdiia03   <none>           <none>
+### 4. o servidor da API ainda roda dentro do head?
+### 5. GPUs (memória cai se o vLLM saiu)
+ray-head: 0 MiB, 0 %
+ray-worker-2: 0 MiB, 0 %
+ray-worker-3: 0 MiB, 0 %

@@ -1,0 +1,233 @@
+== sabdiia03  2026-10-28T14:21:30-03:00
+### disco
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/ol-root  631G   98G  534G  16% /
+/dev/mapper/ol-home  200G   45G  156G  23% /home
+/dev/mapper/ol-root  631G   98G  534G  16% /
+/dev/mapper/ol-root  631G   98G  534G  16% /
+NAME          SIZE ROTA TYPE MOUNTPOINT
+sda         836.6G    1 disk 
+├─sda1        600M    1 part /boot/efi
+├─sda2          1G    1 part /boot
+└─sda3        835G    1 part 
+  ├─ol-root   631G    1 lvm  /
+  ├─ol-swap     4G    1 lvm  
+  └─ol-home   200G    1 lvm  /home
+sdb             0B    0 disk 
+sr0          1024M    0 rom  
+sr1          1024M    0 rom  
+### LVM
+  VG #PV #LV #SN Attr   VSize    VFree
+  ol   1   3   0 wz--n- <835.04g    0 
+  LV   VG LSize   
+  home ol  200.00g
+  root ol <631.04g
+  swap ol    4.00g
+### onde ficam imagens e etcd
+TARGET SOURCE              FSTYPE
+/      /dev/mapper/ol-root xfs
+/dev/mapper/ol-home     /home                   xfs     defaults        0 0
+### placas de rede
+01:00.0 Ethernet controller: Broadcom Inc. and subsidiaries NetXtreme BCM5720 Gigabit Ethernet PCIe
+01:00.1 Ethernet controller: Broadcom Inc. and subsidiaries NetXtreme BCM5720 Gigabit Ethernet PCIe
+02:00.0 Ethernet controller: Broadcom Inc. and subsidiaries NetXtreme BCM5720 Gigabit Ethernet PCIe
+02:00.1 Ethernet controller: Broadcom Inc. and subsidiaries NetXtreme BCM5720 Gigabit Ethernet PCIe
+04:00.0 Ethernet controller: Broadcom Inc. and subsidiaries NetXtreme II BCM57810 10 Gigabit Ethernet (rev 10)
+04:00.1 Ethernet controller: Broadcom Inc. and subsidiaries NetXtreme II BCM57810 10 Gigabit Ethernet (rev 10)
+41:00.0 Ethernet controller: Intel Corporation 82571EB/82571GB Gigabit Ethernet Controller D0/D1 (copper applications) (rev 06)
+41:00.1 Ethernet controller: Intel Corporation 82571EB/82571GB Gigabit Ethernet Controller D0/D1 (copper applications) (rev 06)
+42:00.0 Ethernet controller: Intel Corporation 82599ES 10-Gigabit SFI/SFP+ Network Connection (rev 01)
+42:00.1 Ethernet controller: Intel Corporation 82599ES 10-Gigabit SFI/SFP+ Network Connection (rev 01)
+### interfaces e IPs
+lo               UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP> 
+eno1             UP             c8:1f:66:fa:d4:27 <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> 
+eno2             UP             c8:1f:66:fa:d4:27 <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> 
+eno3             UP             c8:1f:66:fa:d4:27 <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> 
+eno4             UP             c8:1f:66:fa:d4:27 <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> 
+enp65s0f0        UP             c8:1f:66:fa:d4:27 <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> 
+enp66s0f0        UP             00:0a:f7:70:dc:50 <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> 
+enp4s0f0         UP             00:0a:f7:70:dc:50 <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> 
+enp65s0f1        UP             c8:1f:66:fa:d4:27 <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> 
+enp66s0f1        UP             00:0a:f7:70:dc:50 <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> 
+enp4s0f1         UP             00:0a:f7:70:dc:50 <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> 
+idrac            UNKNOWN        44:a8:42:04:7f:94 <BROADCAST,MULTICAST,UP,LOWER_UP> 
+bond1            UP             00:0a:f7:70:dc:50 <BROADCAST,MULTICAST,MASTER,UP,LOWER_UP> 
+bond1.302@bond1  UP             00:0a:f7:70:dc:50 <BROADCAST,MULTICAST,UP,LOWER_UP> 
+bond0            UP             c8:1f:66:fa:d4:27 <BROADCAST,MULTICAST,MASTER,UP,LOWER_UP> 
+bond0.500@bond0  UP             c8:1f:66:fa:d4:27 <BROADCAST,MULTICAST,UP,LOWER_UP> 
+docker0          DOWN           32:64:74:9b:7c:ce <NO-CARRIER,BROADCAST,MULTICAST,UP> 
+tunl0@NONE       UNKNOWN        0.0.0.0 <NOARP,UP,LOWER_UP> 
+cali4adfc3e201c@if3 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+cali0f7b1ca658e@if3 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+calif1d2e2138de@if3 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+cali9360824707d@if3 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+cali63d4fc190d8@if3 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+cali1fb86e2317b@if3 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+cali28d1f46bdca@if3 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+cali6b6bb605950@if3 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+calib4eda222389@if3 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+cali5502cf33d1c@if3 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+calif824b3767e2@if3 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+cali05a63d3be4a@if3 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+calib853ef6b1d7@if3 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+cali343ee2a3e3a@if3 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+cali4cbff306290@if3 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+cali859fc8c2dd6@if3 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+calia26432b1f0d@if3 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+cali7f55a8c6222@if3 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+calie061975e5e8@if3 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+cali35a151953a7@if3 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+cali35375c59ba1@if3 UP             ee:ee:ee:ee:ee:ee <BROADCAST,MULTICAST,UP,LOWER_UP> 
+lo               UNKNOWN        127.0.0.1/8 ::1/128 
+eno1             UP             
+eno2             UP             
+eno3             UP             
+eno4             UP             
+enp65s0f0        UP             
+enp66s0f0        UP             
+enp4s0f0         UP             
+enp65s0f1        UP             
+enp66s0f1        UP             
+enp4s0f1         UP             
+idrac            UNKNOWN        
+bond1            UP             
+bond1.302@bond1  UP             2801:80:f8c:302:c8:1f:66fa:d427/64 fe80::8dbf:b3b4:c1d7:9d22/64 
+bond0            UP             
+bond0.500@bond0  UP             192.168.50.150/24 2801:80:f8c:500:7962:e5fe:9379:8740/64 fe80::1d4b:cf1e:b61e:82/64 
+docker0          DOWN           172.17.0.1/16 
+tunl0@NONE       UNKNOWN        10.244.50.128/32 
+cali4adfc3e201c@if3 UP             fe80::ecee:eeff:feee:eeee/64 
+cali0f7b1ca658e@if3 UP             fe80::ecee:eeff:feee:eeee/64 
+calif1d2e2138de@if3 UP             fe80::ecee:eeff:feee:eeee/64 
+cali9360824707d@if3 UP             fe80::ecee:eeff:feee:eeee/64 
+cali63d4fc190d8@if3 UP             fe80::ecee:eeff:feee:eeee/64 
+cali1fb86e2317b@if3 UP             fe80::ecee:eeff:feee:eeee/64 
+cali28d1f46bdca@if3 UP             fe80::ecee:eeff:feee:eeee/64 
+cali6b6bb605950@if3 UP             fe80::ecee:eeff:feee:eeee/64 
+calib4eda222389@if3 UP             fe80::ecee:eeff:feee:eeee/64 
+cali5502cf33d1c@if3 UP             fe80::ecee:eeff:feee:eeee/64 
+calif824b3767e2@if3 UP             fe80::ecee:eeff:feee:eeee/64 
+cali05a63d3be4a@if3 UP             fe80::ecee:eeff:feee:eeee/64 
+calib853ef6b1d7@if3 UP             fe80::ecee:eeff:feee:eeee/64 
+cali343ee2a3e3a@if3 UP             fe80::ecee:eeff:feee:eeee/64 
+cali4cbff306290@if3 UP             fe80::ecee:eeff:feee:eeee/64 
+cali859fc8c2dd6@if3 UP             fe80::ecee:eeff:feee:eeee/64 
+calia26432b1f0d@if3 UP             fe80::ecee:eeff:feee:eeee/64 
+cali7f55a8c6222@if3 UP             fe80::ecee:eeff:feee:eeee/64 
+calie061975e5e8@if3 UP             fe80::ecee:eeff:feee:eeee/64 
+cali35a151953a7@if3 UP             fe80::ecee:eeff:feee:eeee/64 
+cali35375c59ba1@if3 UP             fe80::ecee:eeff:feee:eeee/64 
+### rotas
+default via 192.168.50.254 dev bond0.500 proto static metric 401 
+blackhole 10.244.50.128/26 proto bird 
+10.244.50.132 dev cali4cbff306290 scope link 
+10.244.50.134 dev cali9360824707d scope link 
+10.244.50.138 dev calib4eda222389 scope link 
+10.244.50.144 dev calif1d2e2138de scope link 
+10.244.50.148 dev cali28d1f46bdca scope link 
+10.244.50.151 dev cali63d4fc190d8 scope link 
+10.244.50.152 dev cali35a151953a7 scope link 
+10.244.50.153 dev cali859fc8c2dd6 scope link 
+10.244.50.154 dev cali1fb86e2317b scope link 
+10.244.50.156 dev calib853ef6b1d7 scope link 
+10.244.50.160 dev cali6b6bb605950 scope link 
+10.244.50.162 dev cali35375c59ba1 scope link 
+10.244.50.163 dev cali343ee2a3e3a scope link 
+10.244.50.164 dev calie061975e5e8 scope link 
+10.244.50.170 dev cali05a63d3be4a scope link 
+10.244.50.171 dev calia26432b1f0d scope link 
+10.244.50.173 dev cali4adfc3e201c scope link 
+10.244.50.179 dev calif824b3767e2 scope link 
+10.244.50.180 dev cali5502cf33d1c scope link 
+10.244.50.182 dev cali0f7b1ca658e scope link 
+10.244.50.189 dev cali7f55a8c6222 scope link 
+10.244.179.64/26 via 192.168.50.151 dev tunl0 proto bird onlink 
+10.244.182.128/26 via 192.168.50.152 dev tunl0 proto bird onlink 
+172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1 linkdown 
+192.168.50.0/24 dev bond0.500 proto kernel scope link src 192.168.50.150 metric 401 
+### /proc/net/bonding/bond0
+Bonding Mode: IEEE 802.3ad Dynamic link aggregation
+Transmit Hash Policy: layer2 (0)
+MII Status: up
+	Aggregator ID: 3
+	Number of ports: 6
+Slave Interface: eno1
+MII Status: up
+Speed: 1000 Mbps
+Duplex: full
+Link Failure Count: 0
+Aggregator ID: 3
+Slave Interface: eno2
+MII Status: up
+Speed: 1000 Mbps
+Duplex: full
+Link Failure Count: 0
+Aggregator ID: 3
+Slave Interface: eno3
+MII Status: up
+Speed: 1000 Mbps
+Duplex: full
+Link Failure Count: 0
+Aggregator ID: 3
+Slave Interface: eno4
+MII Status: up
+Speed: 1000 Mbps
+Duplex: full
+Link Failure Count: 0
+Aggregator ID: 3
+Slave Interface: enp65s0f0
+MII Status: up
+Speed: 1000 Mbps
+Duplex: full
+Link Failure Count: 0
+Aggregator ID: 3
+Slave Interface: enp65s0f1
+MII Status: up
+Speed: 1000 Mbps
+Duplex: full
+Link Failure Count: 0
+Aggregator ID: 3
+### /proc/net/bonding/bond1
+Bonding Mode: IEEE 802.3ad Dynamic link aggregation
+Transmit Hash Policy: layer2 (0)
+MII Status: up
+	Aggregator ID: 1
+	Number of ports: 2
+Slave Interface: enp4s0f0
+MII Status: up
+Speed: 10000 Mbps
+Duplex: full
+Link Failure Count: 0
+Aggregator ID: 1
+Slave Interface: enp4s0f1
+MII Status: up
+Speed: 10000 Mbps
+Duplex: full
+Link Failure Count: 0
+Aggregator ID: 2
+Slave Interface: enp66s0f0
+MII Status: up
+Speed: 10000 Mbps
+Duplex: full
+Link Failure Count: 0
+Aggregator ID: 1
+Slave Interface: enp66s0f1
+MII Status: up
+Speed: 10000 Mbps
+Duplex: full
+Link Failure Count: 0
+Aggregator ID: 2
+### MTU e velocidade de cada bond
+bond0 mtu=9000 speed=6000
+bond1 mtu=1500 speed=20000
+### GPU
+name, memory.used [MiB]
+Tesla V100S-PCIE-32GB, 0 MiB
+pid, process_name, used_gpu_memory [MiB]
+### Kubernetes (falha em sabdiia03 por OIDC)
+Error in configuration: 
+* apiVersion must be specified for oidc to use exec authentication plugin
+* interactiveMode must be specified for oidc to use exec authentication plugin
+Error in configuration: 
+* apiVersion must be specified for oidc to use exec authentication plugin
+* interactiveMode must be specified for oidc to use exec authentication plugin

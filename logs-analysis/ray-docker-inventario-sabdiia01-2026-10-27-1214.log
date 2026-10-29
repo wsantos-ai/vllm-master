@@ -1,0 +1,63 @@
+== nó: sabdiia01  2026-10-27T12:14:23-03:00
+== motores de contêiner
+docker: /bin/docker
+podman: /bin/podman
+nerdctl: ausente
+== processos Ray no host
+ 577807 root           03:44 /home/utec/llm_lhama_prototype/venv/lib/python3.9/site-packages/ray/core/src/ray/gcs/gcs_server --log_dir=/tmp/ray/session_2026-10-27_12-10-38_728215_577731/logs --config_list=eyJvYmplY3Rfc3B
+ 578034 root           03:43 /home/utec/llm_lhama_prototype/venv/lib/python3.9/site-packages/ray/core/src/ray/raylet/raylet --raylet_socket_name=/tmp/ray/session_2026-10-27_12-10-38_728215_577731/sockets/raylet --store_s
+ 578135 root           03:42 /home/utec/llm_lhama_prototype/venv/bin/python3 -u /home/utec/llm_lhama_prototype/venv/lib/python3.9/site-packages/ray/dashboard/agent.py --node-ip-address=192.168.50.151 --metrics-export-por
+== portas
+LISTEN 0      128           0.0.0.0:8265       0.0.0.0:*    users:(("python3",pid=577900,fd=23))                     
+LISTEN 0      4096                *:6379             *:*    users:(("gcs_server",pid=577807,fd=22))                  
+== quem usa a GPU (PID do host)
+pid, process_name, used_gpu_memory [MiB]
+579011, python3, 8162 MiB
+memory.used [MiB], memory.total [MiB], utilization.gpu [%]
+8166 MiB, 32768 MiB, 0 %
+== contêineres
+NAMES           IMAGE                          STATUS                         PORTS
+elastic_kare    2a46ab0efdbc                   Exited (0) About an hour ago   
+ray-head-node   llm_lhama_prototype-ray-head   Exited (1) 41 minutes ago      
+== disco
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          3         2         18.39GB   15.18kB (0%)
+Containers      2         0         16.35GB   16.35GB (100%)
+Local Volumes   0         0         0B        0B
+Build Cache     0         0         0B        0B
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/ol-root   70G   70G  5.9M 100% /
+/dev/mapper/ol-home  761G  110G  652G  15% /home
+/dev/mapper/ol-home  761G  110G  652G  15% /home
+== cópia do projeto no disco
+/llm_lhama_prototype/docker-compose-head.yml
+/home/utec/llm_lhama_prototype/docker-compose-head.yml
+== GPU vista pelo Kubernetes
+  nvidia.com/gpu     0           0
+NAMESPACE        NAME                                               READY   STATUS                   RESTARTS        AGE     IP               NODE        NOMINATED NODE   READINESS GATES
+gpu-operator     gpu-feature-discovery-9q4lm                        1/1     Running                  3 (17h ago)     39d     10.244.179.67    sabdiia01   <none>           <none>
+gpu-operator     gpu-operator-node-feature-discovery-worker-gpfw9   1/1     Running                  3 (17h ago)     39d     10.244.179.69    sabdiia01   <none>           <none>
+gpu-operator     nvidia-container-toolkit-daemonset-4l7fg           1/1     Running                  3 (17h ago)     39d     10.244.179.66    sabdiia01   <none>           <none>
+gpu-operator     nvidia-dcgm-exporter-xglh6                         1/1     Running                  3 (17h ago)     39d     10.244.179.68    sabdiia01   <none>           <none>
+gpu-operator     nvidia-device-plugin-daemonset-2wxf2               1/1     Running                  3 (17h ago)     39d     10.244.179.121   sabdiia01   <none>           <none>
+gpu-operator     nvidia-operator-validator-zcqsk                    1/1     Running                  3 (17h ago)     39d     10.244.179.115   sabdiia01   <none>           <none>
+kong             kong-controller-76f66d77f-ssvbg                    0/1     ContainerStatusUnknown   6 (27h ago)     27h     <none>           sabdiia01   <none>           <none>
+kube-system      calico-node-64shr                                  1/1     Running                  7 (17h ago)     42d     192.168.50.151   sabdiia01   <none>           <none>
+kube-system      csi-nfs-node-nrz8q                                 3/3     Running                  24 (17h ago)    42d     192.168.50.151   sabdiia01   <none>           <none>
+kube-system      etcd-sabdiia01                                     1/1     Running                  8 (17h ago)     42d     192.168.50.151   sabdiia01   <none>           <none>
+kube-system      kube-apiserver-sabdiia01                           1/1     Running                  12 (17h ago)    42d     192.168.50.151   sabdiia01   <none>           <none>
+kube-system      kube-controller-manager-sabdiia01                  1/1     Running                  8 (17h ago)     42d     192.168.50.151   sabdiia01   <none>           <none>
+kube-system      kube-proxy-jr9r5                                   1/1     Running                  8 (17h ago)     42d     192.168.50.151   sabdiia01   <none>           <none>
+kube-system      kube-scheduler-sabdiia01                           1/1     Running                  9 (17h ago)     42d     192.168.50.151   sabdiia01   <none>           <none>
+kube-system      node-shell-18d688ba-f4d6-42e8-878e-1bbad0a6fabe    1/1     Running                  0               3h58m   192.168.50.151   sabdiia01   <none>           <none>
+kube-system      node-shell-c3326fc6-ab30-4730-8a5e-2d25f12bb457    0/1     Unknown                  0               3d14h   192.168.50.151   sabdiia01   <none>           <none>
+metallb-system   controller-5d66678cc4-77xnb                        0/1     ContainerStatusUnknown   1               27h     <none>           sabdiia01   <none>           <none>
+metallb-system   speaker-nls5d                                      0/1     Evicted                  0               12m     <none>           sabdiia01   <none>           <none>
+monitoring       monitoring-grafana-df5bc6c55-p7hdt                 0/3     ContainerStatusUnknown   3               27h     <none>           sabdiia01   <none>           <none>
+monitoring       monitoring-kube-state-metrics-78fd56fc4b-nmjg5     0/1     Error                    0               27h     <none>           sabdiia01   <none>           <none>
+monitoring       monitoring-kube-state-metrics-78fd56fc4b-qtqd2     0/1     Error                    0               27h     <none>           sabdiia01   <none>           <none>
+monitoring       monitoring-prometheus-node-exporter-snzst          0/1     Evicted                  0               12m     <none>           sabdiia01   <none>           <none>
+vllms            open-webui-566c8b6bd7-msl6n                        0/1     ContainerStatusUnknown   0               27h     <none>           sabdiia01   <none>           <none>
+vllms            vllm-deepseek-33b-67754f4465-6mg2t                 0/1     ContainerStatusUnknown   5 (3d14h ago)   3d14h   <none>           sabdiia01   <none>           <none>
+vllms            vllm-deepseek-33b-67754f4465-ns6f8                 0/1     ContainerStatusUnknown   1               27h     <none>           sabdiia01   <none>           <none>
+vllms            vllm-deepseek-33b-67754f4465-tm8mx                 0/1     ContainerStatusUnknown   1               27h     <none>           sabdiia01   <none>           <none>

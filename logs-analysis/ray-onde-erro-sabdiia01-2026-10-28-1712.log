@@ -1,0 +1,91 @@
+== sabdiia01  2026-10-28T17:12:41-03:00
+### 1. Ray/vLLM no Kubernetes, em qualquer namespace (falha em sabdiia03 por OIDC)
+NAMESPACE        NAME                                                              READY   STATUS      RESTARTS        AGE     IP               NODE        NOMINATED NODE   READINESS GATES
+NAMESPACE        NAME                                                         READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS                                                       IMAGES                                                                                                                                                                                                                                                 SELECTOR
+vllms            deployment.apps/vllm-deepseek-33b                            0/0     0            0           40d   vllm                                                             vllm/vllm-openai:v0.6.4                                                                                                                                                                                                                                app=vllm-deepseek-33b
+vllms            deployment.apps/vllm-llama31-8b                              0/0     0            0           36d   vllm                                                             vllm/vllm-openai:v0.12.0                                                                                                                                                                                                                               app=vllm-llama31-8b
+### 2. Ray/vLLM como processo no host, com NCCL/GLOO do ambiente (só essas variáveis)
+### 3. contêineres Docker/Podman
+### 4. erros nos logs da sessão do Ray no host
+### 5. portas do Ray e da API
+nada escutando em 8000/8265/6379
+### 6. rede do nó: interfaces (sem Calico), MTU, IPv4/IPv6, rota padrão
+lo: mtu 65536 UNKNOWN
+eno1: mtu 1500 bond0
+eno2: mtu 1500 bond0
+eno3: mtu 1500 bond0
+eno4: mtu 1500 bond0
+enp66s0f0: mtu 9000 bond1
+enp65s0f0: mtu 1500 bond0
+enp4s0f0: mtu 9000 bond1
+enp66s0f1: mtu 9000 bond1
+enp65s0f1: mtu 1500 bond0
+enp4s0f1: mtu 9000 bond1
+idrac: mtu 1500 UNKNOWN
+bond1: mtu 1500 UP
+bond1.302@bond1: mtu 1500 UP
+bond0: mtu 1500 UP
+bond0.500@bond0: mtu 1500 UP
+docker0: mtu 1500 DOWN
+tunl0@NONE: mtu 1480 UNKNOWN
+bond1.20@bond1: mtu 1500 UP
+lo               UNKNOWN        127.0.0.1/8 ::1/128 
+eno1             UP             
+eno2             UP             
+eno3             UP             
+eno4             UP             
+enp66s0f0        UP             
+enp65s0f0        UP             
+enp4s0f0         UP             
+enp66s0f1        UP             
+enp65s0f1        UP             
+enp4s0f1         UP             
+idrac            UNKNOWN        
+bond1            UP             
+bond1.302@bond1  UP             2801:80:f8c:302:c8:1f:66fa:fe55/64 fe80::cf1e:84bf:e2d5:b5de/64 
+bond0            UP             
+bond0.500@bond0  UP             192.168.50.151/24 2801:80:f8c:500:ae5:648f:1003:4891/64 fe80::574:e4eb:1b45:726c/64 
+docker0          DOWN           172.17.0.1/16 
+tunl0@NONE       UNKNOWN        10.244.179.64/32 
+bond1.20@bond1   UP             
+default via 192.168.50.254 dev bond0.500 proto static metric 400 
+# /proc/net/bonding/bond0
+Transmit Hash Policy: layer2 (0)
+	Aggregator ID: 2
+	Number of ports: 5
+Slave Interface: eno1
+Speed: 1000 Mbps
+Aggregator ID: 2
+Slave Interface: eno2
+Speed: 1000 Mbps
+Aggregator ID: 2
+Slave Interface: eno3
+Speed: 1000 Mbps
+Aggregator ID: 2
+Slave Interface: eno4
+Speed: 1000 Mbps
+Aggregator ID: 2
+Slave Interface: enp65s0f0
+Speed: 1000 Mbps
+Aggregator ID: 2
+Slave Interface: enp65s0f1
+Speed: 100 Mbps
+Aggregator ID: 1
+# /proc/net/bonding/bond1
+Transmit Hash Policy: layer2 (0)
+	Aggregator ID: 1
+	Number of ports: 4
+Slave Interface: enp4s0f0
+Speed: 10000 Mbps
+Aggregator ID: 1
+Slave Interface: enp4s0f1
+Speed: 10000 Mbps
+Aggregator ID: 1
+Slave Interface: enp66s0f0
+Speed: 10000 Mbps
+Aggregator ID: 1
+Slave Interface: enp66s0f1
+Speed: 10000 Mbps
+Aggregator ID: 1
+### 7. GPU
+0 MiB, 0 %

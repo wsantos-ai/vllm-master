@@ -1,0 +1,45 @@
+== sabdiia01  2026-10-28T17:10:21-03:00
+### 1. pods do Ray (idade e reinícios: foram recriados com o ajuste?)
+No resources found in vllms namespace.
+### 2. interface pedida ao NCCL e ao Gloo em cada Deployment
+Error from server (NotFound): deployments.apps "ray-head" not found
+Error from server (NotFound): deployments.apps "ray-head" not found
+ray-head: NCCL= GLOO=
+Error from server (NotFound): deployments.apps "ray-worker-2" not found
+Error from server (NotFound): deployments.apps "ray-worker-2" not found
+ray-worker-2: NCCL= GLOO=
+Error from server (NotFound): deployments.apps "ray-worker-3" not found
+Error from server (NotFound): deployments.apps "ray-worker-3" not found
+ray-worker-3: NCCL= GLOO=
+### 3. rede de cada nó, vista de dentro do pod (interfaces, MTU, estado, IPv4)
+## ray-head
+Error from server (NotFound): deployments.apps "ray-head" not found
+## ray-worker-2
+Error from server (NotFound): deployments.apps "ray-worker-2" not found
+## ray-worker-3
+Error from server (NotFound): deployments.apps "ray-worker-3" not found
+### 4. bonds de cada nó
+## ray-head
+Error from server (NotFound): deployments.apps "ray-head" not found
+## ray-worker-2
+Error from server (NotFound): deployments.apps "ray-worker-2" not found
+## ray-worker-3
+Error from server (NotFound): deployments.apps "ray-worker-3" not found
+### 5. o cluster Ray tem os 3 nós?
+Error from server (NotFound): deployments.apps "ray-head" not found
+### 6. os workers alcançam a porta do Ray no head?
+Error from server (NotFound): deployments.apps "ray-worker-2" not found
+ray-worker-2 -> 192.168.50.151:6379 FALHOU
+Error from server (NotFound): deployments.apps "ray-worker-3" not found
+ray-worker-3 -> 192.168.50.151:6379 FALHOU
+### 7. erros de NCCL, Gloo e Python nos logs da sessão do Ray
+## ray-head
+Error from server (NotFound): deployments.apps "ray-head" not found
+## ray-worker-2
+Error from server (NotFound): deployments.apps "ray-worker-2" not found
+## ray-worker-3
+Error from server (NotFound): deployments.apps "ray-worker-3" not found
+### 8. GPUs
+ray-head: Error from server (NotFound): deployments.apps "ray-head" not found
+ray-worker-2: Error from server (NotFound): deployments.apps "ray-worker-2" not found
+ray-worker-3: Error from server (NotFound): deployments.apps "ray-worker-3" not found

@@ -1,0 +1,253 @@
+# =============================================================================
+# As três mudanças realizadas no cluster para o vLLM v0.19.1:
+#  1. O servidor do vLLM sobe pelo próprio manifesto do head (antes: `kubectl exec -it` à mão,
+#     que morre quando a sessão fecha — AC-19). O head espera os 3 GPUs no Ray antes de subir.
+#  2. startupProbe / readinessProbe / livenessProbe em GET /health (só responde depois do motor
+#     montado e não exige chave — F-033). Se o vLLM cair ou travar, o Kubernetes reinicia o head.
+#  3. HF_TOKEN vem de um Secret (`hf-token`), não do ConfigMap versionado. `env` tem precedência
+#     sobre `envFrom`, mas o token antigo deve ser REVOGADO e retirado do 01-fundacao.yaml.
+#
+# O que a troca v0.5.4 -> v0.19.1 obriga a mudar:
+#  a. A imagem v0.19.1 NÃO traz Ray, e o executor Ray dela exige ray >= 2.43.0 com Compiled Graph.
+#     Cada contêiner instala `ray[default,cgraph]==2.56.0` ao iniciar, se faltar. Versão escolhida
+#     porque a 2.43.0 (mínimo do vLLM) tem vulnerabilidades no PyPI corrigidas até a 2.56.0, e o painel
+#     do Ray fica aberto na rede. A 2.56.0 é posterior à v0.19.1: compatibilidade [não verificado];
+#     se o vLLM falhar ao montar o Compiled Graph, trocar as três ocorrências por 2.43.0. Instalar: precisa de acesso
+#     ao PyPI a partir dos nós [não verificado] e repete a cada reinício (~1-3 min [estimativa]).
+#     Alternativa melhor, se houver registro de imagens: uma imagem derivada com o Ray já instalado.
+#     Head e workers precisam da MESMA versão do Ray e do Python (garantido: mesma imagem e pin).
+#  b. Comando `vllm serve` (ENTRYPOINT da imagem) no lugar de `python3 -m ...api_server`.
+#  c. `--enable-chunked-prefill=False` saiu: na v0.19.1 os booleanos são `--X`/`--no-X` e a forma
+#     `=False` deve ser rejeitada. O equivalente seria `--no-enable-chunked-prefill`; não foi
+#     posto porque o motor V1 trabalha com chunked prefill e desligá-lo é [não verificado].
+#  d. VLLM_HOST_IP = IP do nó em cada pod, igual ao --node-ip-address do Ray (F-034).
+#
+# Ajuste necessário: `strategy: Recreate`. Com 1 GPU por nó, nodeName e hostNetwork (portas
+# fixas), o RollingUpdate tentaria subir o pod novo antes de tirar o velho, sem GPU nem porta.
+#
+# Disco: a v0.19.1 ocupa ~30 G por nó em / (AC-09); / tem 534-580 G livres desde 2026-10-28.
+# =============================================================================
+
+# 1. Head (sabdiia01 - .151): Ray head + servidor do vLLM, no mesmo contêiner
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ray-head
+  namespace: vllms
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: ray-head
+  template:
+    metadata:
+      labels:
+        app: ray-head
+    spec:
+      hostNetwork: true
+      nodeName: sabdiia01
+      containers:
+      - name: vllm-head
+        image: vllm/vllm-openai:v0.19.1
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            set -e
+            python3 -c "import ray" 2>/dev/null || uv pip install --system "ray[default,cgraph]==2.56.0" || python3 -m pip install "ray[default,cgraph]==2.56.0"
+            python3 -c "import ray; print('ray', ray.__version__)"
+            ray start --head --node-ip-address=192.168.50.151 --port=6379 --dashboard-host=0.0.0.0 --num-gpus=1
+            echo "aguardando os 3 GPUs no cluster Ray..."
+            until python3 -c "import ray, sys; ray.init(address='auto', logging_level='ERROR'); sys.exit(0 if ray.cluster_resources().get('GPU', 0) >= 3 else 1)"; do
+              sleep 10
+            done
+            echo "3 GPUs no Ray; subindo o vLLM"
+            exec vllm serve meta-llama/Meta-Llama-3.1-8B-Instruct \
+              --pipeline-parallel-size 3 \
+              --tensor-parallel-size 1 \
+              --distributed-executor-backend ray \
+              --dtype half \
+              --host 0.0.0.0 \
+              --port 8000 \
+              --enforce-eager \
+              --gpu-memory-utilization 0.98 \
+              --max-model-len 4096 \
+              --max-num-seqs 16
+        envFrom:
+          - configMapRef:
+              name: vllm-env-config
+        env:
+          - name: HF_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: hf-token
+                key: HF_TOKEN
+          - name: VLLM_HOST_IP
+            value: "192.168.50.151"
+          - name: NCCL_SOCKET_IFNAME
+            value: "bond0.500"
+          - name: GLOO_SOCKET_IFNAME
+            value: "bond0.500"
+        ports:
+          - name: api
+            containerPort: 8000
+        # Espera até 30 min: instalar o Ray, workers entrarem, modelo carregar do NFS.
+        startupProbe:
+          httpGet: {path: /health, port: 8000}
+          periodSeconds: 10
+          failureThreshold: 180
+        # Fora do ar por ~30 s: deixa de receber tráfego (quando houver Service).
+        readinessProbe:
+          httpGet: {path: /health, port: 8000}
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        # Travado por ~90 s: o Kubernetes reinicia o contêiner (Ray head + vLLM).
+        livenessProbe:
+          httpGet: {path: /health, port: 8000}
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+        volumeMounts:
+          - name: hf-cache
+            mountPath: /root/.cache/huggingface
+          - name: dshm
+            mountPath: /dev/shm
+      volumes:
+        - name: hf-cache
+          persistentVolumeClaim:
+            claimName: hf-cache-pvc
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 16Gi
+---
+# 2. Worker (sabdiia02 - .152): instala o Ray se faltar, espera o head, entra no cluster
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ray-worker-2
+  namespace: vllms
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: ray-worker-2
+  template:
+    metadata:
+      labels:
+        app: ray-worker-2
+    spec:
+      hostNetwork: true
+      nodeName: sabdiia02
+      containers:
+      - name: vllm-worker
+        image: vllm/vllm-openai:v0.19.1
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            set -e
+            python3 -c "import ray" 2>/dev/null || uv pip install --system "ray[default,cgraph]==2.56.0" || python3 -m pip install "ray[default,cgraph]==2.56.0"
+            python3 -c "import ray; print('ray', ray.__version__)"
+            until timeout 3 bash -c '</dev/tcp/192.168.50.151/6379'; do echo "aguardando o head..."; sleep 5; done
+            exec ray start --address=192.168.50.151:6379 --node-ip-address=192.168.50.152 --num-gpus=1 --block
+        envFrom:
+          - configMapRef:
+              name: vllm-env-config
+        env:
+          - name: HF_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: hf-token
+                key: HF_TOKEN
+          - name: VLLM_HOST_IP
+            value: "192.168.50.152"
+          - name: NCCL_SOCKET_IFNAME
+            value: "bond0.500"
+          - name: GLOO_SOCKET_IFNAME
+            value: "bond0.500"
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+        volumeMounts:
+          - name: hf-cache
+            mountPath: /root/.cache/huggingface
+          - name: dshm
+            mountPath: /dev/shm
+      volumes:
+        - name: hf-cache
+          persistentVolumeClaim:
+            claimName: hf-cache-pvc
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 16Gi
+---
+# 3. Worker (sabdiia03 - .150)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ray-worker-3
+  namespace: vllms
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: ray-worker-3
+  template:
+    metadata:
+      labels:
+        app: ray-worker-3
+    spec:
+      hostNetwork: true
+      nodeName: sabdiia03
+      containers:
+      - name: vllm-worker
+        image: vllm/vllm-openai:v0.19.1
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            set -e
+            python3 -c "import ray" 2>/dev/null || uv pip install --system "ray[default,cgraph]==2.56.0" || python3 -m pip install "ray[default,cgraph]==2.56.0"
+            python3 -c "import ray; print('ray', ray.__version__)"
+            until timeout 3 bash -c '</dev/tcp/192.168.50.151/6379'; do echo "aguardando o head..."; sleep 5; done
+            exec ray start --address=192.168.50.151:6379 --node-ip-address=192.168.50.150 --num-gpus=1 --block
+        envFrom:
+          - configMapRef:
+              name: vllm-env-config
+        env:
+          - name: HF_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: hf-token
+                key: HF_TOKEN
+          - name: VLLM_HOST_IP
+            value: "192.168.50.150"
+          - name: NCCL_SOCKET_IFNAME
+            value: "bond0.500"
+          - name: GLOO_SOCKET_IFNAME
+            value: "bond0.500"
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+        volumeMounts:
+          - name: hf-cache
+            mountPath: /root/.cache/huggingface
+          - name: dshm
+            mountPath: /dev/shm
+      volumes:
+        - name: hf-cache
+          persistentVolumeClaim:
+            claimName: hf-cache-pvc
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 16Gi

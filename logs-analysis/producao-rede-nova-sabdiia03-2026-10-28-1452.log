@@ -1,0 +1,63 @@
+== sabdiia03  2026-10-28T14:52:55-03:00
+### produção
+Error in configuration: 
+* apiVersion must be specified for oidc to use exec authentication plugin
+* interactiveMode must be specified for oidc to use exec authentication plugin
+Error in configuration: 
+* apiVersion must be specified for oidc to use exec authentication plugin
+* interactiveMode must be specified for oidc to use exec authentication plugin
+### rota para o NFS
+2801:80:f8c:302::aa dev bond1.302 proto kernel src 2801:80:f8c:302:c8:1f:66fa:d427 metric 400 pref medium
+### MTU das interfaces
+lo: mtu 65536
+eno1: mtu 9000
+eno2: mtu 9000
+eno3: mtu 9000
+eno4: mtu 9000
+enp65s0f0: mtu 9000
+enp66s0f0: mtu 9000
+enp4s0f0: mtu 9000
+enp65s0f1: mtu 9000
+enp66s0f1: mtu 9000
+enp4s0f1: mtu 9000
+idrac: mtu 1500
+bond1: mtu 1500
+bond1.302@bond1: mtu 1500
+bond0: mtu 9000
+bond0.500@bond0: mtu 9000
+docker0: mtu 1500
+tunl0@NONE: mtu 8980
+cali4adfc3e201c@if3: mtu 8980
+cali0f7b1ca658e@if3: mtu 8980
+calif1d2e2138de@if3: mtu 8980
+cali9360824707d@if3: mtu 8980
+cali63d4fc190d8@if3: mtu 8980
+cali1fb86e2317b@if3: mtu 8980
+cali28d1f46bdca@if3: mtu 8980
+cali6b6bb605950@if3: mtu 8980
+calib4eda222389@if3: mtu 8980
+cali5502cf33d1c@if3: mtu 8980
+calif824b3767e2@if3: mtu 8980
+cali05a63d3be4a@if3: mtu 8980
+calib853ef6b1d7@if3: mtu 8980
+cali343ee2a3e3a@if3: mtu 8980
+cali4cbff306290@if3: mtu 8980
+cali859fc8c2dd6@if3: mtu 8980
+calia26432b1f0d@if3: mtu 8980
+cali7f55a8c6222@if3: mtu 8980
+calie061975e5e8@if3: mtu 8980
+cali35a151953a7@if3: mtu 8980
+cali35375c59ba1@if3: mtu 8980
+calif1db3023599@if3: mtu 8980
+### RTT a 02 pela rede antiga (1 GbE)
+PING 192.168.50.152 (192.168.50.152) 56(84) bytes of data.
+
+--- 192.168.50.152 ping statistics ---
+100 packets transmitted, 100 received, 0% packet loss, time 20587ms
+rtt min/avg/max/mdev = 0.260/0.348/0.441/0.034 ms
+### RTT a 02 pela rede nova (10 GbE, IPv6)
+PING 2801:80:f8c:302:b8:2a:72d5:2599(2801:80:f8c:302:b8:2a:72d5:2599) 56 data bytes
+
+--- 2801:80:f8c:302:b8:2a:72d5:2599 ping statistics ---
+100 packets transmitted, 100 received, 0% packet loss, time 20586ms
+rtt min/avg/max/mdev = 0.220/0.311/0.706/0.064 ms

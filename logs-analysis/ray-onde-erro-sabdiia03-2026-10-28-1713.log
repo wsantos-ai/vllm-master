@@ -1,0 +1,88 @@
+== sabdiia03  2026-10-28T17:13:20-03:00
+### 1. Ray/vLLM no Kubernetes, em qualquer namespace (falha em sabdiia03 por OIDC)
+Error in configuration: 
+### 2. Ray/vLLM como processo no host, com NCCL/GLOO do ambiente (só essas variáveis)
+### 3. contêineres Docker/Podman
+### 4. erros nos logs da sessão do Ray no host
+### 5. portas do Ray e da API
+nada escutando em 8000/8265/6379
+### 6. rede do nó: interfaces (sem Calico), MTU, IPv4/IPv6, rota padrão
+lo: mtu 65536 UNKNOWN
+eno1: mtu 9000 bond0
+eno2: mtu 9000 bond0
+eno3: mtu 9000 bond0
+eno4: mtu 9000 bond0
+enp65s0f0: mtu 9000 bond0
+enp66s0f0: mtu 9000 bond1
+enp4s0f0: mtu 9000 bond1
+enp65s0f1: mtu 9000 bond0
+enp66s0f1: mtu 9000 bond1
+enp4s0f1: mtu 9000 bond1
+idrac: mtu 1500 UNKNOWN
+bond1: mtu 1500 UP
+bond1.302@bond1: mtu 1500 UP
+bond0: mtu 9000 UP
+bond0.500@bond0: mtu 9000 UP
+docker0: mtu 1500 DOWN
+tunl0@NONE: mtu 8980 UNKNOWN
+bond1.20@bond1: mtu 1500 UP
+lo               UNKNOWN        127.0.0.1/8 ::1/128 
+eno1             UP             
+eno2             UP             
+eno3             UP             
+eno4             UP             
+enp65s0f0        UP             
+enp66s0f0        UP             
+enp4s0f0         UP             
+enp65s0f1        UP             
+enp66s0f1        UP             
+enp4s0f1         UP             
+idrac            UNKNOWN        
+bond1            UP             
+bond1.302@bond1  UP             2801:80:f8c:302:c8:1f:66fa:d427/64 fe80::8dbf:b3b4:c1d7:9d22/64 
+bond0            UP             
+bond0.500@bond0  UP             192.168.50.150/24 2801:80:f8c:500:7962:e5fe:9379:8740/64 fe80::1d4b:cf1e:b61e:82/64 
+docker0          DOWN           172.17.0.1/16 
+tunl0@NONE       UNKNOWN        10.244.50.128/32 
+bond1.20@bond1   UP             
+default via 192.168.50.254 dev bond0.500 proto static metric 401 
+# /proc/net/bonding/bond0
+Transmit Hash Policy: layer2 (0)
+	Aggregator ID: 3
+	Number of ports: 6
+Slave Interface: eno1
+Speed: 1000 Mbps
+Aggregator ID: 3
+Slave Interface: eno2
+Speed: 1000 Mbps
+Aggregator ID: 3
+Slave Interface: eno3
+Speed: 1000 Mbps
+Aggregator ID: 3
+Slave Interface: eno4
+Speed: 1000 Mbps
+Aggregator ID: 3
+Slave Interface: enp65s0f0
+Speed: 1000 Mbps
+Aggregator ID: 3
+Slave Interface: enp65s0f1
+Speed: 1000 Mbps
+Aggregator ID: 3
+# /proc/net/bonding/bond1
+Transmit Hash Policy: layer2 (0)
+	Aggregator ID: 1
+	Number of ports: 2
+Slave Interface: enp4s0f0
+Speed: 10000 Mbps
+Aggregator ID: 1
+Slave Interface: enp4s0f1
+Speed: 10000 Mbps
+Aggregator ID: 2
+Slave Interface: enp66s0f0
+Speed: 10000 Mbps
+Aggregator ID: 1
+Slave Interface: enp66s0f1
+Speed: 10000 Mbps
+Aggregator ID: 2
+### 7. GPU
+0 MiB, 0 %

@@ -1,0 +1,110 @@
+== sabdiia01  2026-10-28T15:11:37-03:00
+### deployments e replicasets de vllms (0/0 = desligado, ausente = apagado)
+NAME                                READY   UP-TO-DATE   AVAILABLE   AGE     CONTAINERS    IMAGES                     SELECTOR
+deployment.apps/ray-head            1/1     1            1           8m34s   vllm-head     vllm/vllm-openai:v0.5.4    app=ray-head
+deployment.apps/ray-worker-2        1/1     1            1           8m34s   vllm-worker   vllm/vllm-openai:v0.5.4    app=ray-worker-2
+deployment.apps/ray-worker-3        1/1     1            1           8m34s   vllm-worker   vllm/vllm-openai:v0.5.4    app=ray-worker-3
+deployment.apps/vllm-deepseek-33b   0/0     0            0           39d     vllm          vllm/vllm-openai:v0.6.4    app=vllm-deepseek-33b
+deployment.apps/vllm-llama31-8b     0/0     0            0           36d     vllm          vllm/vllm-openai:v0.12.0   app=vllm-llama31-8b
+
+NAME                                           DESIRED   CURRENT   READY   AGE     CONTAINERS    IMAGES                     SELECTOR
+replicaset.apps/ray-head-545cc769b9            1         1         1       8m34s   vllm-head     vllm/vllm-openai:v0.5.4    app=ray-head,pod-template-hash=545cc769b9
+replicaset.apps/ray-worker-2-6749656654        1         1         1       8m34s   vllm-worker   vllm/vllm-openai:v0.5.4    app=ray-worker-2,pod-template-hash=6749656654
+replicaset.apps/ray-worker-3-7cfd96f894        1         1         1       8m34s   vllm-worker   vllm/vllm-openai:v0.5.4    app=ray-worker-3,pod-template-hash=7cfd96f894
+replicaset.apps/vllm-deepseek-33b-67754f4465   0         0         0       39d     vllm          vllm/vllm-openai:v0.6.4    app=vllm-deepseek-33b,pod-template-hash=67754f4465
+replicaset.apps/vllm-llama31-8b-7ff775c756     0         0         0       36d     vllm          vllm/vllm-openai:v0.12.0   app=vllm-llama31-8b,pod-template-hash=7ff775c756
+
+NAME                        TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)          AGE   SELECTOR
+service/vllm-deepseek-33b   LoadBalancer   10.102.231.75   192.168.50.160   8001:30191/TCP   39d   app=vllm-deepseek-33b
+### pods, nó e GPU pedida
+POD                             NO          GPU   IMAGEM
+ray-head-545cc769b9-7sjvc       sabdiia01   1     vllm/vllm-openai:v0.5.4
+ray-worker-2-6749656654-29w9x   sabdiia02   1     vllm/vllm-openai:v0.5.4
+ray-worker-3-7cfd96f894-ckb8n   sabdiia03   1     vllm/vllm-openai:v0.5.4
+### GPUs reservadas por nó
+Name:               sabdiia01
+                    nvidia.com/gpu-driver-upgrade-state=upgrade-done
+                    nvidia.com/gpu.compute.major=7
+                    nvidia.com/gpu.compute.minor=0
+                    nvidia.com/gpu.count=1
+                    nvidia.com/gpu.deploy.client=true
+                    nvidia.com/gpu.deploy.container-toolkit=true
+                    nvidia.com/gpu.deploy.dcgm=true
+                    nvidia.com/gpu.deploy.dcgm-exporter=true
+                    nvidia.com/gpu.deploy.device-plugin=true
+                    nvidia.com/gpu.deploy.driver=pre-installed
+                    nvidia.com/gpu.deploy.gpu-feature-discovery=true
+                    nvidia.com/gpu.deploy.node-status-exporter=true
+                    nvidia.com/gpu.deploy.nvsm=
+                    nvidia.com/gpu.deploy.operator-validator=true
+                    nvidia.com/gpu.family=volta
+                    nvidia.com/gpu.machine=PowerEdge-R720
+                    nvidia.com/gpu.memory=32768
+                    nvidia.com/gpu.mode=compute
+                    nvidia.com/gpu.present=true
+                    nvidia.com/gpu.product=Tesla-V100S-PCIE-32GB
+                    nvidia.com/gpu.replicas=1
+                    nvidia.com/gpu.sharing-strategy=none
+                    nvidia.com/gpu-driver-upgrade-enabled: true
+  nvidia.com/gpu:     1
+  nvidia.com/gpu:     1
+  nvidia.com/gpu     1           1
+Name:               sabdiia02
+                    nvidia.com/gpu-driver-upgrade-state=upgrade-done
+                    nvidia.com/gpu.compute.major=7
+                    nvidia.com/gpu.compute.minor=0
+                    nvidia.com/gpu.count=1
+                    nvidia.com/gpu.deploy.client=true
+                    nvidia.com/gpu.deploy.container-toolkit=true
+                    nvidia.com/gpu.deploy.dcgm=true
+                    nvidia.com/gpu.deploy.dcgm-exporter=true
+                    nvidia.com/gpu.deploy.device-plugin=true
+                    nvidia.com/gpu.deploy.driver=pre-installed
+                    nvidia.com/gpu.deploy.gpu-feature-discovery=true
+                    nvidia.com/gpu.deploy.node-status-exporter=true
+                    nvidia.com/gpu.deploy.nvsm=
+                    nvidia.com/gpu.deploy.operator-validator=true
+                    nvidia.com/gpu.family=volta
+                    nvidia.com/gpu.machine=PowerEdge-R720
+                    nvidia.com/gpu.memory=32768
+                    nvidia.com/gpu.mode=compute
+                    nvidia.com/gpu.present=true
+                    nvidia.com/gpu.product=Tesla-V100S-PCIE-32GB
+                    nvidia.com/gpu.replicas=1
+                    nvidia.com/gpu.sharing-strategy=none
+                    nvidia.com/gpu-driver-upgrade-enabled: true
+  nvidia.com/gpu:     1
+  nvidia.com/gpu:     1
+  nvidia.com/gpu     1           1
+Name:               sabdiia03
+                    nvidia.com/gpu.compute.major=7
+                    nvidia.com/gpu.compute.minor=0
+                    nvidia.com/gpu.count=1
+                    nvidia.com/gpu.deploy.client=true
+                    nvidia.com/gpu.deploy.container-toolkit=true
+                    nvidia.com/gpu.deploy.dcgm=true
+                    nvidia.com/gpu.deploy.dcgm-exporter=true
+                    nvidia.com/gpu.deploy.device-plugin=true
+                    nvidia.com/gpu.deploy.driver=pre-installed
+                    nvidia.com/gpu.deploy.gpu-feature-discovery=true
+                    nvidia.com/gpu.deploy.node-status-exporter=true
+                    nvidia.com/gpu.deploy.operator-validator=true
+                    nvidia.com/gpu.family=volta
+                    nvidia.com/gpu.machine=PowerEdge-R720
+                    nvidia.com/gpu.memory=32768
+                    nvidia.com/gpu.mode=compute
+                    nvidia.com/gpu.present=true
+                    nvidia.com/gpu.product=Tesla-V100S-PCIE-32GB
+                    nvidia.com/gpu.replicas=1
+                    nvidia.com/gpu.sharing-strategy=none
+                    nvidia.com/gpu-driver-upgrade-enabled: true
+  nvidia.com/gpu:     1
+  nvidia.com/gpu:     1
+  nvidia.com/gpu     1            1
+### GPU de 01 no host
+pid, process_name, used_gpu_memory [MiB]
+587107, python3, 5664 MiB
+### pod/ray-worker-2-6749656654-29w9x (queda anterior)
+Error from server (BadRequest): previous terminated container "vllm-worker" in pod "ray-worker-2-6749656654-29w9x" not found
+### pod/ray-worker-3-7cfd96f894-ckb8n (queda anterior)
+Error from server (BadRequest): previous terminated container "vllm-worker" in pod "ray-worker-3-7cfd96f894-ckb8n" not found

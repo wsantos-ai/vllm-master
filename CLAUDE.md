@@ -17,16 +17,26 @@ resumo que muda o jeito de trabalhar é este:
   existe (AC-01, AC-04).
 - *Runtime* **containerd**, não Docker; GPU entregue pelo **NVIDIA GPU Operator**; *driver*
   `580.173.02` / CUDA 13.0 instalado no *host* (AC-02, AC-04). Escreva manifestos K8s, não `docker run`.
-- Armazenamento só em **NFS**; o cache de modelos é o PVC `vllms/hf-cache` (AC-03). Rede **1 GbE por
-  destino** (LACP com *hash* `layer2`), então nada de paralelismo multinó; a porta a 100 Mbps de
-  `sabdiia01` está fora do agregado e não afeta medições (AC-08). `/`
-  tem só 20-28 G livres e guarda as imagens; `/home` tem 755 G livres por nó (AC-09). CPU sem AVX2;
-  Docker não está instalado.
+- Armazenamento só em **NFS**; o cache de modelos é o PVC `vllms/hf-cache` (AC-03). **Entre *pods*, rede
+  de 1 GbE por destino** (`bond0`, LACP com *hash* `layer2`; é o IP que o Calico usa), então nada de
+  *tensor parallel* multinó. Desde 2026-10-28 existe `bond1` (4 × 10 GbE, só IPv6 da VLAN 302, a do
+  NFS), que os *pods* não usam (AC-08). A porta a 100 Mbps de `sabdiia01` segue fora do agregado. Desde
+  2026-10-28, **`/` tem 631 G e `/home` 200 G nos 3 nós** (534-580 G livres em `/`, 77-156 G em `/home`);
+  imagens e `etcd` ficam em `/` (AC-09; o `/` de 70 G encheu em 2026-10-27, AC-20). CPU sem AVX2. Docker e
+  Podman foram instalados nos 3 nós, fora do Kubernetes, com `data-root` em `/home/utec/docker_data`.
+  `kubectl` falha em `sabdiia03` (OIDC): blocos com `kubectl` rodam em 01 ou 02.
 - **Há produção no *namespace* `vllms`**: `vllm-deepseek-33b` (`v0.6.4`, GPTQ) em `sabdiia03`, exposto
-  em `192.168.50.160:8001` sem autenticação (AC-05, AC-06). **Nunca proponha parar, reiniciar, editar
-  ou apagar recursos de `vllms` sem o usuário pedir explicitamente.** Experimentos vão para uma GPU livre
-  (`sabdiia01` e `sabdiia02` desde 2026-10-02, quando o usuário desligou o `vllm-llama31-8b` com
-  `--replicas=0`; confira antes com "Qual GPU está livre?" do COMANDOS.md), com `Service` `ClusterIP`.
+  em `192.168.50.160:8001` sem autenticação (AC-05, AC-06). **Desde 2026-10-28 o deepseek e o
+  llama estão em `0/0`** (não apagados), e o Ray do administrador roda em 3 *pods* em `vllms` (`ray-head`,
+  `ray-worker-2`, `ray-worker-3`, `v0.5.4`), **um por nó, cada um com `nvidia.com/gpu: 1`: nenhuma GPU
+  livre para o estudo** (AC-19). **Nunca proponha parar, reiniciar, editar
+  ou apagar recursos de `vllms` sem o usuário pedir explicitamente.** Experimentos vão para uma GPU livre,
+  com `Service` `ClusterIP`. O Ray do administrador roda no *host* e, quando liga, ocupa as GPUs de
+  `sabdiia01` e `sabdiia02` sem o Kubernetes saber, que continua mostrando as duas como livres (AC-19;
+  ocupadas às 12:14 e vazias às 14:20 de 2026-10-27). Em 2026-10-28 14:21 a GPU de `sabdiia03` também
+  estava vazia (o deepseek usava 27.882 MiB na véspera): confira o *pod* antes de supor produção no ar. Livre é `0 0`
+  no Kubernetes **e** `nvidia-smi --query-compute-apps` vazio ("Qual GPU está livre?" do COMANDOS.md).
+  O Ray do administrador segue a mesma regra de `vllms`: não proponha pará-lo sem o usuário pedir.
 
 **Produto final:** [ESTUDO-DE-CASO.md](ESTUDO-DE-CASO.md). Quem chegar com hardware parecido lê em vinte
 minutos e sai sabendo que versão instalar, que manifesto aplicar, quanto cabe na GPU e quais alavancas
@@ -176,7 +186,8 @@ usuário no servidor. Todo bloco colável diz **no título** a máquina e o *she
 `kubectl`, ou estação/PowerShell). **Nenhum *placeholder*:** o bloco traz valores reais já conferidos
 (imagem, *tag*, nó) ou os descobre sozinho. Um *placeholder* colado sem edição virou nome de imagem
 inválido três vezes seguidas no Bloco 3 (§9). O `tee` grava **todas** as etapas do bloco, não só a
-última, para que a falha apareça no log.
+última, para que a falha apareça no log. O nome do log usa `$(hostname -s)`, nunca o nó escrito à mão, e
+o bloco feito para um nó aborta em outro: um bloco de 01 rodou em 03 e gravou o log com o nome de 01 (§9).
 
 ### Ao executar algo no servidor
 
@@ -239,15 +250,16 @@ imperativo, descrevendo **o que mudou no conhecimento**, sem emoji.
 
 A lista viva e priorizada está em §7 do estudo; esta é só a ordem de ataque:
 
-1. **Inventário.** Concluído em 2026-09-29 (AC-01 a AC-10). **Em `/` de 70 G cabe uma imagem recente do
-   vLLM por nó**: ela ocupa ~3,3× o tamanho comprimido (medido: `v0.12.0` = 27 G; `v0.19.1` ≈ 29 G;
-   AC-09). Para trocar de versão, remova a anterior antes. Remoção de imagem só **por *digest***, as três
+1. **Inventário.** Concluído em 2026-09-29 (AC-01 a AC-10). Uma imagem recente do vLLM ocupa ~3,3× o
+   tamanho comprimido (medido: `v0.12.0` = 27 G; `v0.19.1` ≈ 29 G; AC-09); com `/` de 631 G (desde
+   2026-10-28) cabem várias por nó. Remoção de imagem só **por *digest***, as três
    referências, medindo `df` antes e depois (Passo 3 do runbook de primeiro arranque); remover pelo nome
    não libera espaço.
 2. **Versão viável.** Fechado: `v0.19.1` (AC-11, AC-13).
 3. **Primeiro arranque.** Feito em 2026-10-02 em `sabdiia01` (AC-13, §6), pelo
-   [runbook](runbooks/primeiro-arranque-v0.19.1.md). `sabdiia01` é o nó de testes (D-02): tem a imagem
-   `v0.19.1` e só 5,5 G de folga em `/`, então **não baixe outra imagem grande ali**. Nunca interrompa
+   [runbook](runbooks/primeiro-arranque-v0.19.1.md). `sabdiia01` era o nó de testes (D-02, **suspensa em
+   2026-10-27**: GPU disputada com o Ray do administrador e `v0.19.1` apagada de 01; AC-19, AC-20, PD-29. O
+   disco deixou de bloquear em 2026-10-28, PD-15 fechada; falta o acordo das GPUs). Nunca interrompa
    um bloco de arranque com Ctrl+C: o *pod* continua sozinho; use `kubectl delete pod`.
    O modelo pedido pelo usuário, `Qwen/Qwen3.8-27B`, sobe com `--quantization bitsandbytes
    --enforce-eager` a ~3 *tokens*/s, com *KV cache* de 20.384 *tokens* e 12 min de arranque (AC-14).

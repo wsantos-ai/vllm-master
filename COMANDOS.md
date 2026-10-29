@@ -60,8 +60,11 @@ nvidia-smi --query-gpu=name,memory.total,compute_cap,pcie.link.gen.current,pcie.
 
 ### Qual GPU está livre?
 
-São duas perguntas, e as respostas podem divergir: uma GPU **reservada** por um *pod* fica indisponível
-para o Kubernetes mesmo que esteja parada (caso de `sabdiia01`).
+São duas perguntas, e as respostas podem divergir nos dois sentidos: uma GPU **reservada** por um *pod*
+fica indisponível para o Kubernetes mesmo que esteja parada (`sabdiia01`, 2026-10-02); e uma GPU usada
+**fora do Kubernetes** aparece como livre (`0 0`) estando ocupada (Ray em `sabdiia01` e `sabdiia02`,
+2026-10-27, AC-19). **Só está livre a GPU que passa nas duas:** `0 0` e lista vazia em
+`--query-compute-apps`.
 
 ```bash
 # 1. RESERVADA no Kubernetes? (servidor, bash, qualquer nó)           [executado 2026-10-02]
@@ -71,7 +74,7 @@ kubectl describe nodes | grep -E '^Name:|^  (cpu|memory|nvidia\.com/gpu) +[0-9]'
 #    quem reservou: pods com GPU, e em que nó                         [não executado]
 kubectl get pods -A -o custom-columns='NS:.metadata.namespace,POD:.metadata.name,NODE:.spec.nodeName,PHASE:.status.phase,GPU:.spec.containers[*].resources.limits.nvidia\.com/gpu' | grep -v '<none>'
 
-# 2. EM USO de fato? (servidor, bash, no próprio nó)                  [não executado nesta forma]
+# 2. EM USO de fato? (servidor, bash, no próprio nó)                  [executado 2026-10-27]
 nvidia-smi --query-gpu=name,memory.used,memory.total,utilization.gpu --format=csv
 nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv
 ```
@@ -162,6 +165,33 @@ grep -E 'Bonding Mode|Transmit Hash Policy|MII Status|Slave Interface|Speed|Dupl
 # o que a placa e o switch anunciam e o que foi negociado              [executado 2026-10-02, sabdiia01]
 ethtool enp65s0f1
 
+# todos os bonds do nó (não só bond0): modo, hash, portas, agregador  [executado 2026-10-28]
+for B in /proc/net/bonding/*; do echo "### $B"; grep -E 'Bonding Mode|Transmit Hash Policy|MII Status|Slave Interface|Speed|Duplex|Link Failure Count|Aggregator ID|Number of ports' "$B"; done
+
+# MTU e velocidade somada de cada bond                                [executado 2026-10-28]
+for B in /proc/net/bonding/*; do n=$(basename "$B"); echo "$n mtu=$(cat /sys/class/net/$n/mtu) speed=$(cat /sys/class/net/$n/speed 2>&1)"; done
+
+# placas de rede instaladas (1 GbE, 10/40 GbE, InfiniBand)             [executado 2026-10-28]
+lspci | grep -iE 'ethernet|network|infiniband'
+
+# interfaces, IPs e rotas em uma tela                                  [executado 2026-10-28]
+ip -br link; ip -br addr; ip route
+
+# por qual interface sai o tráfego para o NFS (IPv6)                   [executado 2026-10-28, sabdiia03]
+ip -6 route get 2801:80:f8c:302::aa
+
+# MTU de cada interface (VLANs e túnel do Calico incluídos)            [executado 2026-10-28, sabdiia03]
+ip -o link | awk '{print $2, $4, $5}'
+
+# RTT a 02 pela rede nova (bond1, IPv6 da VLAN 302)                    [executado 2026-10-28, de sabdiia03: 0,311 ms]
+ping -6 -c 100 -i 0.2 -q 2801:80:f8c:302:b8:2a:72d5:2599
+
+# por qual IP o Calico manda o tráfego entre pods de nós diferentes    [executado 2026-10-28]
+kubectl get nodes -o custom-columns='NO:.metadata.name,CALICO_IPV4:.metadata.annotations.projectcalico\.org/IPv4Address'
+
+# volumes LVM: tamanho de / e /home depois de redimensionar (root)     [executado 2026-10-28]
+vgs; lvs -o lv_name,vg_name,lv_size
+
 # pacotes, erros e descartes de uma porta                              [executado 2026-10-02, sabdiia01]
 ip -s link show enp65s0f1
 
@@ -212,12 +242,20 @@ mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
   echo "### configuração efetiva (mesclada)";   containerd config dump | grep -nE '^(root|state|imports|version)|root_path|snapshotter ='
   echo "### arquivos de configuração";          ls -l /etc/containerd/ /etc/containerd/conf.d/ 2>/dev/null
   echo "### root no arquivo principal";         grep -nE '^\s*(root|state|imports)\s*=' /etc/containerd/config.toml
+  # [acrescentado 2026-10-27, executado 2026-10-27 em sabdiia01] o disco de verdade, mesmo com link simbólico ou bind mount
+  R=$(containerd config dump | awk -F'"' '/^root *=/{print $2}'); R=${R:-/var/lib/containerd}
+  echo "### root aponta para";                  readlink -f "$R"
+  echo "### em que disco está";                 findmnt -T "$R" -o TARGET,SOURCE,FSTYPE; df -h "$R"
+  echo "### disco das imagens visto pelo kubelet"; kubectl get --raw "/api/v1/nodes/$(hostname -s)/proxy/stats/summary" | grep -A4 '"imageFs"'
 } 2>&1 | tee containerd-config-$(hostname -s)-$(date +%F-%H%M).log
 ```
 
 O que cada linha responde: `root` = onde ficam imagens, camadas e metadados; `state` = estado volátil
 (`/run/containerd`); `imports` = outros arquivos que entram na configuração; `root_path` = se o
 diretório das camadas desempacotadas (`overlayfs`) foi separado do `root`.
+
+**Para mudar o local** (não é leitura: para o containerd do nó): procedimento completo, com reversão, em
+[runbooks/mover-containerd-para-home.md](runbooks/mover-containerd-para-home.md). `[não executado]`
 
 ## 3. *Pods*: o que roda e onde
 
@@ -285,6 +323,15 @@ kubectl describe pod -n vllms -l app=vllm-llama31-8b | sed -n '/^Containers:/,$p
 
 # log da execução atual                                               [não executado nesta forma]
 kubectl logs -n vllms deploy/vllm-deepseek-33b --tail=80
+
+# log da queda anterior de CADA pod com o mesmo prefixo (deploy/ pega só um) [executado 2026-10-28]
+for p in $(kubectl get pods -n vllms -o name | grep ray-worker); do echo "### $p"; kubectl logs -n vllms "$p" --previous --tail=40 2>&1; done
+
+# quantas GPUs cada pod pede (vazio = não pede; o Kubernetes não sabe que usa GPU) [executado 2026-10-28]
+kubectl get pods -n vllms -o custom-columns='POD:.metadata.name,NO:.spec.nodeName,GPU:.spec.containers[*].resources.limits.nvidia\.com/gpu'
+
+# GPUs reservadas por nó, segundo o Kubernetes                        [executado 2026-10-28]
+kubectl describe nodes | grep -E '^Name:|nvidia.com/gpu'
 ```
 
 Lição do caso: leia `--previous` antes de culpar a GPU ou a versão
@@ -348,6 +395,8 @@ kubectl logs -n vllms deploy/vllm-llama31-8b --previous | grep -m1 'vLLM API ser
 ctr -n k8s.io images ls | awk 'NR==1 || /vllm/'
 ```
 
+Para o vLLM instalado num *venv* no *host* (o projeto Ray do administrador), veja a seção 7b.
+
 A *tag* da imagem (caso 3) é só um rótulo; como evidência vale o que o vLLM em execução responde
 (caso 1). Estado em 2026-10-02:
 
@@ -377,6 +426,121 @@ kubectl get storageclass
 
 # volumes persistentes, tamanho e a quem pertencem                    [executado 2026-09-28]
 kubectl get pv
+```
+
+## 7b. Ray fora do Kubernetes (projeto do administrador)
+
+Servidor, bash, em cada nó. Só leitura. O projeto do administrador (`llm_lhama_prototype`) roda o Ray
+**direto no *host***, num *venv* em `/home/utec/llm_lhama_prototype/venv`, como `root` (AC-19); os
+contêineres Docker do projeto estão parados. **Não use `docker inspect` sem `-f`, nem `env`:** as
+variáveis trazem `HF_TOKEN`.
+
+```bash
+# há motor de contêiner fora do Kubernetes?                           [executado 2026-10-27]
+for c in docker podman nerdctl; do printf '%s: ' $c; command -v $c || echo ausente; done
+
+# processos do Ray no host                                            [executado 2026-10-27]
+ps -eo pid,user,etime,args | grep -E '[r]aylet|[g]cs_server|[r]ay start|[s]erve run' | cut -c1-220
+
+# quem usa a GPU, inclusive fora do Kubernetes (PID do host)          [executado 2026-10-27]
+nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv
+
+# contêineres e espaço do Docker                                      [executado 2026-10-27]
+docker ps -a --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
+docker system df
+
+# portas do Ray (6379, 8265), da API (8000), Streamlit (8501), http.server (8080) [executado 2026-10-27]
+ss -ltnp | grep -E ':(6379|8265|8000|8501|8080)\b'
+
+# RTT entre nós (custo de rede por passo de tensor/pipeline parallel, PD-31) [executado 2026-10-27]
+ping -c 100 -i 0.2 -q 192.168.50.152
+
+# quando Docker/Podman foram instalados (cruzar com a PD-28)          [não executado]
+rpm -qa --qf '%{NAME} %{VERSION} %{INSTALLTIME:date}\n' | grep -iE 'docker|podman|moby|containerd'
+
+# política da cadeia FORWARD (o Docker costuma pô-la em DROP)         [não executado]
+iptables -S FORWARD | head -3
+
+# versões do vLLM no venv, sem importar nada                                  [executado 2026-10-27]
+/home/utec/llm_lhama_prototype/venv/bin/pip show vllm ray torch | grep -E '^(Name|Version):'
+
+# se o pip falhar ("pip: command not found"): versão do vLLM sem depender do pip [não executado]
+P=/home/utec/llm_lhama_prototype/venv
+echo "== versão pelo nome da pasta de instalação (sem pip)"; ls -d "$P"/lib*/python3*/site-packages/vllm-*.dist-info 2>&1
+echo "== versão pelo python do venv"; "$P/bin/python3" -m pip show vllm 2>&1 | grep -E '^(Name|Version):|rror'
+
+# estado do cluster Ray e das aplicações Serve                        [executado 2026-10-27]
+/home/utec/llm_lhama_prototype/venv/bin/ray status
+/home/utec/llm_lhama_prototype/venv/bin/serve status
+
+# configuração com que o vLLM subiu (paralelismo, modelo, dtype)      [executado 2026-10-27, vazio]
+grep -rhoE 'Initializing an LLM engine.{0,600}' /tmp/ray/session_latest/logs 2>/dev/null | tail -2
+```
+
+## 7c. Ray dentro do Kubernetes (projeto do administrador, desde 2026-10-28)
+
+Só leitura. `kubectl exec` roda um comando de consulta dentro do contêiner do administrador, sem alterá-lo.
+Nunca use `-o yaml` nem `env` aqui: o manifesto pode trazer o *token* do Hugging Face. Mostre só os
+**nomes** das variáveis, e passe a saída por `sed` para mascarar `hf_...`.
+
+```bash
+# comando, args, nomes das variáveis, volumes e recursos de cada Deployment do Ray [executado 2026-10-28]
+kubectl get deploy -n vllms ray-head ray-worker-2 ray-worker-3 -o jsonpath='{range .items[*]}{"### "}{.metadata.name}{"\n command: "}{.spec.template.spec.containers[0].command}{"\n args: "}{.spec.template.spec.containers[0].args}{"\n env (só nomes): "}{.spec.template.spec.containers[0].env[*].name}{"\n mounts: "}{.spec.template.spec.containers[0].volumeMounts[*].mountPath}{"\n volumes: "}{.spec.template.spec.volumes}{"\n hostNetwork: "}{.spec.template.spec.hostNetwork}{"\n resources: "}{.spec.template.spec.containers[0].resources}{"\n"}{end}' | sed -E 's/hf_[A-Za-z0-9]{8,}/hf_***MASCARADO***/g'
+
+# configuração com que o vLLM subiu, no log do pod (modelo, TP, PP, dtype) [executado 2026-10-28]
+kubectl logs -n vllms deploy/ray-head --tail=3000 | grep -E 'Initializing an LLM engine|tensor_parallel|pipeline_parallel|Loading model weights took|GPU blocks|Uvicorn running|Error|ERROR' | cut -c1-600 | tail -30
+
+# estado do cluster Ray e das aplicações Serve, de dentro do head      [executado 2026-10-28]
+kubectl exec -n vllms deploy/ray-head -- ray status
+kubectl exec -n vllms deploy/ray-head -- serve status
+
+# a API do Ray (hostNetwork, porta 8000 no IP do nó) responde, e com que modelo [executado 2026-10-28: recusado]
+curl -s -m 10 http://192.168.50.151:8000/v1/models
+
+# copiar arquivos do tokenizer de dentro do head, só lendo (segue os links do cache HF) [não executado]
+P=$(kubectl get pods -n vllms -l app=ray-head -o jsonpath='{.items[0].metadata.name}')
+kubectl exec -n vllms "$P" -- sh -c 'find /root/.cache/huggingface -path "*Meta-Llama-3.1-8B-Instruct*" -name tokenizer.json'
+
+# curl "não retornou nada": mostrar o erro e o código de saída (7 = recusado, 28 = tempo esgotado) [executado 2026-10-28: recusado]
+curl -v -m 10 http://192.168.50.151:8000/v1/models; echo "curl saiu com $?"
+
+# alguém escuta na porta 8000 do nó? (hostNetwork: o pod usa a rede do host) [executado 2026-10-28: recusado]
+ss -ltnp | grep -E ':8000 |:8265 |:6379 '
+
+# o servidor da API ainda roda dentro do head?                       [executado 2026-10-28: recusado]
+kubectl exec -n vllms deploy/ray-head -- sh -c 'ps -eo pid,etime,args | grep -E "api_server" | grep -v grep | cut -c1-200'
+
+# onde o Ray/vLLM está agora: pods e deployments em qualquer namespace [não executado]
+kubectl get pods,deploy -A -o wide 2>&1 | grep -iE 'NAMESPACE|ray|vllm'
+
+# processos do Ray/vLLM no host, com a interface do NCCL/Gloo lida do ambiente do processo (só essas variáveis; root) [não executado]
+for p in $(pgrep -f 'api_server|raylet|gcs_server|ray start'); do echo "## $p $(ps -o etime=,user= -p $p) $(tr '\0' ' ' < /proc/$p/cmdline | cut -c1-250)"; tr '\0' '\n' < /proc/$p/environ 2>/dev/null | grep -E '^(NCCL|GLOO)_'; done
+
+# interface que o NCCL e o Gloo usam (só essas duas variáveis; nunca liste o env inteiro) [executado 2026-10-28: Deployments já removidos]
+for d in ray-head ray-worker-2 ray-worker-3; do echo "$d: NCCL=$(kubectl get deploy -n vllms $d -o jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="NCCL_SOCKET_IFNAME")].value}') GLOO=$(kubectl get deploy -n vllms $d -o jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="GLOO_SOCKET_IFNAME")].value}')"; done
+
+# rede de cada nó vista de dentro do pod do Ray (hostNetwork): interfaces, MTU, estado, IPv4 [não executado]
+for d in ray-head ray-worker-2 ray-worker-3; do echo "## $d"; kubectl exec -n vllms deploy/$d -- sh -c 'for i in /sys/class/net/*; do n=$(basename $i); case $n in cali*|lo|docker0|tunl0) continue;; esac; echo "$n mtu=$(cat $i/mtu) $(cat $i/operstate)"; done; echo "IPv4: $(hostname -I)"'; done
+
+# um worker alcança a porta do Ray no head? (sem ping nem nc na imagem) [não executado]
+kubectl exec -n vllms deploy/ray-worker-2 -- timeout 3 bash -c '</dev/tcp/192.168.50.151/6379' && echo "02 -> 01:6379 ok"
+
+# erros de NCCL, Gloo e Python nos logs da sessão do Ray, dentro do pod [não executado]
+kubectl exec -n vllms deploy/ray-head -- sh -c 'grep -hE "NCCL WARN|NCCL INFO (NET|Bootstrap|Using network)|[Gg]loo|Traceback|Error|timed out|refused" /tmp/ray/session_latest/logs/*.err /tmp/ray/session_latest/logs/*.out 2>/dev/null | cut -c1-300 | tail -60'
+
+# perguntar ao modelo do Ray (chat, resposta inteira, só o texto)    [não executado]
+curl -s http://192.168.50.151:8000/v1/chat/completions -H 'Content-Type: application/json' -d '{"model":"meta-llama/Meta-Llama-3.1-8B-Instruct","messages":[{"role":"user","content":"Explique em duas frases o que é Kubernetes."}],"max_tokens":200,"temperature":0}' | python3 -c 'import sys,json; r=json.load(sys.stdin); print(r["choices"][0]["message"]["content"]); print(r["usage"])'
+
+# o mesmo em streaming (os pedaços chegam à medida que são gerados)  [não executado]
+curl -sN http://192.168.50.151:8000/v1/chat/completions -H 'Content-Type: application/json' -d '{"model":"meta-llama/Meta-Llama-3.1-8B-Instruct","messages":[{"role":"user","content":"Conte até dez."}],"max_tokens":100,"stream":true}'
+
+# o servidor respeita ignore_eos? uma requisição de 256 tokens; espere "completion_tokens":256 [não executado]
+curl -s -m 180 http://192.168.50.151:8000/v1/completions -H 'Content-Type: application/json' -d '{"model":"meta-llama/Meta-Llama-3.1-8B-Instruct","prompt":"Diga oi.","max_tokens":256,"temperature":0,"ignore_eos":true}' | grep -oE '"usage": *\{[^}]*\}'
+
+# carga contra a API do Ray a partir de um pod sem GPU: ver runbooks/medicao-ray-pp3.md [não executado]
+
+# memória e uso de cada GPU, de dentro de cada pod do Ray              [executado 2026-10-28]
+for d in ray-head ray-worker-2 ray-worker-3; do echo "$d: $(kubectl exec -n vllms deploy/$d -- nvidia-smi --query-gpu=memory.used,utilization.gpu --format=csv,noheader 2>&1)"; done
 ```
 
 ## 8. Logs: gravar e trazer para a estação

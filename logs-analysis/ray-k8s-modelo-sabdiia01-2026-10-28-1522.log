@@ -1,0 +1,94 @@
+== sabdiia01  2026-10-28T15:22:58-03:00
+### manifesto dos Deployments (sem valores de variáveis)
+### ray-head
+ command: ["/bin/bash","-c","ray start --head --node-ip-address=192.168.50.151 --port=6379 --dashboard-host=0.0.0.0 --num-gpus=1 --block"]
+ args: 
+ env (só nomes): NCCL_SOCKET_IFNAME GLOO_SOCKET_IFNAME
+ mounts: /root/.cache/huggingface /dev/shm
+ volumes: [{"name":"hf-cache","persistentVolumeClaim":{"claimName":"hf-cache-pvc"}},{"emptyDir":{"medium":"Memory","sizeLimit":"16Gi"},"name":"dshm"}]
+ hostNetwork: true
+ resources: {"limits":{"nvidia.com/gpu":"1"}}
+### ray-worker-2
+ command: ["/bin/bash","-c","ray start --address=192.168.50.151:6379 --node-ip-address=192.168.50.152 --num-gpus=1 --block"]
+ args: 
+ env (só nomes): NCCL_SOCKET_IFNAME GLOO_SOCKET_IFNAME
+ mounts: /root/.cache/huggingface /dev/shm
+ volumes: [{"name":"hf-cache","persistentVolumeClaim":{"claimName":"hf-cache-pvc"}},{"emptyDir":{"medium":"Memory","sizeLimit":"16Gi"},"name":"dshm"}]
+ hostNetwork: true
+ resources: {"limits":{"nvidia.com/gpu":"1"}}
+### ray-worker-3
+ command: ["/bin/bash","-c","ray start --address=192.168.50.151:6379 --node-ip-address=192.168.50.150 --num-gpus=1 --block"]
+ args: 
+ env (só nomes): NCCL_SOCKET_IFNAME GLOO_SOCKET_IFNAME
+ mounts: /root/.cache/huggingface /dev/shm
+ volumes: [{"name":"hf-cache","persistentVolumeClaim":{"claimName":"hf-cache-pvc"}},{"emptyDir":{"medium":"Memory","sizeLimit":"16Gi"},"name":"dshm"}]
+ hostNetwork: true
+ resources: {"limits":{"nvidia.com/gpu":"1"}}
+### services e endpoints de vllms
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME                        TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)          AGE   SELECTOR
+service/vllm-deepseek-33b   LoadBalancer   10.102.231.75   192.168.50.160   8001:30191/TCP   39d   app=vllm-deepseek-33b
+
+NAME                          ENDPOINTS   AGE
+endpoints/vllm-deepseek-33b   <none>      39d
+### configuração do vLLM no log do head
+### log de ray-worker-2 (filtrado)
+### log de ray-worker-3 (filtrado)
+### ray status
+======== Autoscaler status: 2026-10-28 18:22:58.512864 ========
+Node status
+---------------------------------------------------------------
+Active:
+ 1 node_d669e4e6d68d974f9323372e4e5db9212aac27967face42213b5228c
+ 1 node_02b8988226dc7820d1f5510c3ea6e34792e66ee92c1e9e4060d71677
+ 1 node_26b4bcf92fb5f74671a5c01b78f28072e970fca0434aad5ed3ede0f7
+Pending:
+ (no pending nodes)
+Recent failures:
+ (no failures)
+
+Resources
+---------------------------------------------------------------
+Usage:
+ 0.0/96.0 CPU
+ 3.0/3.0 GPU (3.0 used of 3.0 reserved in placement groups)
+ 0B/1.42TiB memory
+ 0B/45.60GiB object_store_memory
+
+Demands:
+ (no resource demands)
+### serve status
+Traceback (most recent call last):
+  File "/usr/local/bin/serve", line 5, in <module>
+    from ray.serve.scripts import cli
+  File "/usr/local/lib/python3.10/dist-packages/ray/serve/__init__.py", line 29, in <module>
+    raise e
+  File "/usr/local/lib/python3.10/dist-packages/ray/serve/__init__.py", line 4, in <module>
+    from ray.serve.api import (
+  File "/usr/local/lib/python3.10/dist-packages/ray/serve/api.py", line 14, in <module>
+    from ray.serve._private.config import (
+  File "/usr/local/lib/python3.10/dist-packages/ray/serve/_private/config.py", line 29, in <module>
+    from ray.serve._private.utils import DEFAULT, DeploymentOptionUpdateType
+  File "/usr/local/lib/python3.10/dist-packages/ray/serve/_private/utils.py", line 28, in <module>
+    from ray.serve._private.common import ServeComponentType
+  File "/usr/local/lib/python3.10/dist-packages/ray/serve/_private/common.py", line 23, in <module>
+    from ray.serve.grpc_util import RayServegRPCContext
+  File "/usr/local/lib/python3.10/dist-packages/ray/serve/grpc_util.py", line 3, in <module>
+    import grpc
+ModuleNotFoundError: No module named 'grpc'. You can run `pip install "ray[serve]"` to install all Ray Serve dependencies.
+command terminated with exit code 1
+### processos no head
+      1       19:58 /usr/bin/python3 /usr/local/bin/ray start --head --node-ip-address=192.168.50.151 --port=6379 --dashboard-host=0.0.0.0 --num-gpus=1 --block
+     58       19:56 /usr/local/lib/python3.10/dist-packages/ray/core/src/ray/gcs/gcs_server --log_dir=/tmp/ray/session_2026-10-28_18-03-05_601359_1/logs --config_list=eyJvYmplY3Rfc3BpbGxpbmdfY29uZmlnIjogIntcInR5cGVcIjogXCJmaWxlc3lzdGVtXCIsIFwicGFyYW1zXCI6IHtcImRpcmVjdG9yeV9wYXRoXCI6IFwiL3RtcC9yYXkvc2Vzc2lvbl8yMDI2LTEwLTI4XzE4LTAzLTA1XzYwMTM1OV8xXCJ9fSIsICJpc19leHRlcm5hbF9zdG9yYWdlX3R5cGVfZnMiOiB0c
+    150       19:56 /usr/bin/python3 -u /usr/local/lib/python3.10/dist-packages/ray/autoscaler/_private/monitor.py --logs-dir=/tmp/ray/session_2026-10-28_18-03-05_601359_1/logs --logging-rotate-bytes=536870912 --logging-rotate-backup-count=5 --gcs-address=192.168.50.151:6379 --monitor-ip=192.168.50.151
+    151       19:56 /usr/bin/python3 /usr/local/lib/python3.10/dist-packages/ray/dashboard/dashboard.py --host=0.0.0.0 --port=8265 --port-retries=0 --temp-dir=/tmp/ray --log-dir=/tmp/ray/session_2026-10-28_18-03-05_601359_1/logs --session-dir=/tmp/ray/session_2026-10-28_18-03-05_601359_1 --logging-rotate-bytes=536870912 --logging-rotate-backup-count=5 --gcs-address=192.168.50.151:6379 --node-ip-ad
+    209       19:55 /usr/local/lib/python3.10/dist-packages/ray/core/src/ray/raylet/raylet --raylet_socket_name=/tmp/ray/session_2026-10-28_18-03-05_601359_1/sockets/raylet --store_socket_name=/tmp/ray/session_2026-10-28_18-03-05_601359_1/sockets/plasma_store --object_manager_port=0 --min_worker_port=10002 --max_worker_port=19999 --node_manager_port=0 --node_id=26b4bcf92fb5f74671a5c01b78f28072e970
+    210       19:55 /usr/bin/python3 -u /usr/local/lib/python3.10/dist-packages/ray/_private/log_monitor.py --session-dir=/tmp/ray/session_2026-10-28_18-03-05_601359_1 --logs-dir=/tmp/ray/session_2026-10-28_18-03-05_601359_1/logs --gcs-address=192.168.50.151:6379 --logging-rotate-bytes=536870912 --logging-rotate-backup-count=5
+    312       19:54 /usr/bin/python3 -u /usr/local/lib/python3.10/dist-packages/ray/dashboard/agent.py --node-ip-address=192.168.50.151 --metrics-export-port=59789 --dashboard-agent-port=65426 --listen-port=52365 --node-manager-port=36315 --object-store-name=/tmp/ray/session_2026-10-28_18-03-05_601359_1/sockets/plasma_store --raylet-name=/tmp/ray/session_2026-10-28_18-03-05_601359_1/sockets/raylet
+    314       19:54 /usr/bin/python3 -u /usr/local/lib/python3.10/dist-packages/ray/_private/runtime_env/agent/main.py --node-ip-address=192.168.50.151 --runtime-env-agent-port=53441 --gcs-address=192.168.50.151:6379 --runtime-env-dir=/tmp/ray/session_2026-10-28_18-03-05_601359_1/runtime_resources --logging-rotate-bytes=536870912 --logging-rotate-backup-count=5 --log-dir=/tmp/ray/session_2026-10-2
+    438       13:54 python3 -m vllm.entrypoints.openai.api_server --model meta-llama/Meta-Llama-3.1-8B-Instruct --pipeline-parallel-size 3 --tensor-parallel-size 1 --distributed-executor-backend ray --dtype half --host 0.0.0.0 --port 8000 --enable-chunked-prefill=False --enforce-eager --gpu-memory-utilization 0.98 --max-model-len 4096 --max-num-seqs 16
+    481       13:45 python3 -m vllm.entrypoints.openai.api_server --model meta-llama/Meta-Llama-3.1-8B-Instruct --pipeline-parallel-size 3 --tensor-parallel-size 1 --distributed-executor-backend ray --dtype half --host 0.0.0.0 --port 8000 --enable-chunked-prefill=False --enforce-eager --gpu-memory-utilization 0.98 --max-model-len 4096 --max-num-seqs 16
+### GPU de cada pod
+ray-head: 26026 MiB, 0 %
+ray-worker-2: 30928 MiB, 0 %
+ray-worker-3: 25024 MiB, 0 %
