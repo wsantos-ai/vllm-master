@@ -1,0 +1,20 @@
+### 0. host: sabdiia01  data: 2026-10-29T14:38:43-03:00
+### 1. rótulos dos pods vllm-llama31
+No resources found in vllms namespace.
+### 2. endpoints dos Services (vazio = Service sem destino)
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME                 ENDPOINTS                                                   AGE
+ray-head             10.244.179.85:8265,10.244.179.85:10001,10.244.179.85:6379   20h
+vllm-llama-service   <none>                                                      34m
+vllm-llama31-8b      <none>                                                      20h
+### 3. /v1/models direto no IP de cada pod Running, porta 8002
+### 4. /v1/models de dentro do pod de sabdiia01
+error: pod, type/name or --filename must be specified
+
+### 5. início do log do pod (versão, modelo, quantization, KV cache)
+error: You must provide one or more resources by argument or filename.
+Example resource specifications include:
+   '-f rsrc.yaml'
+   '--filename=rsrc.json'
+   '<resource> <name>'
+   '<resource>'

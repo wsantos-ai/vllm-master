@@ -343,10 +343,20 @@ Lição do caso: leia `--previous` antes de culpar a GPU ou a versão
 
 ## 5. A API do vLLM
 
-Servidor, bash. `192.168.50.160:8001` é o `Service` do deepseek (sem autenticação,
-[AC-06](ESTUDO-DE-CASO.md#ac-06)).
+Servidor, bash. `192.168.50.160:8001` era o `Service` do deepseek (sem autenticação,
+[AC-06](ESTUDO-DE-CASO.md#ac-06)). **Desde 2026-10-29, `192.168.50.160` é o `Service` `ray-head`
+(6379/8265/10001) e a `:8001` não responde.** A `:8265` é o painel do Ray: `/v1/models` lá dá `404`.
 
 ```bash
+# a porta é o painel do Ray ou a API do vLLM? (8265 responde /api/..., nunca /v1/models)   [executado 2026-10-29]
+curl -s -m 10 -w '\n[HTTP %{http_code}]\n' http://192.168.50.160:8265/api/version
+curl -s -m 10 -w '\n[HTTP %{http_code}]\n' http://192.168.50.160:8265/api/serve/applications/   # "applications": {} = nada publicado pelo Ray Serve
+
+# o Service tem pod por trás? (<none> = seletor não casa com nenhum pod)   [executado 2026-10-29]
+kubectl get endpoints -n vllms
+
+# o pod recebe a GPU? pod mínimo com nvidia.com/gpu: 1 em cada nó   [não executado; Bloco B de runbooks/ray-3-nos-gpu.md]
+
 # modelos servidos e contexto máximo                                  [executado 2026-09-29]
 curl -s --max-time 10 http://192.168.50.160:8001/v1/models
 

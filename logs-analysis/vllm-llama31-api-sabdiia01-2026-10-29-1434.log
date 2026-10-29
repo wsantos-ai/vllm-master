@@ -1,0 +1,77 @@
+### 0. host: sabdiia01  data: 2026-10-29T14:34:54-03:00
+### 1. Services de vllms
+NAME                 TYPE           CLUSTER-IP       EXTERNAL-IP      PORT(S)                                         AGE   SELECTOR
+ray-head             LoadBalancer   10.103.217.115   192.168.50.160   6379:30247/TCP,8265:31556/TCP,10001:31852/TCP   20h   app=ray-head
+vllm-llama-service   LoadBalancer   10.107.1.84      <pending>        8000:31492/TCP                                  30m   app=vllm-server
+vllm-llama31-8b      ClusterIP      10.104.155.104   <none>           8002/TCP                                        20h   app=vllm-llama31-8b
+### 2. imagem, args e recursos do vllm-llama31 e dos pods do Ray
+image=vllm/vllm-openai:v0.19.1
+cmd=["vllm","serve"]
+args=["TheBloke/deepseek-coder-33B-instruct-GPTQ","--host","0.0.0.0","--port","8002","--dtype","float16","--gpu-memory-utilization","0.92","--max-model-len","8192","--max-num-seqs","16","--trust-remote-code"]
+resources={"limits":{"cpu":"16","memory":"64Gi","nvidia.com/gpu":"1"},"requests":{"cpu":"8","memory":"32Gi","nvidia.com/gpu":"1"}}
+--- deployment.apps/ray-head
+image=rayproject/ray:2.49.2-py311
+resources={}
+--- daemonset.apps/ray-worker
+image=rayproject/ray:2.49.2-py311
+resources={}
+### 3. /v1/models em cada Service do llama
+--- service/vllm-llama-service 10.107.1.84:8000
+
+[HTTP 000]
+
+--- service/vllm-llama31-8b 10.104.155.104:8002
+
+[HTTP 000]
+
+### 4. arranque da réplica de sabdiia01
+(APIServer pid=1) INFO:     192.168.50.151:49856 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:39708 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:39712 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:41940 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:34552 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:60056 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:60058 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:41078 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:38620 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:56292 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:56298 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:39500 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:47768 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:59570 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:59582 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:33652 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:50088 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:60996 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:32772 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:45166 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:40740 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:58704 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:58708 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:48338 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:53742 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:36644 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:36654 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:51942 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:32858 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:58926 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:58930 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:34226 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:35618 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:55912 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:55920 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:45574 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:45736 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:36914 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:36918 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:33578 - "GET /health HTTP/1.1" 200 OK
+### 5. por que a réplica e o worker de sabdiia03 não sobem
+30m         Normal    Scheduled                pod/vllm-server-jwshn               Successfully assigned vllms/vllm-server-jwshn to sabdiia03
+10m         Normal    Scheduled                pod/vllm-llama31-84c5d96454-wqbzt   Successfully assigned vllms/vllm-llama31-84c5d96454-wqbzt to sabdiia03
+12m         Normal    Scheduled                pod/ray-worker-shkmv                Successfully assigned vllms/ray-worker-shkmv to sabdiia03
+7m15s       Warning   FailedCreatePodSandBox   pod/ray-worker-shkmv                Failed to create pod sandbox: rpc error: code = FailedPrecondition desc = failed to reserve sandbox name "ray-worker-shkmv_vllms_834c180b-2657-4db4-8438-912d5fa63042_0": name "ray-worker-shkmv_vllms_834c180b-2657-4db4-8438-912d5fa63042_0" is reserved for "265c3bef4b8e331b821f6f6f4bbeaa4d5dceb13008a40f77afc206f12b13bd7b"
+5m58s       Warning   FailedCreatePodSandBox   pod/vllm-llama31-84c5d96454-wqbzt   Failed to create pod sandbox: rpc error: code = FailedPrecondition desc = failed to reserve sandbox name "vllm-llama31-84c5d96454-wqbzt_vllms_3f411789-dee6-4d0d-b996-bd4f6ac96b7b_0": name "vllm-llama31-84c5d96454-wqbzt_vllms_3f411789-dee6-4d0d-b996-bd4f6ac96b7b_0" is reserved for "3ec37862bafa6f0d4e17acde687c0b6b79ed8e4b99f9bf9b292ba5a9757c8d8e"
+3m3s        Warning   FailedCreatePodSandBox   pod/ray-worker-shkmv                Failed to create pod sandbox: rpc error: code = DeadlineExceeded desc = context deadline exceeded
+2m3s        Warning   FailedCreatePodSandBox   pod/ray-worker-shkmv                Failed to create pod sandbox: rpc error: code = FailedPrecondition desc = failed to reserve sandbox name "ray-worker-shkmv_vllms_834c180b-2657-4db4-8438-912d5fa63042_0": name "ray-worker-shkmv_vllms_834c180b-2657-4db4-8438-912d5fa63042_0" is reserved for "ebb47e310eb11fa9a85eb37532def446b77fa9d0a020fe38f0e37fa692bb2be6"
+107s        Warning   FailedCreatePodSandBox   pod/vllm-llama31-84c5d96454-wqbzt   Failed to create pod sandbox: rpc error: code = DeadlineExceeded desc = context deadline exceeded
+57s         Warning   FailedCreatePodSandBox   pod/vllm-llama31-84c5d96454-wqbzt   Failed to create pod sandbox: rpc error: code = FailedPrecondition desc = failed to reserve sandbox name "vllm-llama31-84c5d96454-wqbzt_vllms_3f411789-dee6-4d0d-b996-bd4f6ac96b7b_0": name "vllm-llama31-84c5d96454-wqbzt_vllms_3f411789-dee6-4d0d-b996-bd4f6ac96b7b_0" is reserved for "849c3574977bcae1e344a7bad66bd435d7b9b10ab75bb7a949a9c9bc493b1672"

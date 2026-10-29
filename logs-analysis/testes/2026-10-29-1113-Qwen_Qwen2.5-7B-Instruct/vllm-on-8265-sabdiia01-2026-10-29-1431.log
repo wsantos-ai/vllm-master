@@ -1,0 +1,52 @@
+### 0. host: sabdiia01  data: 2026-10-29T14:31:31-03:00
+### 1. Services com o IP 192.168.50.160 ou porta 8265
+NAMESPACE        NAME                                                 TYPE           CLUSTER-IP       EXTERNAL-IP      PORT(S)                                         AGE   SELECTOR
+vllms            ray-head                                             LoadBalancer   10.103.217.115   192.168.50.160   6379:30247/TCP,8265:31556/TCP,10001:31852/TCP   20h   app=ray-head
+### 2. pods do Ray/vLLM em todos os namespaces
+NAMESPACE        NAME                                                          READY   STATUS              RESTARTS          AGE     IP               NODE        NOMINATED NODE   READINESS GATES
+vllms            ray-head-f54b96487-94sm4                                      1/1     Running             0                 8m48s   10.244.179.85    sabdiia01   <none>           <none>
+vllms            ray-worker-cx2c5                                              1/1     Running             0                 8m40s   10.244.182.132   sabdiia02   <none>           <none>
+vllms            ray-worker-r95z5                                              1/1     Running             0                 8m40s   10.244.179.71    sabdiia01   <none>           <none>
+vllms            ray-worker-shkmv                                              0/1     ContainerCreating   0                 8m40s   <none>           sabdiia03   <none>           <none>
+vllms            vllm-llama31-84c5d96454-phl2l                                 1/1     Running             0                 7m26s   10.244.182.150   sabdiia02   <none>           <none>
+vllms            vllm-llama31-84c5d96454-tn8tn                                 1/1     Running             0                 7m26s   10.244.179.93    sabdiia01   <none>           <none>
+vllms            vllm-llama31-84c5d96454-wqbzt                                 0/1     ContainerCreating   0                 7m26s   <none>           sabdiia03   <none>           <none>
+### 3. painel do Ray (8265): versão e status
+--- GET :8265/api/version
+{"version": "4", "ray_version": "2.49.2", "ray_commit": "479fa716904109d9df4b56b98ca3c3350e1ec13c", "session_name": "session_2026-10-29_10-22-51_650043_1"}
+[HTTP 200]
+
+--- GET :8265/api/cluster_status
+{"result": true, "msg": "Got cluster status.", "data": {"autoscalingStatus": "Cluster status: 0 nodes\n - MostDelayedHeartbeats: {'4cda4799c4f761460ad24892913f63bb931b86a21f5468f4045576f8': 0.0015797615051269531, '060961958c525de2d2c287955b5ec7ce15b4c18703932356e008445e': 0.0015544891357421875, 'b3668097bec21f8926516e83bfc50653fab17631b6aec2b43e190647': 0.0015316009521484375}\n - NodeIdleSeconds: Min=493 Mean=504 Max=512\n - ResourceUsage: 0.0/96.0 CPU, 0.0 GiB/1479.26 GiB memory, 0.0 GiB/27.94 GiB object_store_memory\n - TimeSinceLastHeartbeat: Min=0 Mean=0 Max=0\nWorker node types:", "autoscalingError": null, "clusterStatus": {"gcsRequestTime": 0.002039194107055664, "time": 1793295087.83482, "monitorPid": 133, "autoscalerUpdateTime": 0.0016846656799316406, "autoscalerReport": {"activeNodes": {"node4Cda4799C4F761460Ad24892913F63Bb931B86A21F5468F4045576F8": 1, "node060961958C525De2D2C287955B5Ec7Ce15B4C18703932356E008445E": 1, "nodeB3668097Bec21F8926516E83Bfc50653Fab17631B6Aec2B43E190647": 1}, "idleNodes": null, "pendingNodes": [], "pendingLaunches": {}, "failedNodes": [], "nodeAvailabilitySummary": {"nodeAvailabilities": {}}, "nodeActivities": null, "pendingResources": {}, "nodeTypeMapping": {"4cda4799c4f761460ad24892913f63bb931b86a21f5468f4045576f8": "node_4cda4799c4f761460ad24892913f63bb931b86a21f5468f4045576f8", "060961958c525de2d2c287955b5ec7ce15b4c18703932356e008445e": "node_060961958c525de2d2c287955b5ec7ce15b4c18703932356e008445e", "b3668097bec21f8926516e83bfc50653fab17
+--- GET :8265/api/serve/applications/
+{"deploy_mode": "MULTI_APP", "controller_info": {}, "proxies": {}, "applications": {}, "target_capacity": null}
+[HTTP 200]
+
+--- GET :8265/v1/models
+404: Not Found
+[HTTP 404]
+
+### 4. /v1/models em cada porta exposta em 192.168.50.160
+--- GET :6379/v1/models
+
+[HTTP 000]
+
+--- GET :8265/v1/models
+404: Not Found
+[HTTP 404]
+
+--- GET :10001/v1/models
+
+[HTTP 000]
+
+--- GET :8000/v1/models
+
+[HTTP 000]
+
+--- GET :8001/v1/models
+
+[HTTP 000]
+
+### 5. GPU deste nó
+pid, process_name, used_gpu_memory [MiB]
+1973250, VLLM::EngineCore, 30992 MiB
