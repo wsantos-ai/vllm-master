@@ -9,3 +9,5 @@ configs/k8config.txt
 *kubeconfig*
 *k8config*
 admin.conf
+# cópia do repositório do administrador (tem token em texto puro): nunca no repositório do estudo
+llm_lhama_prototype/
