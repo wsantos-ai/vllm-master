@@ -468,6 +468,162 @@ V100S varia o *clock* com a carga sem estrangular (critério corrigido depois da
 estrangulamento. Concorrência 1: 47,0 *tok*/s; concorrência 32: 680,4 *tok*/s
 ([AC-17](../ESTUDO-DE-CASO.md#ac-17); [log](../logs-analysis/B-001c-reteste-termico-sabdiia01-2026-10-22-1552.log)).
 
+## Bloco E2 — Reteste térmico depois da 2ª intervenção (B-001d) (servidor, bash, **em `sabdiia01`**)
+
+Em 2026-10-23 o administrador fez uma nova intervenção na refrigeração da sala. Este bloco repete o
+Bloco E **sem mudar a carga** (mesmas fases, sementes e níveis), para comparar com a B-001c. Diferenças,
+só de registro: arquivos `b001d`; contadores de redução de *clock* lidos ANTES e DEPOIS; se o *pod*
+`vllm-conc` não estiver `Ready`, o bloco o recria com o manifesto do Bloco A2 (`HF_HUB_OFFLINE=1`) e
+espera ficar pronto. Leva de 10 a 15 min (mais ~3 min se precisar subir o *pod*).
+
+**Expectativa escrita antes:** a B-001c já não estrangulou, então a *vazão* deve ficar igual à de ontem
+dentro do ruído (~47 *tok*/s na fase 1, ~680 *tok*/s na fase 2). Se a intervenção ajudou, o ganho aparece
+na **temperatura**: parada abaixo de 31 °C e máxima abaixo de 72 °C sob 240-250 W, com subida mais lenta
+no fim da fase 2 `[hipótese]`. Contador `SW Thermal Slowdown` igual entre ANTES e DEPOIS. Uma ressalva:
+se o *pod* estiver rodando desde ontem, a GPU parte do estado ocioso com o modelo carregado, como ontem.
+
+```bash
+mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
+{
+  echo "### nó: $(hostname)   $(date '+%F %T')   uptime: $(uptime -p)"
+  RD=$(kubectl get pod -n vllm-estudo vllm-conc -o jsonpath='{.status.containerStatuses[0].ready}' 2>/dev/null)
+  if [ "$RD" != "true" ]; then
+    echo "### pod vllm-conc não está Ready: recriando com HF_HUB_OFFLINE=1 (manifesto do Bloco A2)"
+    kubectl delete pod -n vllm-estudo vllm-conc --ignore-not-found --wait=true
+    echo "### GPU reservada em sabdiia01 (espera-se 0 0)"
+    kubectl describe node sabdiia01 | grep -E '^  nvidia\.com/gpu +[0-9]'
+    kubectl apply -f - <<'EOF'
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vllm-conc
+  namespace: vllm-estudo
+  labels:
+    app: vllm-conc
+spec:
+  restartPolicy: Never
+  nodeSelector:
+    kubernetes.io/hostname: sabdiia01
+  containers:
+  - name: vllm
+    image: vllm/vllm-openai:v0.19.1
+    command: ["vllm", "serve"]
+    args:
+    - Qwen/Qwen2.5-7B-Instruct
+    - --dtype
+    - float16
+    - --max-model-len
+    - "8192"
+    - --gpu-memory-utilization
+    - "0.90"
+    - --generation-config
+    - vllm
+    - --host
+    - 0.0.0.0
+    - --port
+    - "8000"
+    env:
+    - name: HF_HOME
+      value: /hf-cache
+    - name: HF_HUB_OFFLINE
+      value: "1"
+    ports:
+    - containerPort: 8000
+    readinessProbe:
+      httpGet:
+        path: /health
+        port: 8000
+      periodSeconds: 10
+    resources:
+      requests:
+        cpu: "8"
+        memory: 32Gi
+        nvidia.com/gpu: 1
+      limits:
+        cpu: "16"
+        memory: 64Gi
+        nvidia.com/gpu: 1
+    volumeMounts:
+    - name: hf-cache
+      mountPath: /hf-cache
+    - name: shm
+      mountPath: /dev/shm
+  volumes:
+  - name: hf-cache
+    hostPath:
+      path: /home/utec/vllm-estudo/hf-cache
+      type: DirectoryOrCreate
+  - name: shm
+    emptyDir:
+      medium: Memory
+      sizeLimit: 8Gi
+EOF
+    for i in $(seq 1 90); do
+      PH=$(kubectl get pod -n vllm-estudo vllm-conc -o jsonpath='{.status.phase}' 2>/dev/null)
+      RD=$(kubectl get pod -n vllm-estudo vllm-conc -o jsonpath='{.status.containerStatuses[0].ready}' 2>/dev/null)
+      echo "$(date +%T) | GPU $(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits) MiB | ${PH:--} | ${RD:--}"
+      [ "$RD" = "true" ] && break
+      [ "$PH" = "Failed" ] || [ "$PH" = "Succeeded" ] && break
+      sleep 10
+    done
+    echo "### arranque: ready=$RD   $(date '+%F %T')"
+    kubectl logs -n vllm-estudo vllm-conc | grep -iE 'KV cache|Model loading took|CUDA graph|offline|name resolution|error|Traceback|out of memory' | cut -c1-300
+    echo "### aguardando 3 min para a GPU voltar ao estado ocioso depois do arranque"
+    sleep 180
+  fi
+  kubectl get pod -n vllm-estudo vllm-conc -o wide
+  if [ "$RD" != "true" ]; then
+    echo "### ABORTADO: o pod vllm-conc não ficou Ready."
+    kubectl describe pod -n vllm-estudo vllm-conc | sed -n '/^Events:/,$p'
+  else
+    echo "### processos na GPU (deve haver só o vLLM)"
+    nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv
+    echo "### GPU parada"
+    nvidia-smi --query-gpu=temperature.gpu,power.draw,power.limit,clocks.sm,clocks.max.sm,utilization.gpu,pstate --format=csv
+    echo "### contadores de redução de clock ANTES"
+    nvidia-smi -q -d PERFORMANCE | sed -n '/Clocks Event Reasons Counters/,/HW Power Braking/p'
+    nvidia-smi --query-gpu=timestamp,temperature.gpu,power.draw,clocks.sm,clocks.max.sm,utilization.gpu,pstate --format=csv -l 2 > gpu-amostras-b001d.csv &
+    SMI=$!
+    touch carga-b001d.ativa
+    ( n=0; while [ -f carga-b001d.ativa ]; do sleep 120; n=$((n+1)); echo "=== foto $n ($(date +%T)) ==="; nvidia-smi -q -d PERFORMANCE; done ) > gpu-performance-b001d.txt &
+    FOT=$!
+    M=$(kubectl exec -n vllm-estudo vllm-conc -- python3 -c "import json,urllib.request;print(json.load(urllib.request.urlopen('http://127.0.0.1:8000/v1/models'))['data'][0]['id'])")
+    echo "### nome do modelo servido (lido em /v1/models): $M"
+    B="vllm bench serve --backend openai --base-url http://127.0.0.1:8000 --endpoint /v1/completions --model $M --dataset-name random --random-input-len 512 --random-output-len 256 --ignore-eos --temperature 0 --metric-percentiles 50,95,99"
+    echo "### fase 1, igual ao Bloco C/E: concorrência 1, 12 requisições, semente 101   início $(date +%T)"
+    kubectl exec -n vllm-estudo vllm-conc -- sh -c "$B --seed 101 --max-concurrency 1 --num-prompts 12" | sed -n '/Serving Benchmark Result/,$p'
+    echo "### fase 2, igual ao Bloco E: concorrência 32, 512 requisições, semente 102   início $(date +%T)"
+    kubectl exec -n vllm-estudo vllm-conc -- sh -c "$B --seed 102 --max-concurrency 32 --num-prompts 512" | sed -n '/Serving Benchmark Result/,$p'
+    echo "### fim da carga   $(date +%T)"
+    rm -f carga-b001d.ativa
+    wait $FOT
+    kill $SMI
+    echo "### RESUMO: amostras com a GPU em uso (utilization >= 90 %)"
+    awk -F', ' 'NR>1 && $6+0>=90 {n++; t=$2+0; c=$4+0; if(n==1||t>tmax)tmax=t; if(n==1||c<cmin)cmin=c; s+=c; if(c<1400)baixo++} END {printf "amostras: %d | temp. max: %d C | clock min: %d MHz | clock medio: %.0f MHz | amostras com clock < 1400 MHz: %d\n", n, tmax, cmin, (n?s/n:0), baixo+0}' gpu-amostras-b001d.csv
+    echo "### RESUMO: fotos com algum Slowdown ativo: $(grep -c '=== foto' gpu-performance-b001d.txt) fotos no total; linhas ativas abaixo (vazio = nenhuma)"
+    grep -E '=== foto|Slowdown.*: Active' gpu-performance-b001d.txt
+    echo "### contadores de redução de clock DEPOIS (SW Thermal Slowdown deve ficar igual ao ANTES)"
+    nvidia-smi -q -d PERFORMANCE | sed -n '/Clocks Event Reasons Counters/,/HW Power Braking/p'
+    echo "### GPU 2 min depois da carga (velocidade de resfriamento)"
+    sleep 120
+    nvidia-smi --query-gpu=temperature.gpu,power.draw,clocks.sm,utilization.gpu --format=csv
+    echo "### GPU durante a carga (amostras a cada 2 s)"
+    cat gpu-amostras-b001d.csv
+    echo "### motivos de redução de clock (fotos a cada 2 min)"
+    cat gpu-performance-b001d.txt
+  fi
+} 2>&1 | tee B-001d-reteste-termico-$(hostname -s)-$(date +%F-%H%M).log
+```
+
+O que olhar: comparar com a B-001c, nesta ordem: temperatura parada (31 °C), temperatura máxima (72 °C),
+a curva de temperatura no fim da fase 2 (ontem: 71 → 72 °C no último minuto) e a vazão das duas fases
+(47,0 e 680,4 *tok*/s). Critério de estrangulamento igual ao do Bloco E.
+
+**Bloco E2 executado em 2026-10-23 16:35: passou, e igual à B-001c.** *Pod* já `Ready` (24 h). Parada a
+31 °C; máx. 72 °C; contador `SW Thermal Slowdown` em 0 µs antes e depois; 48,2 e 680,5 *tok*/s. A
+intervenção na sala não mudou a GPU ([AC-17](../ESTUDO-DE-CASO.md#ac-17);
+[log](../logs-analysis/B-001d-reteste-termico-sabdiia01-2026-10-23-1635.log)).
+
 ## Bloco F — Medição B-002: concorrência 1 a 64 com a GPU refrigerada (servidor, bash, **em `sabdiia01`**)
 
 **Só depois de o Bloco E passar.** É o Bloco B repetido sem mudar nada no servidor nem na carga (mesmas
