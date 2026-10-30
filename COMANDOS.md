@@ -357,6 +357,9 @@ kubectl get endpoints -n vllms
 
 # o pod recebe a GPU? pod mínimo com nvidia.com/gpu: 1 em cada nó   [não executado; Bloco B de runbooks/ray-3-nos-gpu.md]
 
+# testar um modelo em 1 GPU no protocolo comum: sobe, mede, guarda os logs e apaga o pod   [não executado; runbooks/plano-onda-1.md]
+cd /home/utec/vllm-estudo && bash teste-1gpu.sh P-01 Qwen/Qwen2.5-14B-Instruct-GPTQ-Int8 2>&1 | tee P-01-$(hostname -s)-$(date +%F-%H%M).log
+
 # modelos servidos e contexto máximo                                  [executado 2026-09-29]
 curl -s --max-time 10 http://192.168.50.160:8001/v1/models
 

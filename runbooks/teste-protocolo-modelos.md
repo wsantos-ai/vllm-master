@@ -203,7 +203,7 @@ for o in $GPUS; do echo "$o: $(X $o nvidia-smi --query-gpu=memory.used,utilizati
 echo "### 4. sanidade: uma pergunta simples, temperature 0"
 XI $SRV python3 - "$M" <<'PY'
 import json,sys,urllib.request
-b=json.dumps({"model":sys.argv[1],"messages":[{"role":"user","content":"Qual é a capital do Brasil? Responda em uma frase curta."}],"max_tokens":64,"temperature":0}).encode()
+b=json.dumps({"model":sys.argv[1],"messages":[{"role":"user","content":"Qual é a capital do Brasil? Responda em uma frase curta."}],"max_tokens":64,"temperature":0,"chat_template_kwargs":{"enable_thinking":False}}).encode()
 r=json.load(urllib.request.urlopen(urllib.request.Request("http://127.0.0.1:8000/v1/chat/completions",b,{"Content-Type":"application/json"}),timeout=300))
 print("RESPOSTA:",r["choices"][0]["message"]["content"].strip()[:400].replace("\n"," "))
 PY
@@ -215,7 +215,7 @@ echo "### 5. amostras de GPU a cada ~5 s -> $D/gpu-amostras.csv"
 ( while true; do for o in $GPUS; do echo "$(date +%T),$o,$(X $o nvidia-smi --query-gpu=temperature.gpu,power.draw,clocks.sm,utilization.gpu,memory.used --format=csv,noheader,nounits 2>&1)"; done; sleep 5; done ) > "$D/gpu-amostras.csv" &
 AM=$!; trap 'kill $AM 2>/dev/null' EXIT
 
-B="vllm bench serve --backend openai --base-url http://127.0.0.1:8000 --endpoint /v1/completions --model $M --tokenizer $TOK --dataset-name random --random-input-len 512 --random-output-len 256 --ignore-eos --temperature 0 --metric-percentiles 50,95,99"
+B="vllm bench serve --backend openai --base-url http://127.0.0.1:8000 --endpoint /v1/completions --model $M --tokenizer $TOK --dataset-name random --random-input-len 512 --random-output-len 256 --ignore-eos --temperature 0 --percentile-metrics ttft,tpot,itl,e2el --metric-percentiles 50,95,99"
 echo "### 6. warmup: c=4, 16 requisições, semente 999 (descartado)   $(date +%T)"
 X $SRV sh -c "$B --seed 999 --max-concurrency 4 --num-prompts 16" 2>&1 | grep -E 'Successful|Failed' 
 for F in "1 12 101" "16 256 116" "32 512 102"; do
@@ -243,9 +243,10 @@ for c in 1 16 32; do
     /^Total input tokens:/ {ti=$4} /^Total generated tokens:/ {tg=$4}
     /^Output token throughput/ {th=$5} /^P50 TTFT/ {t50=$4} /^P99 TTFT/ {t99=$4}
     /^P50 TPOT/ {p50=$4} /^P99 TPOT/ {p99=$4}
+    /^P50 E2EL/ {e50=$4} /^P99 E2EL/ {e99=$4}
     END { if (ok=="") {print "c="c": sem resultado"; exit}
       v=(ti==512*ok && tg==256*ok)?"":"!! totais fora do protocolo: entrada "ti", saída "tg"; a fase NÃO vale";
-      printf "| T-xxx | %s | %s | %s | %.1f | %.0f | %.0f / %.0f | %.1f / %.1f | ver nota | ver seção 8 | %s |\n", c, ok, fa, th, 1000/p50, t50, t99, p50, p99, v }' "$f"
+      printf "| T-xxx | %s | %s | %s | %.1f | %.0f | %.0f / %.0f | %.1f / %.1f | %.1f / %.1f | ver nota | ver seção 8 | %s |\n", c, ok, fa, th, 1000/p50, t50, t99, p50, p99, e50/1000, e99/1000, v }' "$f"
 done
 echo "== fim $(date -Is)   resultados em $D"
 SCRIPT

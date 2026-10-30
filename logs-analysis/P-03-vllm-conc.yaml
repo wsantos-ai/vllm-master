@@ -1,0 +1,35 @@
+# Plano de testes P-03: Qwen/Qwen3-30B-A3B-GPTQ-Int4 em 1 V100S de sabdiia01, vLLM v0.19.1, protocolo comum.
+# Pod de teste (restartPolicy Never), apagado no fim. hostNetwork: API em sabdiia01:8000, sem autenticação, só durante o teste.
+apiVersion: v1
+kind: Pod
+metadata: {name: vllm-conc, namespace: vllm-estudo, labels: {app: vllm-conc, plano: P-03}}
+spec:
+  nodeSelector: {kubernetes.io/hostname: sabdiia01}
+  hostNetwork: true
+  restartPolicy: Never
+  containers:
+  - name: vllm
+    image: vllm/vllm-openai:v0.19.1
+    command: ["/bin/bash", "-c"]
+    args:
+    - |
+      set -e
+      HF_HUB_OFFLINE=0 python3 -c "from huggingface_hub import snapshot_download as s; print('pesos em', s('Qwen/Qwen3-30B-A3B-GPTQ-Int4', allow_patterns=['*.safetensors','*.json','*.model','*.txt','*.tiktoken','*.py']))"
+      exec vllm serve Qwen/Qwen3-30B-A3B-GPTQ-Int4 --dtype float16 --max-model-len 8192 --gpu-memory-utilization 0.90 --generation-config vllm --host 0.0.0.0 --port 8000
+    env:
+    - {name: HF_HOME, value: /hf-cache}
+    - {name: HF_HUB_OFFLINE, value: "1"}
+    readinessProbe:
+      httpGet: {path: /health, port: 8000}
+      periodSeconds: 10
+    resources:
+      requests: {cpu: "8", memory: 32Gi, nvidia.com/gpu: 1}
+      limits: {cpu: "16", memory: 64Gi, nvidia.com/gpu: 1}
+    volumeMounts:
+    - {name: hf-cache, mountPath: /hf-cache}
+    - {name: shm, mountPath: /dev/shm}
+  volumes:
+  - name: hf-cache
+    hostPath: {path: /home/utec/vllm-estudo/hf-cache, type: DirectoryOrCreate}
+  - name: shm
+    emptyDir: {medium: Memory, sizeLimit: 8Gi}

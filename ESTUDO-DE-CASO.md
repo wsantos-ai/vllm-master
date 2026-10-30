@@ -168,6 +168,7 @@ Os logs de `kubectl logs` do deepseek começam em 09-27: o arranque foi perdido 
 | 2026-10-29 | O *pull* da `v0.19.1` em 02 pelo *kubelet* cai 2× com `context canceled` (limite de 5 min do containerd); `ctr images pull` resolve em 6,5 min | AC-24 |
 | 2026-10-29 | **B-004: Ray do estudo, Qwen2.5-7B com *pipeline parallel* 2 em 01 + 02, `v0.19.1`**: sobe e mede; 36,7 e 510,6 *tok*/s (1 e 32 usuários) contra 47,0 e 680,4 com 1 GPU; *KV cache* 3,1× | AC-23, AC-21 (corrigido), PD-31 |
 | 2026-10-29 | **Plano de testes do modelo de produção** (usuário: todos serão testados e daí sai o modelo): 11 candidatos em 3 ondas (1 GPU; Ray PP 2 em 01 + 02; Ray PP 3 com 03), cada Ray com um par em 1 GPU; tamanhos somados no Hugging Face. Em `vllm-config`, §9 do registro de testes | PD-19, PD-31 [F-040] |
+| 2026-10-30 | **Onda 1 do plano (P-01 a P-04, 1 GPU em 01):** GPTQ fica em 114-195 *tok*/s com 32 usuários (7B FP16: 680); P-02 e P-04 (4 bits densos) respondem lixo e saem; P-01 e P-03 passam | AC-25 |
 
 ## 4. Achados
 
@@ -392,6 +393,40 @@ para pelo menos 20 min. Antes de servir a usuários, configure o *reasoning pars
 
 **Validade.** `v0.19.1`, `sabdiia01`, 2026-10-02, duas tentativas, uma geração. Não medido: carga
 concorrente, entrada de imagem, qualidade das respostas em 4 bits, contexto perto de 8192 *tokens*.
+
+### AC-25 — Na V100S, GPTQ quase não ganha com concorrência (114-195 *tok*/s com 32 usuários, contra 680 do 7B FP16), e GPTQ 4 bits denso responde lixo {#ac-25}
+
+**O que é.** Onda 1 do plano de testes: 4 modelos GPTQ, 1 GPU cada, protocolo fixo. Com **1 usuário**,
+o 14B GPTQ Int8 empata com o 7B FP16 (48,7 × 47,0 *tok*/s). Com **32**, todos param entre 114 e 195
+*tok*/s, 3,5 a 6× menos que o 7B FP16, e de 16 para 32 usuários a vazão quase não sobe (P-02: 114 → 118).
+Explicação `[hipótese]`: sem Marlin (CC ≥ 7.5), o `gptq_gemm` não aproveita o lote. Os dois GPTQ
+**4 bits densos** (P-02, P-04) falharam na sanidade, o que confirma na prática o alerta de AC-15. O MoE 4
+bits (P-03) respondeu certo: os especialistas usam outro *kernel* (`MoeWNA16`). O P-03 tem o menor tempo
+por *token* (9,5 ms), mas 1,45 s até o 1º *token* com 1 usuário, e o log avisa `Using default MoE
+config. Performance might be sub-optimal!` (sem tabela de ajuste para a V100S).
+
+**Evidência.** `P-0x-sabdiia01-2026-10-30-*.log` (tabela em Evidências), linhas `T-003` a `T-006` do
+registro da equipe:
+
+```
+            c=1 tok/s  c=16    c=32    sanidade
+P-01 14B-GPTQ-Int8     48,7   165,4   194,6   "A capital do Brasil é Brasília."
+P-02 32B-GPTQ-Int4     39,5   114,3   118,4   "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!..."
+P-03 30B-A3B-GPTQ-Int4 66,6   116,0   133,3   "A capital do Brasil é Brasília."
+P-04 deepseek-33B-GPTQ 40,6   111,1   114,1   "ĠOĠcÃ¢mbioĠdoĠBrasilĠparaĠoĠdÃ³lar..."
+T-001 7B FP16          47,0     —     680,4   (referência)
+WARNING [gptq.py:99] Currently, the 4-bit gptq_gemm kernel for GPTQ is buggy.  (P-02, P-03, P-04)
+```
+
+**Regra prática.** Na V100S, **GPTQ 4 bits denso está fora**. Para servir vários usuários, GPTQ custa
+mais vazão do que economiza memória: um modelo em FP16 que caiba na GPU rende mais com 32 usuários. Um GPTQ
+só se justifica pela qualidade de um modelo maior, para poucos usuários simultâneos.
+
+**Validade.** 2026-10-30, `sabdiia01`, `v0.19.1`, `--dtype float16 --max-model-len 8192
+--gpu-memory-utilization 0.90 --generation-config vllm`, 512 → 256 *tokens*, sem `SW Thermal Slowdown`.
+A sanidade é **uma** pergunta: o P-03 passar não prova qualidade. No P-04, o `Ġ` sugere também um
+defeito de decodificação do *tokenizer* `[hipótese]`, não separado do *kernel*. GPTQ × FP16 do mesmo
+modelo em 1 GPU `[não medido]`.
 
 ### AC-24 — O 1º *pull* da `v0.19.1` pelo Kubernetes cai com `context canceled`: o containerd desiste após 5 min sem progresso; `ctr images pull` baixa em 6,5 min {#ac-24}
 
@@ -863,8 +898,8 @@ Qwen3.5-27B-GPTQ-Int4: I32 17,112,760,320 · BF16 10,668,659,184
 resposta e não só a velocidade: uma pergunta de resposta conhecida, com `temperature` 0. Antes de
 escolher um GPTQ, some os parâmetros não quantizados do `safetensors` da página do modelo.
 
-**Validade.** Leitura de código e da API do Hugging Face em 2026-10-13, **nada executado**. O que o
-aviso quer dizer na prática não foi medido.
+**Validade.** Leitura de código e da API do Hugging Face em 2026-10-13. **Executado em 2026-10-30
+(AC-25):** os dois GPTQ 4 bits densos responderam lixo; o MoE 4 bits respondeu certo.
 
 ### AC-03 — O cache de modelos é um PVC NFS compartilhado por todos os *pods* do vLLM {#ac-03}
 
@@ -1326,6 +1361,8 @@ Alavancas **candidatas**, a medir contra a linha de base de AC-05:
 
 | Arquivo em `logs-analysis/` | Prova |
 |---|---|
+| [P-01](logs-analysis/P-01-sabdiia01-2026-10-30-0907.log), [P-02](logs-analysis/P-02-sabdiia01-2026-10-30-0935.log), [P-03](logs-analysis/P-03-sabdiia01-2026-10-30-1013.log), [P-04](logs-analysis/P-04-sabdiia01-2026-10-30-1050.log) (`P-0x-sabdiia01-*.log`), logs completos dos *pods* (`P-0x-vllm-conc-*.log`), manifestos (`P-0x-vllm-conc.yaml`), [testes/2026-10-30-*](logs-analysis/testes/) | Onda 1: arranque, sanidade, c=1/16/32 e GPU dos 4 GPTQ (AC-25, `T-003` a `T-006`) |
+| [pronto-para-teste-sabdiia01-2026-10-30-0859.log](logs-analysis/pronto-para-teste-sabdiia01-2026-10-30-0859.log) | 2026-10-30 08:59: GPU de 01 livre (0 MiB), `vllm-estudo` vazio, veredito PRONTO; processo `ray start --address=ray-head.vllms.svc.cluster.local:6379 --num-gpus=1` no *host* de 01 |
 | [B-004-ray-pp2-qwen25-7b-sabdiia01-2026-10-29-1039.log](logs-analysis/B-004-ray-pp2-qwen25-7b-sabdiia01-2026-10-29-1039.log), [testes/2026-10-29-1113-Qwen_Qwen2.5-7B-Instruct/](logs-analysis/testes/2026-10-29-1113-Qwen_Qwen2.5-7B-Instruct/), [ray-pp2-qwen25-7b.yaml](logs-analysis/ray-pp2-qwen25-7b.yaml) | Ray do estudo em 01 + 02 (`ray 2.48.0`, `cupy 13.6.0`), `2.0/2.0 GPU`; `v0.19.1`, `--pipeline-parallel-size 2`, sem `--enforce-eager`; 7,13 GiB de pesos por GPU, *KV cache* 762.928 *tokens* (93,13×); c=1 36,7 *tok*/s, TPOT 26,6 ms; c=16 324,4; c=32 510,6, TTFT p50 1,10 s; 0 falhas, 0 preempções; sem estrangulamento (máx. 56 °C); uso médio em c=32: 60 % (01) e 81 % (02); arranque do *head* perdido no log (§9) (AC-23) |
 | [pull-v0191-sabdiia02-2026-10-29-1101.log](logs-analysis/pull-v0191-sabdiia02-2026-10-29-1101.log) | `image_pull_progress_timeout = '5m0s'` em 02; `ctr images pull` da `v0.19.1` em 6 min 30 s, saída 0; `/` de 101 para 114 G durante o `ctr` (84 G às 10:36) (AC-24) |
 | [pronto-para-teste-sabdiia01-2026-10-29-1035.log](logs-analysis/pronto-para-teste-sabdiia01-2026-10-29-1035.log), [02](logs-analysis/pronto-para-teste-sabdiia02-2026-10-29-1036.log) | GPUs de 01 e 02 livres (0 MiB, `0 0`), sem estrangulamento; `vllms` e `vllm-estudo` vazios; MTU 1500 em 01 e 02, `ping` de 1472 *bytes* passa entre os 3; imagens `v0.19.0`/`v0.19.1` em 01 e nenhuma `v0.19.x` em 02 (§2) |

@@ -34,6 +34,7 @@ Lido em `vllms` em 2026-10-29, 14:31-14:34 ([log 1](../logs-analysis/vllm-on-826
 |---|---|---|
 | *Namespace* | `vllm-ray` (novo) | Não se mistura com `vllms` (*Service* `ray-head`, rótulos `app=ray-head`) nem com `vllm-estudo` |
 | *Head* | *Deployment* `ray-head`, `sabdiia01` (`192.168.50.151`): Ray *head* com 1 GPU + `vllm serve` | O servidor sobe pelo manifesto; `kubectl exec -it` morre com a sessão (AC-19) |
+| GPU no *head* | Sim, `--num-gpus=1` | O nó que roda o `vllm serve` precisa de GPU, e uma parte do modelo fica nele [F-041]. *Head* sem GPU obriga o `vllm serve` a rodar num *worker*, e o Ray passa a enxergar só as GPUs dos *workers*: com 2 *workers*, no máximo 2 GPUs. *Head* com GPU e `vllm serve` nele foi o desenho do B-004 (AC-23) |
 | *Workers* | *Deployments* `ray-worker-02` (`192.168.50.152`) e `ray-worker-03` (`192.168.50.150`), 1 GPU cada | Um por nó, com o IP do nó fixo (o Ray e o vLLM precisam do IP de cada nó) |
 | Reinício | `strategy: Recreate`, `replicas: 1` | Nunca dois *pods* do mesmo nó disputando a única GPU |
 | Rede | `hostNetwork: true`; `NCCL_SOCKET_IFNAME`/`GLOO_SOCKET_IFNAME` = `bond0.500`; `VLLM_HOST_IP` = IP do nó | `bond0.500` tem o IP do nó nos 3. O vLLM **não** copia `VLLM_HOST_IP` para os *workers*, então cada *pod* declara o seu; copia `NCCL_*` e `HF_*` [F-038] |
@@ -405,6 +406,7 @@ EOF
 | *Head* parado em `aguardando 3 GPUs no Ray...` | Um *worker* não entrou no Ray (6379 bloqueada, *pod* não nasceu, sem GPU) | `kubectl exec -n vllm-ray deploy/ray-head -- ray status`; log do *worker* parado |
 | `_wait_until_pg_ready` citando `VLLM_HOST_IP` | O IP que o vLLM vê difere do IP do Ray | Conferir `VLLM_HOST_IP` contra `--node-ip-address` em cada *Deployment* |
 | `NCCL` com `timeout`, `Connection refused` ou `unhandled system error`, só quando entra 03 | Rede de 03 (MTU 9000 × 1500) `[hipótese]` | Igualar o MTU; ou repetir só com 01 + 02 e `--pipeline-parallel-size 2` (provado no B-004) |
+| `Current node has no GPU available. ... vLLM engine cannot start without GPU` | O `vllm serve` rodou num *pod* sem GPU (ex.: *head* sem `nvidia.com/gpu`) [F-041] | Dar GPU ao *pod* que roda o `vllm serve`. Se a GPU do *head* estiver reservada por outro *pod*, liberar essa GPU, não tirá-la do *head* |
 | `FA2 is only supported on devices with compute capability >= 8` | Aviso, não erro: a V100S usa `TRITON_ATTN` (AC-13) | Nada |
 
 ## Trocar o modelo
