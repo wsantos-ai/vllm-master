@@ -120,6 +120,31 @@ seguem em `0/0`. Em 03, `0 0` no Kubernetes; `nvidia-smi` não lido. A B-004 uso
 11:24 e os liberou ([01](logs-analysis/pronto-para-teste-sabdiia01-2026-10-29-1035.log),
 [02](logs-analysis/pronto-para-teste-sabdiia02-2026-10-29-1036.log)).
 
+**2026-11-03, estado atual: as 3 GPUs com o administrador, e `vllms` reorganizado por ele depois da nossa
+restauração.** Às 15:09, `vllm-server` (`Meta-Llama-3.1-8B-Instruct`) estava em 01 e `vllm-llama31`
+(`TheBloke/deepseek-coder-33B-instruct-GPTQ`, apesar do nome) em 02, os dois `v0.19.1`, mais o Ray dele
+(`ray-head` em 02 e *DaemonSet* `ray-worker` nos 3 nós). Os *Deployments* `vllm-deepseek-33b` e
+`vllm-llama31-8b` não existem mais ([01](logs-analysis/pronto-para-teste-sabdiia01-2026-11-03-1509.log)).
+`vllms` foi pausado das 15:29 às 16:30 para o P-05 e restaurado como estava
+([log](logs-analysis/restaurar-vllms-sabdiia01-2026-11-03-1630.log)). Por volta das 16:33
+`[estimado pelas idades dos *pods*]`, o administrador alterou `vllms` (confirmado por ele ao usuário):
+
+```
+deployment.apps/vllm-server   3/3     3            3           30m   vllm         vllm/vllm-openai:v0.19.1
+pod/ray-worker-96stn               1/1     Running   3 (2m36s ago)   33m   sabdiia01
+pod/ray-worker-dsk58               1/1     Running   3 (2m34s ago)   33m   sabdiia02
+pod/ray-worker-ldtx4               1/1     Running   3 (2m32s ago)   33m   sabdiia03
+pod/vllm-server-5489c5f447-2l7rq   1/1     Running   0               30m   sabdiia03
+pod/vllm-server-5489c5f447-sk7xg   1/1     Running   0               30m   sabdiia01
+pod/vllm-server-5489c5f447-tvwkf   1/1     Running   0               30m   sabdiia02
+```
+
+`vllm-server` passou a **3 réplicas, uma por nó** (o arranjo da D-04), e `vllm-llama31` e `ray-head` não
+aparecem. Modelo servido `[não verificado]`. **`sabdiia03` voltou a rodar *pod* com GPU**, o que antes falhava
+com `FailedCreatePodSandBox`; o MTU dele (9000 em 2026-10-28) não foi reconferido. Os
+`ray-worker` reiniciam sem o *head* `[hipótese]`. Saída colada pelo usuário; o arquivo
+`vllms-pos-restauracao-*.log` ficou no servidor `[não trazido]`.
+
 Em 2026-09-29, o `/metrics` do deepseek registrava `request_success_total` = **1** desde 09-18 (75
 *tokens* de entrada, 158 de saída).
 

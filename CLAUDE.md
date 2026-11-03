@@ -25,13 +25,14 @@ resumo que muda o jeito de trabalhar é este:
   imagens e `etcd` ficam em `/` (AC-09; o `/` de 70 G encheu em 2026-10-27, AC-20). CPU sem AVX2. Docker e
   Podman foram instalados nos 3 nós, fora do Kubernetes, com `data-root` em `/home/utec/docker_data`.
   `kubectl` falha em `sabdiia03` (OIDC): blocos com `kubectl` rodam em 01 ou 02.
-- **Há produção no *namespace* `vllms`**: `vllm-deepseek-33b` (`v0.6.4`, GPTQ) em `sabdiia03`, exposto
-  em `192.168.50.160:8001` sem autenticação (AC-05, AC-06). **Desde 2026-10-28 o deepseek e o
-  llama estão em `0/0`** (não apagados). O Ray do administrador rodou em 3 *pods* em `vllms` (`v0.5.4`, 1 GPU
-  cada) de 2026-10-28 ~14:50 a 17:10 e foi removido (AC-19). **Em 2026-10-29 10:35, GPUs de 01 e 02 livres e
-  `vllms` vazio** (§2); o estado muda de um dia para o outro: rode o Bloco 0 de
+- **Há produção no *namespace* `vllms`**. **Desde 2026-11-03 ~16:33, as 3 GPUs estão com o administrador:**
+  `vllm-server` (`v0.19.1`, modelo `[não verificado]`) com 3 réplicas, uma por nó, mais o *DaemonSet*
+  `ray-worker` dele nos 3 nós, sem `ray-head` (§2). Os antigos `vllm-deepseek-33b` (`v0.6.4`, AC-05, AC-06)
+  e `vllm-llama31-8b` não existem mais. O estado muda de um dia para o outro: rode o Bloco 0 de
   [runbooks/teste-protocolo-modelos.md](runbooks/teste-protocolo-modelos.md) antes de usar GPU. **Nunca proponha parar, reiniciar, editar
-  ou apagar recursos de `vllms` sem o usuário pedir explicitamente.** Experimentos vão para uma GPU livre,
+  ou apagar recursos de `vllms` sem o usuário pedir explicitamente.** Com o acordo do administrador,
+  a pausa e a restauração reversíveis estão em [runbooks/pausar-vllms.md](runbooks/pausar-vllms.md)
+  (usada no P-05, 2026-11-03). Experimentos vão para uma GPU livre,
   com `Service` `ClusterIP`. O Ray do administrador roda no *host* e, quando liga, ocupa as GPUs de
   `sabdiia01` e `sabdiia02` sem o Kubernetes saber, que continua mostrando as duas como livres (AC-19;
   ocupadas às 12:14 e vazias às 14:20 de 2026-10-27). Em 2026-10-28 14:21 a GPU de `sabdiia03` também
