@@ -1,0 +1,34 @@
+== sabdiia01  2026-11-03T16:30:06-03:00  restauração de vllms
+restaurando a partir de vllms-replicas-2026-11-03-1528.txt
+deployment/ray-head 1
+deployment/vllm-llama31 1
+deployment/vllm-server 1
+daemonset/ray-worker ds
+### 1. restaurando   16:30:06
+deployment.apps/ray-head scaled
+deployment.apps/vllm-llama31 scaled
+deployment.apps/vllm-server scaled
+daemonset.apps/ray-worker patched
+### 2. estado depois de 90 s
+NAME                           READY   UP-TO-DATE   AVAILABLE   AGE     CONTAINERS   IMAGES                      SELECTOR
+deployment.apps/ray-head       1/1     1            1           4d21h   ray-head     rayproject/ray:latest-gpu   app=ray-head
+deployment.apps/vllm-llama31   0/1     1            0           146m    vllm         vllm/vllm-openai:v0.19.1    app=vllm-llama31
+deployment.apps/vllm-server    0/1     1            0           112m    vllm         vllm/vllm-openai:v0.19.1    app=vllm-server
+
+NAME                        DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE    CONTAINERS   IMAGES                      SELECTOR
+daemonset.apps/ray-worker   3         3         3       3            3           <none>          149m   ray-worker   rayproject/ray:latest-gpu   app=ray-worker
+
+NAME                                READY   STATUS    RESTARTS   AGE   IP               NODE        NOMINATED NODE   READINESS GATES
+pod/ray-head-7f64b9b9fd-btfdr       1/1     Running   0          91s   10.244.182.149   sabdiia02   <none>           <none>
+pod/ray-worker-96stn                1/1     Running   0          90s   10.244.179.120   sabdiia01   <none>           <none>
+pod/ray-worker-dsk58                1/1     Running   0          90s   10.244.182.129   sabdiia02   <none>           <none>
+pod/ray-worker-ldtx4                1/1     Running   0          90s   10.244.50.139    sabdiia03   <none>           <none>
+pod/vllm-llama31-84c5d96454-skk8q   0/1     Running   0          91s   10.244.182.179   sabdiia02   <none>           <none>
+pod/vllm-server-6cf97f58cf-vcgnt    0/1     Running   0          91s   10.244.179.116   sabdiia01   <none>           <none>
+Name:               sabdiia01
+  nvidia.com/gpu     1           1
+Name:               sabdiia02
+  nvidia.com/gpu     1             1
+Name:               sabdiia03
+  nvidia.com/gpu     0            0
+== fim 2026-11-03T16:31:37-03:00
