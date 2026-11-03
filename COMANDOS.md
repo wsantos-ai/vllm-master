@@ -321,6 +321,24 @@ Leitura rápida do `STATUS`: `Running` = no ar; `CrashLoopBackOff` = o contêine
 tenta de novo com espera crescente; `CreateContainerConfigError` = falta algo que o manifesto pede
 (Secret, ConfigMap). A coluna `RESTARTS` conta as quedas.
 
+### Pausar e restaurar `vllms` (só com o acordo do administrador)
+
+Servidor, bash, 01 ou 02. **ALTERA o *cluster***: tira do ar a produção e o Ray do administrador. O
+procedimento completo, com cópia de segurança e restauração, está em
+[runbooks/pausar-vllms.md](runbooks/pausar-vllms.md).
+
+```bash
+# Deployment/StatefulSet a 0 réplicas (volta com --replicas=<n antigo>)          [não executado]
+kubectl scale -n vllms deployment/vllm-server --replicas=0
+
+# DaemonSet sem pods: nodeSelector que nenhum nó tem (volta removendo a chave)   [não executado]
+kubectl patch -n vllms daemonset/<nome> -p '{"spec":{"template":{"spec":{"nodeSelector":{"vllm-estudo/pausado":"true"}}}}}'
+kubectl patch -n vllms daemonset/<nome> --type=json -p '[{"op":"remove","path":"/spec/template/spec/nodeSelector/vllm-estudo~1pausado"}]'
+
+# quem é o dono de cada pod (Deployment via ReplicaSet, DaemonSet, ou nenhum)   [não executado]
+kubectl get pods -n vllms -o custom-columns='POD:.metadata.name,DONO:.metadata.ownerReferences[0].kind'
+```
+
 ## 4. Por que um *pod* não sobe
 
 ```bash
