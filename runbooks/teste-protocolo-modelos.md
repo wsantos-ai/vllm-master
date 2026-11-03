@@ -159,6 +159,8 @@ trocando só o modelo (e `--max-model-len`, se o modelo não aceitar 8192). Ele 
 
 **Ray do estudo (01 + 02, Qwen2.5-7B, PP 2):** [teste-ray-pp2-qwen25-7b.md](teste-ray-pp2-qwen25-7b.md)
 sobe o próprio Ray em `vllm-estudo`, roda este protocolo e apaga tudo no fim.
+**P-05 (01 + 02, Qwen2.5-14B FP16, PP 2):** [teste-ray-pp2-qwen25-14b-p05.md](teste-ray-pp2-qwen25-14b-p05.md),
+o mesmo desenho, com o cache em `/` (o `/home` de 01 tinha 33 G livres em 2026-10-30).
 
 **Ray do administrador:** subido por ele. Os nomes abaixo (`ray-head`, `ray-worker-2`, `ray-worker-3` em `vllms`)
 são os de 2026-10-28; confira no Bloco 0 e ajuste a chamada do Bloco 2 se mudarem. O Bloco 2 só lê o

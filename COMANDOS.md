@@ -152,6 +152,11 @@ free -h
 df -h
 lsblk -o NAME,SIZE,ROTA,TYPE,MOUNTPOINT
 
+# em que sistema de arquivos fica um diretório (/ ou /home?) e quantos G livres  [não executado]
+# usado no P-05 para pôr o cache do Hugging Face em / (runbooks/teste-ray-pp2-qwen25-14b-p05.md)
+df --output=target /var/lib | tail -1
+df -BG --output=avail / | tail -1
+
 # montagens NFS e suas opções (versão, rsize, nconnect)               [executado 2026-09-29]
 findmnt -t nfs,nfs4
 
