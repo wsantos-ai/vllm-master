@@ -14,8 +14,9 @@
   `v0.19.1` é a última versão cujo Dockerfile inclui `sm_70`** ([AC-11](#ac-11)), **e ela roda de fato na
   V100S**: motor V1, *attention* Triton, *CUDA graphs*, FP16, em CPU sem AVX2 ([AC-13](#ac-13)). AWQ e
   FP8 não rodam.
-- Uma imagem recente do vLLM ocupa ~3,4× o tamanho comprimido (30 G para a `v0.19.1`): **cabe uma por
-  nó** no `/` de 70 G ([AC-09](#ac-09)).
+- Uma imagem recente do vLLM ocupa ~3,3× o tamanho comprimido (~29 G para a `v0.19.1`). Desde
+  2026-10-28, o `/` tem 631 G nos 3 nós (534-580 G livres): **cabem várias imagens por nó**
+  ([AC-09](#ac-09)).
 - **vLLM `v0.6.4` + GPTQ serve um modelo de 33B numa V100S**, com *attention* XFormers e espaço de
   *KV cache* para 43.600 *tokens* ([AC-05](#ac-05)).
 - A `v0.12.0` que "cai em *loop*" nunca chegou à GPU: morre com `401` no repositório *gated* da Meta.
@@ -28,7 +29,8 @@
   114 e 195 *tok*/s, contra 680 do Qwen2.5-7B em FP16. **GPTQ 4 bits denso responde errado** e está
   fora; o MoE 4 bits respondeu certo ([AC-25](#ac-25)).
 - A rede entre os nós é 1 GbE por fluxo, o que descarta paralelismo multinó e limita o carregamento
-  pelo NFS. `/home` tem 755 G livres por nó para cache local ([AC-08](#ac-08), [AC-09](#ac-09)).
+  pelo NFS. Para cache local, `/home` tem 200 G por nó, com 77-156 G livres
+  ([AC-08](#ac-08), [AC-09](#ac-09)).
 
 ---
 
@@ -1326,6 +1328,7 @@ Alavancas **candidatas**, a medir contra a linha de base de AC-05:
 
 | Data | Correção | Mecanismo do erro |
 |---|---|---|
+| 2026-11-03 | Resumo: "cabe uma imagem por nó no `/` de 70 G" e "`/home` tem 755 G livres" → `/` de 631 G (cabem várias) e `/home` de 200 G com 77-156 G livres (AC-09, 2026-10-28) | a manutenção de 2026-10-28 atualizou AC-09, §2 e o CLAUDE.md, mas não o Resumo, que repete números dos achados sem ser revisto junto com eles |
 | 2026-10-29 | AC-21 "*pipeline parallel* custa ~5 %" → perde 22-25 % de vazão e +31 % de tempo por *token* contra 1 GPU (AC-23) | a estimativa contou só a transferência na fronteira entre as etapas, com o RTT de ICMP como custo inteiro, e ignorou a espera entre as etapas e a coordenação do Ray a cada passo |
 | 2026-10-29 | Runbook B-004: o log do *head* guardou só as últimas 600 linhas e perdeu o arranque, e com ele a prova de captura dos *CUDA graphs* → logs completos em arquivo próprio | o `tail` foi dimensionado para o arranque, mas o *head* grava uma linha por requisição, e a carga empurrou o arranque para fora |
 | 2026-10-28 | Bloco "produção e rede nova" titulado para `sabdiia01` rodou em `sabdiia03` e gravou o log com o nome de 01 → arquivo renomeado para `-sabdiia03-`; os blocos passam a usar `$(hostname -s)` no nome e a abortar se o nó for outro | o nome do nó estava fixo no `tee` e o bloco não conferia `hostname`: o log mentiria sobre a origem se não tivesse o cabeçalho `== $(hostname -s)` |
