@@ -75,7 +75,7 @@ mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
 {
   N=$(hostname -s); echo "== $N  $(date -Is)"
   case "$N" in sabdiia01|sabdiia02|sabdiia03) ;; *) echo "ABORTA: bloco para sabdiia01..03"; exit 1;; esac
-  OK=1; aviso() { echo "!! $*"; OK=0; }
+  OK=1; aviso() { echo "AVISO: $*"; OK=0; }
 
   echo "### 1. GPU: memória, uso, temperatura, potência, clock"
   nvidia-smi --query-gpu=name,memory.used,memory.total,utilization.gpu,temperature.gpu,power.draw,clocks.sm,clocks.max.sm --format=csv
@@ -128,7 +128,7 @@ mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
     echo "kubectl indisponível neste nó"
   fi
 
-  echo "### VEREDITO $N: $([ $OK = 1 ] && echo 'PRONTO (GPU livre, sem estrangulamento, disco ok, ping 1472 ok)' || echo 'NÃO PRONTO: ver linhas !! acima')"
+  echo "### VEREDITO $N: $([ $OK = 1 ] && echo 'PRONTO (GPU livre, sem estrangulamento, disco ok, ping 1472 ok)' || echo 'NÃO PRONTO: ver linhas AVISO acima')"
 } 2>&1 | tee pronto-para-teste-$(hostname -s)-$(date +%F-%H%M).log
 ```
 
@@ -224,7 +224,7 @@ for F in "1 12 101" "16 256 116" "32 512 102"; do
   set -- $F
   echo "### fase c=$1, $2 requisições, semente $3   início $(date +%T)"
   X $SRV sh -c "$B --seed $3 --max-concurrency $1 --num-prompts $2" 2>&1 | tee "$D/fase-c$1.txt" | sed -n '/Serving Benchmark Result/,$p'
-  grep -q 'tokens than expected' "$D/fase-c$1.txt" && echo "!! aviso de entrada fora de 512 tokens na fase c=$1"
+  grep -q 'tokens than expected' "$D/fase-c$1.txt" && echo "AVISO: entrada fora de 512 tokens na fase c=$1"
 done
 kill $AM 2>/dev/null
 
@@ -247,7 +247,7 @@ for c in 1 16 32; do
     /^P50 TPOT/ {p50=$4} /^P99 TPOT/ {p99=$4}
     /^P50 E2EL/ {e50=$4} /^P99 E2EL/ {e99=$4}
     END { if (ok=="") {print "c="c": sem resultado"; exit}
-      v=(ti==512*ok && tg==256*ok)?"":"!! totais fora do protocolo: entrada "ti", saída "tg"; a fase NÃO vale";
+      v=(ti==512*ok && tg==256*ok)?"":"AVISO: totais fora do protocolo: entrada "ti", saída "tg"; a fase NÃO vale";
       printf "| T-xxx | %s | %s | %s | %.1f | %.0f | %.0f / %.0f | %.1f / %.1f | %.1f / %.1f | ver nota | ver seção 8 | %s |\n", c, ok, fa, th, 1000/p50, t50, t99, p50, p99, e50/1000, e99/1000, v }' "$f"
 done
 echo "== fim $(date -Is)   resultados em $D"
@@ -282,7 +282,7 @@ bash teste-protocolo.sh vllms deploy/ray-head deploy/ray-worker-2 deploy/ray-wor
 
 ## O que olhar e como registrar
 
-1. A seção 9 imprime as linhas da Tabela 3 do registro. **Linha com `!! totais fora do protocolo` não
+1. A seção 9 imprime as linhas da Tabela 3 do registro. **Linha com `AVISO: totais fora do protocolo` não
    vale:** respostas curtas ou entrada fora de 512 *tokens*.
 2. `Failed requests` tem de ser 0.
 3. Seção 7: alguma linha `Thermal Slowdown ... Active`, ou contador crescendo? Então o número mede a

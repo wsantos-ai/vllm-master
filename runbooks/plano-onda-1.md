@@ -203,7 +203,7 @@ scp -r "root@192.168.50.151:/home/utec/vllm-estudo/testes" "C:\www\vllm-master\l
 | Protocolo, `### 2` | `Model loading took`, `GPU KV cache size`, nenhum `enforce_eager` | Pesos e *KV cache* para a Tabela 2 |
 | Protocolo, `### 2` | aviso do `gptq_gemm` "buggy" (P-02, P-03, P-04) | Esperado em 4 bits (AC-15); anote em Observação |
 | Protocolo, `### 4` | `RESPOSTA:` | Tem de dizer Brasília, em frase coerente. Texto sem sentido = o modelo **falha no eliminatório**, mesmo com bons números |
-| Protocolo, `### 9` | linhas da Tabela 3 | Sem `!! totais fora do protocolo` |
+| Protocolo, `### 9` | linhas da Tabela 3 | Sem `AVISO: totais fora do protocolo` |
 | Protocolo, `### 7` e `### 8` | `Thermal Slowdown` | Ativo = o número é da refrigeração |
 
 **Falhas prováveis na subida** (seção 5):
