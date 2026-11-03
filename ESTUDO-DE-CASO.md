@@ -28,6 +28,9 @@
 - **Na V100S, GPTQ quase não ganha com concorrência**: com 32 usuários, 4 modelos GPTQ ficaram entre
   114 e 195 *tok*/s, contra 680 do Qwen2.5-7B em FP16. **GPTQ 4 bits denso responde errado** e está
   fora; o MoE 4 bits respondeu certo ([AC-25](#ac-25)).
+- **O teto é do GPTQ, não do tamanho do modelo**: o mesmo Qwen2.5-14B em FP16, dividido em 01 + 02 pelo
+  Ray, dá 319,4 *tok*/s com 32 usuários, contra 194,6 em GPTQ Int8 numa GPU. Como usa 2 GPUs, empata por
+  GPU com duas réplicas do GPTQ ([AC-26](#ac-26)).
 - A rede entre os nós é 1 GbE por fluxo, o que descarta paralelismo multinó e limita o carregamento
   pelo NFS. Para cache local, `/home` tem 200 G por nó, com 77-156 G livres
   ([AC-08](#ac-08), [AC-09](#ac-09)).
@@ -174,6 +177,8 @@ Os logs de `kubectl logs` do deepseek começam em 09-27: o arranque foi perdido 
 | 2026-10-29 | **B-004: Ray do estudo, Qwen2.5-7B com *pipeline parallel* 2 em 01 + 02, `v0.19.1`**: sobe e mede; 36,7 e 510,6 *tok*/s (1 e 32 usuários) contra 47,0 e 680,4 com 1 GPU; *KV cache* 3,1× | AC-23, AC-21 (corrigido), PD-31 |
 | 2026-10-29 | **Plano de testes do modelo de produção** (usuário: todos serão testados e daí sai o modelo): 11 candidatos em 3 ondas (1 GPU; Ray PP 2 em 01 + 02; Ray PP 3 com 03), cada Ray com um par em 1 GPU; tamanhos somados no Hugging Face. Em `vllm-config`, §9 do registro de testes | PD-19, PD-31 [F-040] |
 | 2026-10-30 | **Onda 1 do plano (P-01 a P-04, 1 GPU em 01):** GPTQ fica em 114-195 *tok*/s com 32 usuários (7B FP16: 680); P-02 e P-04 (4 bits densos) respondem lixo e saem; P-01 e P-03 passam | AC-25 |
+| 2026-11-03 | GPUs de 01 e 02 com o administrador (`vllms/vllm-server` e `vllms/vllm-llama31`, `v0.19.1`); `vllms` pausado com o acordo dele (Bloco P) e restaurado depois (Bloco R) | §2, [runbook](runbooks/pausar-vllms.md) |
+| 2026-11-03 | **P-05: Qwen2.5-14B FP16 pelo Ray (PP 2, 01 + 02)**: 21,4 / 203,9 / 319,4 *tok*/s com 1 / 16 / 32 usuários, contra 48,7 / 165,4 / 194,6 do mesmo 14B em GPTQ Int8 (P-01) | AC-26 |
 
 ## 4. Achados
 
@@ -398,6 +403,40 @@ para pelo menos 20 min. Antes de servir a usuários, configure o *reasoning pars
 
 **Validade.** `v0.19.1`, `sabdiia01`, 2026-10-02, duas tentativas, uma geração. Não medido: carga
 concorrente, entrada de imagem, qualidade das respostas em 4 bits, contexto perto de 8192 *tokens*.
+
+### AC-26 — O teto de concorrência do GPTQ é do *kernel*: o mesmo 14B em FP16 pelo Ray rende 64 % mais com 32 usuários, mas empata por GPU {#ac-26}
+
+**O que é.** O P-05 roda o mesmo `Qwen2.5-14B-Instruct` do P-01 (AC-25), em FP16 em vez de GPTQ Int8.
+Os pesos em FP16 (27,51 GiB) não deixam *KV cache* numa V100S, então o teste usa 2 GPUs pelo Ray. Com
+**32 usuários**, o FP16 rende 64 % mais, mesmo pagando o custo da divisão entre os nós (−22 a −25 % no 7B,
+AC-23). Isso indica que o teto de ~195 *tok*/s da onda 1 vem do `gptq_gemm` e não do tamanho do modelo
+`[hipótese, apoiada por esta medida]`. Com **1 usuário**, o FP16 perde 56 %: cada *token* lê o dobro de
+pesos e atravessa os dois nós. **Por GPU**, os dois empatam: o P-05 dá 160 *tok*/s por GPU, e duas
+réplicas do P-01 com 16 usuários cada dariam ~331 *tok*/s no total, com os mesmos 11 *tok*/s por usuário
+`[cálculo, não medido]`. Nenhuma das GPUs saturou: o uso médio foi de 77 % (01) e 89 % (02).
+
+**Evidência.** [P-05-ray-pp2-sabdiia01-2026-11-03-1544.log](logs-analysis/P-05-ray-pp2-sabdiia01-2026-11-03-1544.log),
+[amostras de GPU](logs-analysis/testes/2026-11-03-1556-Qwen_Qwen2.5-14B-Instruct/gpu-amostras.csv), `T-007` do registro:
+
+```
+                       c=1    c=16    c=32   tok/s por usuário (c=32)  TTFT p50/p95 (c=32)
+P-05 14B FP16, PP 2    21,4   203,9   319,4  11                        1.720 / 3.080 ms
+P-01 14B GPTQ-Int8     48,7   165,4   194,6   6                        2.290 / —     ms
+Model loading took 13.79 GiB memory   (as duas GPUs)
+GPU KV cache size: 144,816 tokens     (P-01: 61.440)
+RESPOSTA: A capital do Brasil é Brasília.
+```
+
+**Regra prática.** Para servir muitos usuários na V100S, prefira FP16 a GPTQ. Um modelo FP16 maior que
+32 GB, dividido pelo Ray, rende por GPU o mesmo que réplicas em GPTQ, com 1º *token* mais rápido, mas
+fica 2× mais lento com 1 usuário e prende dois nós a um servidor. A escolha entre eles depende da
+qualidade (PD-19), não da vazão.
+
+**Validade.** 2026-11-03, `sabdiia01` + `sabdiia02`, `v0.19.1`, Ray `2.48.0`, `--pipeline-parallel-size 2
+--distributed-executor-backend ray --dtype float16 --max-model-len 8192 --gpu-memory-utilization 0.90
+--generation-config vllm`, *CUDA graphs* capturados, 512 → 256 *tokens*, 66 °C máx., sem `SW Thermal
+Slowdown`. Duas réplicas do P-01 `[não medido]`. Com o Ray, o vLLM desliga o *async scheduling* (log), e
+o custo disso não foi separado. ITL p99 de 1.136 ms com 32 usuários `[causa não verificada]`.
 
 ### AC-25 — Na V100S, GPTQ quase não ganha com concorrência (114-195 *tok*/s com 32 usuários, contra 680 do 7B FP16), e GPTQ 4 bits denso responde lixo {#ac-25}
 
@@ -1232,7 +1271,7 @@ disco local: `[não medido]`.
 |---|---|---|---|---|
 | D-01 | Imagem de referência: `vllm/vllm-openai:v0.19.1` | `v0.20.0`+ (CUDA 13, sem `sm_70`); `v0.12.0` (7 versões mais antiga, também com `sm_70`); variantes `-cu129` de `v0.20.0`+ (Dockerfile sem `7.0`) | última versão com `sm_70` no Dockerfile (AC-11) | **confirmada** em 2026-10-02 pelo primeiro arranque (AC-13) |
 | D-03 | **Descartado** como modelo de produção: `Qwen/Qwen3.8-27B` com bitsandbytes 4 bits, na configuração de AC-14 | — | ~3 *tokens*/s e 12 min de arranque (AC-14) não atendem ao uso pretendido (decisão do usuário, 2026-10-13); sem GPTQ do 3.8, e o GPTQ do 3.5-27B não cabe (AC-15) | em vigor; **antes de apagar o *pod*, testar as alavancas da PD-20**; substituto: PD-19 |
-| D-04 | **Escalar com réplicas de 1 GPU por nó, sem Ray**: um `Deployment` do vLLM por GPU atrás de um `Service`; modelo que caiba inteiro em 32 GB. Primeiro candidato: `Qwen/Qwen3-30B-A3B-GPTQ-Int4` (PD-19) | Ray com modelo dividido entre nós (*tensor parallel*: a rede custa mais que o ganho; *pipeline parallel*: só para modelo > 32 GB, PD-31); Ray Serve na frente das réplicas (sem medida de ganho sobre o `Service`); gpt-oss no vLLM (MXFP4 exige CC 8.0) | AC-01, AC-21, AC-22; réplicas não passam pela rede durante a geração. **Medido em 2026-10-29 (AC-23):** o mesmo 7B dividido em 2 GPUs pelo Ray rende 22-25 % menos que em 1 GPU | **provisória** (2026-10-27): o modelo depende de arranque, qualidade (AC-15) e *tool calling* (PD-25); hoje são 2 réplicas possíveis (01 e 02), porque 03 tem a produção. **Onda 1 (2026-10-30, AC-25):** o primeiro candidato sobe e responde certo, mas dá 133,3 *tok*/s com 32 usuários (5 por usuário), contra 680,4 do 7B FP16; a escolha do modelo segue aberta (PD-19) |
+| D-04 | **Escalar com réplicas de 1 GPU por nó, sem Ray**: um `Deployment` do vLLM por GPU atrás de um `Service`; modelo que caiba inteiro em 32 GB. Primeiro candidato: `Qwen/Qwen3-30B-A3B-GPTQ-Int4` (PD-19) | Ray com modelo dividido entre nós (*tensor parallel*: a rede custa mais que o ganho; *pipeline parallel*: só para modelo > 32 GB, PD-31); Ray Serve na frente das réplicas (sem medida de ganho sobre o `Service`); gpt-oss no vLLM (MXFP4 exige CC 8.0) | AC-01, AC-21, AC-22; réplicas não passam pela rede durante a geração. **Medido em 2026-10-29 (AC-23):** o mesmo 7B dividido em 2 GPUs pelo Ray rende 22-25 % menos que em 1 GPU | **provisória** (2026-10-27): o modelo depende de arranque, qualidade (AC-15) e *tool calling* (PD-25); hoje são 2 réplicas possíveis (01 e 02), porque 03 tem a produção. **Onda 1 (2026-10-30, AC-25):** o primeiro candidato sobe e responde certo, mas dá 133,3 *tok*/s com 32 usuários (5 por usuário), contra 680,4 do 7B FP16; a escolha do modelo segue aberta (PD-19). **P-05 (2026-11-03, AC-26):** o 14B FP16 pelo Ray dá 319,4 *tok*/s com 32 usuários em 2 GPUs, o mesmo por GPU que réplicas do 14B GPTQ; Ray com modelo > 32 GB passa a ser opção, decidida pela qualidade |
 | D-02 | `sabdiia01` é o nó de testes; `vllm-llama31-8b` desligado (`--replicas=0`) e imagem `v0.12.0` removida | testar em `sabdiia02` (imagem não cabia, e a remoção por nome não liberou espaço) | abriu GPU e 27 G de disco sem tirar nenhum serviço que funcionasse (AC-09) | **suspensa em 2026-10-27**: a GPU de 01 é disputada pelo Ray do administrador, que liga sem aviso (AC-19), e a `v0.19.1` foi apagada e não cabe de volta em `/` (AC-20). Volta com a PD-15 (containerd em `/home`) e um acordo sobre a GPU (PD-29) |
 
 ## 6. Configuração de referência
@@ -1297,7 +1336,7 @@ Alavancas **candidatas**, a medir contra a linha de base de AC-05:
 | PD-21 | Num nó do *cluster* (1 V100S), o Ollama/llama.cpp é mais rápido que o vLLM **com o mesmo modelo e a mesma carga**? | motor de produção: vLLM (forte em concorrência) × Ollama (forte em um usuário por vez nesta GPU) | o mesmo modelo inteiro em 32 GB nos dois motores (ex.: `Qwen3.8-27B` em GGUF 4 bits, F-010), 1 e N requisições simultâneas. Referência externa, **outro servidor com as mesmas placas** (as V100S foram tiradas dele para montar este *cluster*): o usuário mediu 10 → 50 *tokens*/s com `gpt-oss:120b` no Ollama, com as 2 V100S na mesma máquina, sem Kubernetes, ajustando `num_ctx`, Flash Attention e quantização q8. O ganho acompanhou a queda do *offload* para a CPU (40 % → 4 %), com 64 GB de VRAM num servidor só, arranjo que não existe aqui |
 | PD-22 | **Topologia das GPUs:** manter 1 V100S por nó (até 3 cópias de modelos de até ~32 GB; tolera falha de um nó) ou juntar 2 V100S num nó (64 GB para um modelo maior, *tensor parallel* no vLLM ou divisão de camadas no Ollama; menos cópias)? | o tamanho máximo de modelo e a forma de escalar o serviço | decisão do usuário e do administrador, com base no uso (modelo grande e capaz × muitos usuários simultâneos), nos resultados da PD-20/PD-21 e em conferir se o nó comporta 2 placas (espaço, *riser*, energia). Evidência a favor de 2 por nó: PD-21 (gpt-oss-120b a ~50 *tokens*/s com 2 V100S juntas) |
 | PD-20 | **Parcial (2026-10-14): concorrência não ajuda e raciocínio desligado funciona (AC-16).** Restam R1 (*CUDA graphs* via `--kv-cache-memory-bytes`) e R2 (entrada de imagem desligada). Alguma parametrização tira o `Qwen/Qwen3.8-27B` dos ~3 a 5 *tokens*/s? | se o modelo pedido volta a ser viável (reabre D-03) ou não | Passo 1b de [runbooks/teste-qwen38-27b-bnb.md](runbooks/teste-qwen38-27b-bnb.md) no *pod* em execução; depois R1 e R2, um por vez |
-| PD-19 | Qual modelo entrega a velocidade necessária na V100S com saída correta? **Desde 2026-10-29, a lista viva é o plano de testes (§9 do registro em `vllm-config`, P-01 a P-11): os 4 abaixo + `TheBloke/deepseek-coder-33B-instruct-GPTQ` (4 bits, 16,2 GiB, o da produção) em 1 GPU e 7 modelos de 27,5 a 71,8 GiB pelo Ray (PD-31) [F-040]. Onda 1 (P-01 a P-04) feita em 2026-10-30 (AC-25): P-02 e P-04 eliminados; P-01 e P-03 passam, mas com 32 usuários dão 6 e 5 *tok*/s por usuário. Próximo: onda 2, começando pelo P-05 (14B FP16, Ray PP 2), que separa o custo do GPTQ do custo do tamanho do modelo.** Candidatos originais: `Qwen/Qwen3-30B-A3B-GPTQ-Int4` (MoE, 3B ativos; **primeiro a testar**, D-04; ~16,2 GB de *weights* [F-030] `[cálculo]`, cabe numa V100S com ~12 GB para *KV cache*; especialistas no `MoeWNA16`, atenção no `gptq_gemm` de 4 bits sob alerta, AC-15), `Qwen/Qwen2.5-14B-Instruct-GPTQ-Int8` (núcleo 8 bits, fora do alerta), `Qwen/Qwen2.5-32B-Instruct-GPTQ-Int4` (núcleo 4 bits sob alerta), `Qwen/Qwen2.5-7B-Instruct` em FP16 (controle, sem *quantization*) | o modelo de produção que substitui o Qwen3.8-27B (D-03) | definir com o usuário a velocidade mínima e o uso; testar um candidato por vez em `sabdiia01` com o mesmo bloco de AC-14 (imagem já no nó; só o modelo baixa para `/home`), conferindo *tokens*/s **e** se a resposta faz sentido (AC-15) |
+| PD-19 | Qual modelo entrega a velocidade necessária na V100S com saída correta? **Desde 2026-10-29, a lista viva é o plano de testes (§9 do registro em `vllm-config`, P-01 a P-11): os 4 abaixo + `TheBloke/deepseek-coder-33B-instruct-GPTQ` (4 bits, 16,2 GiB, o da produção) em 1 GPU e 7 modelos de 27,5 a 71,8 GiB pelo Ray (PD-31) [F-040]. Onda 1 (P-01 a P-04) feita em 2026-10-30 (AC-25): P-02 e P-04 eliminados; P-01 e P-03 passam, mas com 32 usuários dão 6 e 5 *tok*/s por usuário. P-05 feito em 2026-11-03 (AC-26): o 14B FP16 pelo Ray dá 319,4 *tok*/s com 32 usuários (11 por usuário) e confirma que o teto é do GPTQ. P-06 e P-07 (GPTQ) perdem prioridade. Próximo: definir o teste de qualidade (critério 2 do plano), sem o qual nenhum candidato vence o 7B FP16 (680,4 *tok*/s em 1 GPU).** Candidatos originais: `Qwen/Qwen3-30B-A3B-GPTQ-Int4` (MoE, 3B ativos; **primeiro a testar**, D-04; ~16,2 GB de *weights* [F-030] `[cálculo]`, cabe numa V100S com ~12 GB para *KV cache*; especialistas no `MoeWNA16`, atenção no `gptq_gemm` de 4 bits sob alerta, AC-15), `Qwen/Qwen2.5-14B-Instruct-GPTQ-Int8` (núcleo 8 bits, fora do alerta), `Qwen/Qwen2.5-32B-Instruct-GPTQ-Int4` (núcleo 4 bits sob alerta), `Qwen/Qwen2.5-7B-Instruct` em FP16 (controle, sem *quantization*) | o modelo de produção que substitui o Qwen3.8-27B (D-03) | definir com o usuário a velocidade mínima e o uso; testar um candidato por vez em `sabdiia01` com o mesmo bloco de AC-14 (imagem já no nó; só o modelo baixa para `/home`), conferindo *tokens*/s **e** se a resposta faz sentido (AC-15) |
 | PD-13 | Por que `sabdiia03` negociou PCIe x8, tem ECC desligado, e `sabdiia01` tem *persistence mode* desligado? | se os 3 nós são equivalentes para réplicas e comparações | `nvidia-smi -q` sob carga para o PCIe; decidir ECC e *persistence* iguais nos 3. A porta a 100 Mbps de `sabdiia01` saiu desta pendência: está fora do agregado e não afeta medições (AC-08); a troca do cabo `enp65s0f1` fica com a equipe de rede |
 
 ## 8. Lições
@@ -1368,6 +1407,8 @@ Alavancas **candidatas**, a medir contra a linha de base de AC-05:
 
 | Arquivo em `logs-analysis/` | Prova |
 |---|---|
+| [P-05-ray-pp2-sabdiia01-2026-11-03-1544.log](logs-analysis/P-05-ray-pp2-sabdiia01-2026-11-03-1544.log), logs completos dos *pods* (`P-05-ray-pp2-head-*.log`, `P-05-ray-pp2-worker-*.log`), [P-05-ray-pp2.yaml](logs-analysis/P-05-ray-pp2.yaml), [testes/2026-11-03-1556-…/](logs-analysis/testes/2026-11-03-1556-Qwen_Qwen2.5-14B-Instruct/), [p05-preparo-sabdiia02-2026-11-03-1538.log](logs-analysis/p05-preparo-sabdiia02-2026-11-03-1538.log) | P-05 (`T-007`, AC-26): arranque em 12 min, 13,79 GiB por GPU, 144.816 *tokens* de *KV cache*, sanidade certa, c=1/16/32, 66 °C máx. sem estrangulamento, *pods* apagados no fim |
+| [pausar-vllms-sabdiia01-2026-11-03-1528.log](logs-analysis/pausar-vllms-sabdiia01-2026-11-03-1528.log), [pronto-para-teste-sabdiia01-2026-11-03-1533.log](logs-analysis/pronto-para-teste-sabdiia01-2026-11-03-1533.log) | Pausa de `vllms` em 41 s: `vllm-server`, `vllm-llama31` e `ray-head` a 0; *DaemonSet* `ray-worker` com `nodeSelector` `vllm-estudo/pausado=true`; GPUs `0 0`; Bloco 0 de 01 PRONTO depois. Os *Deployments* `vllm-deepseek-33b` e `vllm-llama31-8b` não existem mais. Restauração (Bloco R) feita, log `[não trazido]` |
 | [pronto-para-teste-sabdiia01-2026-11-03-1509.log](logs-analysis/pronto-para-teste-sabdiia01-2026-11-03-1509.log), [02](logs-analysis/pronto-para-teste-sabdiia02-2026-11-03-1510.log) | 2026-11-03 15:09-15:10: NÃO PRONTO nos dois. GPUs de 01 e 02 reservadas por `vllms/vllm-server` (01, `Meta-Llama-3.1-8B-Instruct`, 31.314 MiB) e `vllms/vllm-llama31` (02, `TheBloke/deepseek-coder-33B-instruct-GPTQ`, 30.992 MiB), ambos `v0.19.1`; Ray do administrador com *head* em 02 e *workers* nos 3 nós; `/home` de 01 com 33 G livres; `v0.19.1` presente em 01 e 02; sem estrangulamento |
 | [P-01](logs-analysis/P-01-sabdiia01-2026-10-30-0907.log), [P-02](logs-analysis/P-02-sabdiia01-2026-10-30-0935.log), [P-03](logs-analysis/P-03-sabdiia01-2026-10-30-1013.log), [P-04](logs-analysis/P-04-sabdiia01-2026-10-30-1050.log) (`P-0x-sabdiia01-*.log`), logs completos dos *pods* (`P-0x-vllm-conc-*.log`), manifestos (`P-0x-vllm-conc.yaml`), [testes/2026-10-30-*](logs-analysis/testes/) | Onda 1: arranque, sanidade, c=1/16/32 e GPU dos 4 GPTQ (AC-25, `T-003` a `T-006`) |
 | [pronto-para-teste-sabdiia01-2026-10-30-0859.log](logs-analysis/pronto-para-teste-sabdiia01-2026-10-30-0859.log) | 2026-10-30 08:59: GPU de 01 livre (0 MiB), `vllm-estudo` vazio, veredito PRONTO; processo `ray start --address=ray-head.vllms.svc.cluster.local:6379 --num-gpus=1` no *host* de 01 |

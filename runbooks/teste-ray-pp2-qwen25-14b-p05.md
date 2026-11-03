@@ -22,6 +22,12 @@ Ray `2.48.0`, a rede, as *flags* e a carga.
 O Ray é o do estudo, criado em `vllm-estudo` e **apagado no fim**. Nada em `vllms` é alterado, parado ou
 editado.
 
+> **Executado em 2026-11-03, 15:44-16:13 ([log](../logs-analysis/P-05-ray-pp2-sabdiia01-2026-11-03-1544.log)), com
+> `vllms` pausado ([pausar-vllms.md](pausar-vllms.md)).** Subiu em 12 min. c=1: 21,4 *tok*/s e TPOT 45,7 ms;
+> c=32: 319,4 *tok*/s; *KV cache* 144.816 *tokens*. A expectativa acertou o arranque, os pesos, o *KV cache* e
+> o c=1, mas ficou abaixo no c=32 (200-300). Pela tabela "Como ler o c=32", o teto do P-01 vem do `gptq_gemm`:
+> [AC-26](../ESTUDO-DE-CASO.md#ac-26).
+
 ## Antes de rodar
 
 1. **Combine com o administrador** o uso das GPUs de 01 e 02 por ~1h30 `[estimativa]`.

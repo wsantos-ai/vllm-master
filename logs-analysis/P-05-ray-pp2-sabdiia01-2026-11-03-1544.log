@@ -1,0 +1,591 @@
+== sabdiia01  2026-11-03T15:44:17-03:00  plano P-05
+### 1. pré-condições
+Name:               sabdiia01
+  nvidia.com/gpu     0           0
+Name:               sabdiia02
+  nvidia.com/gpu     0           0
+/var/lib está montado em: /
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/ol-root  631G  142G  490G  23% /
+/dev/mapper/ol-home  200G  168G   33G  84% /home
+PyPI a partir de 01: HTTP 200
+Hugging Face a partir de 01: HTTP 200
+MTU bond0.500 em 01: 1500
+### 2. manifesto e criação dos pods   15:44:19
+namespace/vllm-estudo unchanged
+pod/ray-pp2-worker created
+pod/ray-pp2-head created
+### 3. aguardando o servidor (até 60 min)   15:44:19
+15:44:19 head=Pending/false worker=Pending | head:  | worker: 
+15:45:20 head=Running/false worker=Running | head: Fetching 15 files:   0%|          | 0/15 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_T | worker: Fetching 15 files:   0%|          | 0/15 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_T
+15:46:20 head=Running/false worker=Running | head: Fetching 15 files:   0%|          | 0/15 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_T | worker: Fetching 15 files:   0%|          | 0/15 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_T
+15:47:21 head=Running/false worker=Running | head: Fetching 15 files:   0%|          | 0/15 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_T | worker: Fetching 15 files:   0%|          | 0/15 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_T
+15:48:21 head=Running/false worker=Running | head: Fetching 15 files:   0%|          | 0/15 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_T | worker: Fetching 15 files:   0%|          | 0/15 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_T
+15:49:21 head=Running/false worker=Running | head: Fetching 15 files:   0%|          | 0/15 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_T | worker: Fetching 15 files:   0%|          | 0/15 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_T
+15:50:22 head=Running/false worker=Running | head: Fetching 15 files:   0%|          | 0/15 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_T | worker: Fetching 15 files:   0%|          | 0/15 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_T
+15:51:22 head=Running/false worker=Running | head: Fetching 15 files:   0%|          | 0/15 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_T | worker: Fetching 15 files:   0%|          | 0/15 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_T
+15:52:22 head=Running/false worker=Running | head: Fetching 15 files:   0%|          | 0/15 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_T | worker: Fetching 15 files:   0%|          | 0/15 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_T
+15:53:23 head=Running/false worker=Running | head: 2 GPUs no Ray; subindo o vLLM | worker: 2026-11-03 18:53:14,320	INFO scripts.py:1127 -- Running subprocesses are monitored and a message will be printed if any of them terminate un
+15:54:23 head=Running/false worker=Running | head: (EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m <frozen importlib._bootstrap_external>:1301: FutureWarning: The cuda.nvrtc module | worker: 2026-11-03 18:53:14,320	INFO scripts.py:1127 -- Running subprocesses are monitored and a message will be printed if any of them terminate un
+15:55:23 head=Running/false worker=Running | head: (EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m  | worker: 2026-11-03 18:53:14,320	INFO scripts.py:1127 -- Running subprocesses are monitored and a message will be printed if any of them terminate un
+pronto=1 depois de 12 min
+NAME             READY   STATUS    RESTARTS   AGE   IP               NODE        NOMINATED NODE   READINESS GATES
+ray-pp2-head     1/1     Running   0          12m   192.168.50.151   sabdiia01   <none>           <none>
+ray-pp2-worker   1/1     Running   0          12m   192.168.50.152   sabdiia02   <none>           <none>
+### 4. cluster Ray
+======== Autoscaler status: 2026-11-03 18:56:21.099663 ========
+Node status
+---------------------------------------------------------------
+Active:
+ 1 node_5df9c8ba384a70669618ba0fba6fb4387406d500ce486ed155887feb
+ 1 node_a46a277aa72199f37bcda07fe3dba144fb67d6bfd46e3c866d91a34f
+Pending:
+ (no pending nodes)
+Recent failures:
+ (no failures)
+
+Resources
+---------------------------------------------------------------
+Total Usage:
+ 0.0/32.0 CPU
+ 2.0/2.0 GPU (2.0 used of 2.0 reserved in placement groups)
+ 0B/117.09GiB memory
+ 0B/7.45GiB object_store_memory
+
+Total Constraints:
+ (no request_resources() constraints)
+Total Demands:
+ (no resource demands)
+### 5. protocolo   15:56:25
+== sabdiia01  2026-11-03T15:56:25-03:00  alvo: vllm-estudo/pod/ray-pp2-head  GPUs: pod/ray-pp2-head pod/ray-pp2-worker
+### 1. servidor: versão, comando, modelo
+vllm: 0.19.1
+/usr/bin/python3 /usr/local/bin/vllm serve Qwen/Qwen2.5-14B-Instruct --pipeline-parallel-size 2 --distributed-executor-backend ray --dtype float16 --max-model-len 8192 --gpu-memory-utilization 0.90 --generation-config vllm --host 0.0.0.0 --port 8000 
+sh -c for p in /proc/[0-9]*/cmdline; do tr "\0" " " < $p 2>/dev/null | grep -E "vllm serve|api_server" ; done | sort -u | cut -c1-600 
+modelo servido: Qwen/Qwen2.5-14B-Instruct   tokenizer (root): Qwen/Qwen2.5-14B-Instruct
+resultados em /home/utec/vllm-estudo/testes/2026-11-03-1556-Qwen_Qwen2.5-14B-Instruct
+### 2. linhas do arranque (pesos, KV cache, concorrência máxima)
+## pod/ray-pp2-head
+(EngineCore pid=2506) INFO 11-03 18:53:59 [core.py:105] Initializing a V1 LLM engine (v0.19.1) with config: model='/hf-cache/hub/models--Qwen--Qwen2.5-14B-Instruct/snapshots/cf98f3b3bbb457ad9e2bb7baf9a0125b6b88caa8', speculative_config=None, tokenize
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m ERROR 11-03 18:54:26 [fa_utils.py:145] Cannot use FA version 2 is not supported due to FA2 is only supported on devices with compute capability >= 8
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=454, ip=192.168.50.152)[0m ERROR 11-03 18:54:26 [fa_utils.py:145] Cannot use FA version 2 is not supported due to FA2 is only supported on devices with compute capability >= 8
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m INFO 11-03 18:54:46 [gpu_model_runner.py:4820] Model loading took 13.79 GiB memory and 18.624906 seconds
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=454, ip=192.168.50.152)[0m INFO 11-03 18:54:48 [gpu_model_runner.py:4820] Model loading took 13.79 GiB memory and 21.138292 seconds
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m INFO 11-03 18:55:18 [gpu_worker.py:436] Available KV cache memory: 13.26 GiB
+(EngineCore pid=2506) INFO 11-03 18:55:55 [kv_cache_utils.py:1319] GPU KV cache size: 144,816 tokens
+(EngineCore pid=2506) INFO 11-03 18:55:55 [kv_cache_utils.py:1324] Maximum concurrency for 8,192 tokens per request: 17.68x
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=454, ip=192.168.50.152)[0m INFO 11-03 18:55:55 [gpu_worker.py:436] Available KV cache memory: 14.09 GiB
+## pod/ray-pp2-worker
+### 3. GPUs antes (uso deve estar perto de 0 %)
+pod/ray-pp2-head: 28658 MiB, 0 %, 33, 1245 MHz, 38.64 W
+949495, [Not Found], 28654 MiB
+pod/ray-pp2-worker: 29328 MiB, 0 %, 33, 1245 MHz, 40.09 W
+626242, [Not Found], 29324 MiB
+### 4. sanidade: uma pergunta simples, temperature 0
+RESPOSTA: A capital do Brasil é Brasília.
+preempções antes: 0.0
+### 5. amostras de GPU a cada ~5 s -> /home/utec/vllm-estudo/testes/2026-11-03-1556-Qwen_Qwen2.5-14B-Instruct/gpu-amostras.csv
+### 6. warmup: c=4, 16 requisições, semente 999 (descartado)   15:56:37
+Successful requests:                     16        
+Failed requests:                         0         
+### fase c=1, 12 requisições, semente 101   início 15:57:51
+============ Serving Benchmark Result ============
+Successful requests:                     12        
+Failed requests:                         0         
+Maximum request concurrency:             1         
+Benchmark duration (s):                  143.85    
+Total input tokens:                      6144      
+Total generated tokens:                  3072      
+Request throughput (req/s):              0.08      
+Output token throughput (tok/s):         21.36     
+Peak output token throughput (tok/s):    23.00     
+Peak concurrent requests:                2.00      
+Total token throughput (tok/s):          64.07     
+---------------Time to First Token----------------
+Mean TTFT (ms):                          330.41    
+Median TTFT (ms):                        329.20    
+P50 TTFT (ms):                           329.20    
+P95 TTFT (ms):                           339.05    
+P99 TTFT (ms):                           344.59    
+-----Time per Output Token (excl. 1st token)------
+Mean TPOT (ms):                          45.71     
+Median TPOT (ms):                        45.71     
+P50 TPOT (ms):                           45.71     
+P95 TPOT (ms):                           45.78     
+P99 TPOT (ms):                           45.79     
+---------------Inter-token Latency----------------
+Mean ITL (ms):                           45.71     
+Median ITL (ms):                         45.56     
+P50 ITL (ms):                            45.56     
+P95 ITL (ms):                            46.72     
+P99 ITL (ms):                            47.37     
+----------------End-to-end Latency----------------
+Mean E2EL (ms):                          11986.93  
+Median E2EL (ms):                        11984.46  
+P50 E2EL (ms):                           11984.46  
+P95 E2EL (ms):                           12008.67  
+P99 E2EL (ms):                           12011.06  
+==================================================
+### fase c=16, 256 requisições, semente 116   início 16:00:26
+============ Serving Benchmark Result ============
+Successful requests:                     256       
+Failed requests:                         0         
+Maximum request concurrency:             16        
+Benchmark duration (s):                  321.40    
+Total input tokens:                      131072    
+Total generated tokens:                  65536     
+Request throughput (req/s):              0.80      
+Output token throughput (tok/s):         203.91    
+Peak output token throughput (tok/s):    264.00    
+Peak concurrent requests:                27.00     
+Total token throughput (tok/s):          611.73    
+---------------Time to First Token----------------
+Mean TTFT (ms):                          1731.98   
+Median TTFT (ms):                        1691.33   
+P50 TTFT (ms):                           1691.33   
+P95 TTFT (ms):                           2483.65   
+P99 TTFT (ms):                           3787.38   
+-----Time per Output Token (excl. 1st token)------
+Mean TPOT (ms):                          71.96     
+Median TPOT (ms):                        72.26     
+P50 TPOT (ms):                           72.26     
+P95 TPOT (ms):                           76.86     
+P99 TPOT (ms):                           77.65     
+---------------Inter-token Latency----------------
+Mean ITL (ms):                           71.96     
+Median ITL (ms):                         65.01     
+P50 ITL (ms):                            65.01     
+P95 ITL (ms):                            67.22     
+P99 ITL (ms):                            75.38     
+----------------End-to-end Latency----------------
+Mean E2EL (ms):                          20082.40  
+Median E2EL (ms):                        20123.54  
+P50 E2EL (ms):                           20123.54  
+P95 E2EL (ms):                           20279.97  
+P99 E2EL (ms):                           21004.22  
+==================================================
+### fase c=32, 512 requisições, semente 102   início 16:06:00
+============ Serving Benchmark Result ============
+Successful requests:                     512       
+Failed requests:                         0         
+Maximum request concurrency:             32        
+Benchmark duration (s):                  410.39    
+Total input tokens:                      262144    
+Total generated tokens:                  131072    
+Request throughput (req/s):              1.25      
+Output token throughput (tok/s):         319.39    
+Peak output token throughput (tok/s):    480.00    
+Peak concurrent requests:                44.00     
+Total token throughput (tok/s):          958.16    
+---------------Time to First Token----------------
+Mean TTFT (ms):                          1976.86   
+Median TTFT (ms):                        1720.22   
+P50 TTFT (ms):                           1720.22   
+P95 TTFT (ms):                           3079.52   
+P99 TTFT (ms):                           6109.88   
+-----Time per Output Token (excl. 1st token)------
+Mean TPOT (ms):                          92.79     
+Median TPOT (ms):                        93.79     
+P50 TPOT (ms):                           93.79     
+P95 TPOT (ms):                           96.32     
+P99 TPOT (ms):                           99.96     
+---------------Inter-token Latency----------------
+Mean ITL (ms):                           92.79     
+Median ITL (ms):                         75.99     
+P50 ITL (ms):                            75.99     
+P95 ITL (ms):                            79.90     
+P99 ITL (ms):                            1136.37   
+----------------End-to-end Latency----------------
+Mean E2EL (ms):                          25637.75  
+Median E2EL (ms):                        25868.79  
+P50 E2EL (ms):                           25868.79  
+P95 E2EL (ms):                           26534.06  
+P99 E2EL (ms):                           28246.44  
+==================================================
+preempções depois: 0.0 (diferença = preempções do teste, warmup incluído)
+### 7. estrangulamento depois da carga
+## pod/ray-pp2-head
+        SW Power Cap                                   : Not Active
+        HW Slowdown                                    : Not Active
+            HW Thermal Slowdown                        : Not Active
+            HW Power Brake Slowdown                    : Not Active
+        SW Thermal Slowdown                            : Not Active
+        SW Power Capping                               : 440169512909 us
+        SW Thermal Slowdown                            : 0 us
+        HW Thermal Slowdown                            : 0 us
+## pod/ray-pp2-worker
+        SW Power Cap                                   : Not Active
+        HW Slowdown                                    : Not Active
+            HW Thermal Slowdown                        : Not Active
+            HW Power Brake Slowdown                    : Not Active
+        SW Thermal Slowdown                            : Not Active
+        SW Power Capping                               : 535235086614 us
+        SW Thermal Slowdown                            : 0 us
+        HW Thermal Slowdown                            : 0 us
+### 8. GPU sob carga (amostras com uso >= 50 %): temp. máx., clock mín.
+pod/ray-pp2-head: temp máx 66 C, clock mín 1222 MHz, amostras 134
+pod/ray-pp2-worker: temp máx 66 C, clock mín 1245 MHz, amostras 175
+### 9. LINHAS PARA O REGISTRO (Tabela 3), conferidas com os totais esperados
+| T-xxx | 1 | 12 | 0 | 21.4 | 22 | 329 / 345 | 45.7 / 45.8 | 12.0 / 12.0 | ver nota | ver seção 8 |  |
+| T-xxx | 16 | 256 | 0 | 203.9 | 14 | 1691 / 3787 | 72.3 / 77.7 | 20.1 / 21.0 | ver nota | ver seção 8 |  |
+| T-xxx | 32 | 512 | 0 | 319.4 | 11 | 1720 / 6110 | 93.8 / 100.0 | 25.9 / 28.2 | ver nota | ver seção 8 |  |
+== fim 2026-11-03T16:13:05-03:00   resultados em /home/utec/vllm-estudo/testes/2026-11-03-1556-Qwen_Qwen2.5-14B-Instruct
+### 6. logs completos dos dois pods em arquivo próprio; aqui, o arranque e o fim
+## ray-pp2-worker (54 linhas em P-05-ray-pp2-worker-2026-11-03-1613.log): arranque
+livre em /hf-cache: 503 G
+Using Python 3.12.13 environment at: /usr
+Resolved 62 packages in 2.24s
+Downloading ray (66.9MiB)
+Downloading virtualenv (5.3MiB)
+Downloading cupy-cuda12x (107.7MiB)
+Downloading py-spy (2.8MiB)
+ Downloaded py-spy
+ Downloaded virtualenv
+ Downloaded ray
+ Downloaded cupy-cuda12x
+Prepared 16 packages in 20.89s
+Uninstalled 2 packages in 399ms
+Installed 16 packages in 2.44s
+ + aiohttp-cors==0.8.1
+ + colorful==0.5.8
+ - cupy-cuda12x==14.0.1
+ + cupy-cuda12x==13.6.0
+ + distlib==0.4.4
+ + fastrlock==0.8.4
+ + msgpack==1.2.4
+ + opencensus==0.11.4
+ + opencensus-context==0.1.3
+ - packaging==26.1
+ + packaging==26.3
+ + platformdirs==4.14.3
+ + py-spy==0.4.3
+ + python-discovery==1.9.2
+ + ray==2.48.0
+ + smart-open==9.0.2
+ + virtualenv==21.15.3
+ + wrapt==2.5.2
+ray 2.48.0 cupy 13.6.0
+Fetching 15 files:   0%|          | 0/15 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 15 files:   7%|▋         | 1/15 [00:00<00:02,  4.69it/s]Fetching 15 files:  20%|██        | 3/15 [00:00<00:01,  7.51it/s]Fetching 15 files:  27%|██▋       | 4/15 [07:32<28:42, 156.58s/it]Fetching 15 files:  33%|███▎      | 5/15 [07:57<18:50, 113.05s/it]Fetching 15 files:  60%|██████    | 9/15 [07:58<03:55, 39.32s/it] Fetching 15 files:  67%|██████▋   | 10/15 [07:59<02:39, 31.98s/it]Fetching 15 files: 100%|██████████| 15/15 [07:59<00:00, 31.97s/it]
+pesos em /hf-cache/hub/models--Qwen--Qwen2.5-14B-Instruct/snapshots/cf98f3b3bbb457ad9e2bb7baf9a0125b6b88caa8
+28G	/hf-cache/hub/models--Qwen--Qwen2.5-14B-Instruct
+bash: connect: Connection refused
+bash: line 1: /dev/tcp/192.168.50.151/6379: Connection refused
+aguardando o head...
+bash: connect: Connection refused
+bash: line 1: /dev/tcp/192.168.50.151/6379: Connection refused
+aguardando o head...
+[2026-11-03 18:53:12,314 W 1 1] global_state_accessor.cc:435: Retrying to get node with node ID 5df9c8ba384a70669618ba0fba6fb4387406d500ce486ed155887feb
+[2026-11-03 18:53:13,316 W 1 1] global_state_accessor.cc:435: Retrying to get node with node ID 5df9c8ba384a70669618ba0fba6fb4387406d500ce486ed155887feb
+2026-11-03 18:53:11,804	INFO scripts.py:1094 -- [37mLocal node IP[39m: [1m192.168.50.152[22m
+2026-11-03 18:53:14,319	SUCC scripts.py:1110 -- [32m--------------------[39m
+2026-11-03 18:53:14,320	SUCC scripts.py:1111 -- [32mRay runtime started.[39m
+2026-11-03 18:53:14,320	SUCC scripts.py:1112 -- [32m--------------------[39m
+2026-11-03 18:53:14,320	INFO scripts.py:1114 -- To terminate the Ray runtime, run
+2026-11-03 18:53:14,320	INFO scripts.py:1115 -- [1m  ray stop[22m
+2026-11-03 18:53:14,320	INFO scripts.py:1123 -- [36m[1m--block[22m[39m
+2026-11-03 18:53:14,320	INFO scripts.py:1124 -- This command will now block forever until terminated by a signal.
+2026-11-03 18:53:14,320	INFO scripts.py:1127 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+## ray-pp2-worker: fim
+Fetching 15 files:   7%|▋         | 1/15 [00:00<00:02,  4.69it/s]Fetching 15 files:  20%|██        | 3/15 [00:00<00:01,  7.51it/s]Fetching 15 files:  27%|██▋       | 4/15 [07:32<28:42, 156.58s/it]Fetching 15 files:  33%|███▎      | 5/15 [07:57<18:50, 113.05s/it]Fetching 15 files:  60%|██████    | 9/15 [07:58<03:55, 39.32s/it] Fetching 15 files:  67%|██████▋   | 10/15 [07:59<02:39, 31.98s/it]Fetching 15 files: 100%|██████████| 15/15 [07:59<00:00, 31.97s/it]
+pesos em /hf-cache/hub/models--Qwen--Qwen2.5-14B-Instruct/snapshots/cf98f3b3bbb457ad9e2bb7baf9a0125b6b88caa8
+28G	/hf-cache/hub/models--Qwen--Qwen2.5-14B-Instruct
+bash: connect: Connection refused
+bash: line 1: /dev/tcp/192.168.50.151/6379: Connection refused
+aguardando o head...
+bash: connect: Connection refused
+bash: line 1: /dev/tcp/192.168.50.151/6379: Connection refused
+aguardando o head...
+[2026-11-03 18:53:12,314 W 1 1] global_state_accessor.cc:435: Retrying to get node with node ID 5df9c8ba384a70669618ba0fba6fb4387406d500ce486ed155887feb
+[2026-11-03 18:53:13,316 W 1 1] global_state_accessor.cc:435: Retrying to get node with node ID 5df9c8ba384a70669618ba0fba6fb4387406d500ce486ed155887feb
+2026-11-03 18:53:11,804	INFO scripts.py:1094 -- [37mLocal node IP[39m: [1m192.168.50.152[22m
+2026-11-03 18:53:14,319	SUCC scripts.py:1110 -- [32m--------------------[39m
+2026-11-03 18:53:14,320	SUCC scripts.py:1111 -- [32mRay runtime started.[39m
+2026-11-03 18:53:14,320	SUCC scripts.py:1112 -- [32m--------------------[39m
+2026-11-03 18:53:14,320	INFO scripts.py:1114 -- To terminate the Ray runtime, run
+2026-11-03 18:53:14,320	INFO scripts.py:1115 -- [1m  ray stop[22m
+2026-11-03 18:53:14,320	INFO scripts.py:1123 -- [36m[1m--block[22m[39m
+2026-11-03 18:53:14,320	INFO scripts.py:1124 -- This command will now block forever until terminated by a signal.
+2026-11-03 18:53:14,320	INFO scripts.py:1127 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+## ray-pp2-head (1261 linhas em P-05-ray-pp2-head-2026-11-03-1613.log): arranque
+livre em /hf-cache: 490 G
+Using Python 3.12.13 environment at: /usr
+Resolved 62 packages in 1.43s
+Downloading virtualenv (5.3MiB)
+Downloading py-spy (2.8MiB)
+Downloading cupy-cuda12x (107.7MiB)
+Downloading ray (66.9MiB)
+ Downloaded py-spy
+ Downloaded virtualenv
+ Downloaded ray
+ Downloaded cupy-cuda12x
+Prepared 16 packages in 22.18s
+Uninstalled 2 packages in 135ms
+Installed 16 packages in 1.38s
+ + aiohttp-cors==0.8.1
+ + colorful==0.5.8
+ - cupy-cuda12x==14.0.1
+ + cupy-cuda12x==13.6.0
+ + distlib==0.4.4
+ + fastrlock==0.8.4
+ + msgpack==1.2.4
+ + opencensus==0.11.4
+ + opencensus-context==0.1.3
+ - packaging==26.1
+ + packaging==26.3
+ + platformdirs==4.14.3
+ + py-spy==0.4.3
+ + python-discovery==1.9.2
+ + ray==2.48.0
+ + smart-open==9.0.2
+ + virtualenv==21.15.3
+ + wrapt==2.5.2
+ray 2.48.0 cupy 13.6.0
+Fetching 15 files:   0%|          | 0/15 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 15 files:   7%|▋         | 1/15 [00:00<00:03,  4.44it/s]Fetching 15 files:  27%|██▋       | 4/15 [06:44<20:01, 109.22s/it]Fetching 15 files:  33%|███▎      | 5/15 [08:08<17:03, 102.36s/it]Fetching 15 files: 100%|██████████| 15/15 [08:08<00:00, 32.58s/it]
+pesos em /hf-cache/hub/models--Qwen--Qwen2.5-14B-Instruct/snapshots/cf98f3b3bbb457ad9e2bb7baf9a0125b6b88caa8
+28G	/hf-cache/hub/models--Qwen--Qwen2.5-14B-Instruct
+2026-11-03 18:53:00,073	INFO usage_lib.py:467 -- Usage stats collection is enabled by default without user confirmation because this terminal is detected to be non-interactive. To disable this, add `--disable-usage-stats` to the command that starts the cluster, or run the following command: `ray disable-usage-stats` before starting the cluster. See https://docs.ray.io/en/master/cluster/usage-stats.html for more details.
+2026-11-03 18:53:00,073	INFO scripts.py:913 -- [37mLocal node IP[39m: [1m192.168.50.151[22m
+2026-11-03 18:53:04,289	SUCC scripts.py:949 -- [32m--------------------[39m
+2026-11-03 18:53:04,289	SUCC scripts.py:950 -- [32mRay runtime started.[39m
+2026-11-03 18:53:04,289	SUCC scripts.py:951 -- [32m--------------------[39m
+2026-11-03 18:53:04,290	INFO scripts.py:953 -- [36mNext steps[39m
+2026-11-03 18:53:04,290	INFO scripts.py:956 -- To add another node to this Ray cluster, run
+2026-11-03 18:53:04,290	INFO scripts.py:959 -- [1m  ray start --address='192.168.50.151:6379'[22m
+2026-11-03 18:53:04,290	INFO scripts.py:968 -- To connect to this Ray cluster:
+2026-11-03 18:53:04,290	INFO scripts.py:970 -- [35mimport[39m[26m ray
+2026-11-03 18:53:04,290	INFO scripts.py:971 -- ray[35m.[39m[26minit(_node_ip_address[35m=[39m[26m[33m'192.168.50.151'[39m[26m)
+2026-11-03 18:53:04,290	INFO scripts.py:983 -- To submit a Ray job using the Ray Jobs CLI:
+2026-11-03 18:53:04,290	INFO scripts.py:984 -- [1m  RAY_ADDRESS='http://127.0.0.1:8265' ray job submit --working-dir . -- python my_script.py[22m
+2026-11-03 18:53:04,290	INFO scripts.py:993 -- See https://docs.ray.io/en/latest/cluster/running-applications/job-submission/index.html 
+2026-11-03 18:53:04,290	INFO scripts.py:997 -- for more information on submitting Ray jobs to the Ray cluster.
+2026-11-03 18:53:04,290	INFO scripts.py:1002 -- To terminate the Ray runtime, run
+2026-11-03 18:53:04,290	INFO scripts.py:1003 -- [1m  ray stop[22m
+2026-11-03 18:53:04,290	INFO scripts.py:1006 -- To view the status of the cluster, use
+2026-11-03 18:53:04,290	INFO scripts.py:1007 --   [1mray status[22m[26m
+2026-11-03 18:53:04,290	INFO scripts.py:1011 -- To monitor and debug Ray, view the dashboard at 
+2026-11-03 18:53:04,290	INFO scripts.py:1012 --   [1m127.0.0.1:8265[22m[26m
+2026-11-03 18:53:04,291	INFO scripts.py:1019 -- [4mIf connection to the dashboard fails, check your firewall settings and network configuration.[24m
+aguardando 2 GPUs no Ray...
+======== Autoscaler status: 2026-11-03 18:53:15.887487 ========
+Node status
+---------------------------------------------------------------
+Active:
+ 1 node_5df9c8ba384a70669618ba0fba6fb4387406d500ce486ed155887feb
+ 1 node_a46a277aa72199f37bcda07fe3dba144fb67d6bfd46e3c866d91a34f
+Pending:
+ (no pending nodes)
+Recent failures:
+ (no failures)
+
+Resources
+---------------------------------------------------------------
+Total Usage:
+ 0.0/32.0 CPU
+ 0.0/2.0 GPU
+ 0B/117.09GiB memory
+ 0B/7.45GiB object_store_memory
+
+Total Constraints:
+ (no request_resources() constraints)
+Total Demands:
+ (no resource demands)
+2 GPUs no Ray; subindo o vLLM
+(APIServer pid=1) INFO 11-03 18:53:38 [utils.py:299] 
+(APIServer pid=1) INFO 11-03 18:53:38 [utils.py:299]        █     █     █▄   ▄█
+(APIServer pid=1) INFO 11-03 18:53:38 [utils.py:299]  ▄▄ ▄█ █     █     █ ▀▄▀ █  version 0.19.1
+(APIServer pid=1) INFO 11-03 18:53:38 [utils.py:299]   █▄█▀ █     █     █     █  model   Qwen/Qwen2.5-14B-Instruct
+(APIServer pid=1) INFO 11-03 18:53:38 [utils.py:299]    ▀▀  ▀▀▀▀▀ ▀▀▀▀▀ ▀     ▀
+(APIServer pid=1) INFO 11-03 18:53:38 [utils.py:299] 
+(APIServer pid=1) INFO 11-03 18:53:38 [utils.py:233] non-default args: {'model_tag': 'Qwen/Qwen2.5-14B-Instruct', 'host': '0.0.0.0', 'model': 'Qwen/Qwen2.5-14B-Instruct', 'dtype': 'float16', 'max_model_len': 8192, 'generation_config': 'vllm', 'distributed_executor_backend': 'ray', 'pipeline_parallel_size': 2}
+(APIServer pid=1) INFO 11-03 18:53:38 [arg_utils.py:665] HF_HUB_OFFLINE is True, replace model_id [Qwen/Qwen2.5-14B-Instruct] to model_path [/hf-cache/hub/models--Qwen--Qwen2.5-14B-Instruct/snapshots/cf98f3b3bbb457ad9e2bb7baf9a0125b6b88caa8]
+(APIServer pid=1) INFO 11-03 18:53:48 [model.py:549] Resolved architecture: Qwen2ForCausalLM
+(APIServer pid=1) WARNING 11-03 18:53:48 [model.py:2016] Casting torch.bfloat16 to torch.float16.
+(APIServer pid=1) INFO 11-03 18:53:48 [model.py:1678] Using max model len 8192
+(APIServer pid=1) WARNING 11-03 18:53:48 [vllm.py:780] Async scheduling will be disabled because it is not supported with the `ray` distributed executor backend. 
+(APIServer pid=1) INFO 11-03 18:53:48 [vllm.py:790] Asynchronous scheduling is disabled.
+(EngineCore pid=2506) INFO 11-03 18:53:59 [core.py:105] Initializing a V1 LLM engine (v0.19.1) with config: model='/hf-cache/hub/models--Qwen--Qwen2.5-14B-Instruct/snapshots/cf98f3b3bbb457ad9e2bb7baf9a0125b6b88caa8', speculative_config=None, tokenizer='/hf-cache/hub/models--Qwen--Qwen2.5-14B-Instruct/snapshots/cf98f3b3bbb457ad9e2bb7baf9a0125b6b88caa8', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=False, dtype=torch.float16, max_seq_len=8192, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=2, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=None, enforce_eager=False, enable_return_routed_experts=False, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False), seed=0, served_model_name=/hf-cache/hub/models--Qwen--Qwen2.5-14B-Instruct/snapshots/cf98f3b3bbb457ad9e2bb7baf9a0125b6b88caa8, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.VLLM_COMPILE: 3>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['none'], 'splitting_ops': ['vllm::unified_attention', 'vllm::unified_attention_with_output', 'vllm::unified_mla_attention', 'vllm::unified_mla_attention_with_output', 'vllm::mamba_mixer2', 'vllm::mamba_mixer', 'vllm::short_conv', 'vllm::linear_attention', 'vllm::plamo2_mamba_mixer', 'vllm::gdn_attention_core', 'vllm::olmo_hybrid_gdn_full_forward', 'vllm::kda_attention', 'vllm::sparse_attn_indexer', 'vllm::rocm_aiter_sparse_attn_indexer', 'vllm::unified_kv_cache_update', 'vllm::unified_mla_kv_cache_update'], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_images_per_batch': 0, 'compile_sizes': [], 'compile_ranges_endpoints': [2048], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'size_asserts': False, 'alignment_asserts': False, 'scalar_asserts': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.FULL_AND_PIECEWISE: (2, 1)>, 'cudagraph_num_of_warmups': 1, 'cudagraph_capture_sizes': [1, 2, 4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232, 240, 248, 256, 272, 288, 304, 320, 336, 352, 368, 384, 400, 416, 432, 448, 464, 480, 496, 512], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': False, 'fuse_act_quant': False, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': False}, 'max_cudagraph_capture_size': 512, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': True, 'static_all_moe_layers': []}
+(EngineCore pid=2506) WARNING 11-03 18:53:59 [ray_utils.py:376] Tensor parallel size (2) exceeds available GPUs (1). This may result in Ray placement group allocation failures. Consider reducing tensor_parallel_size to 1 or less, or ensure your Ray cluster has 2 GPUs available.
+(EngineCore pid=2506) 2026-11-03 18:53:59,199	INFO worker.py:1747 -- Connecting to existing Ray cluster at address: 192.168.50.151:6379...
+(EngineCore pid=2506) 2026-11-03 18:53:59,214	INFO worker.py:1918 -- Connected to Ray cluster. View the dashboard at [1m[32mhttp://127.0.0.1:8265 [39m[22m
+(EngineCore pid=2506) INFO 11-03 18:53:59 [ray_utils.py:441] No current placement group found. Creating a new placement group.
+(EngineCore pid=2506) INFO 11-03 18:54:16 [ray_env.py:100] Env var prefixes to copy: ['HF_', 'HUGGING_FACE_', 'LMCACHE_', 'NCCL_', 'UCX_', 'VLLM_']
+(EngineCore pid=2506) INFO 11-03 18:54:16 [ray_env.py:101] Copying the following environment variables to workers: ['HF_HOME', 'HF_HUB_OFFLINE', 'LD_LIBRARY_PATH', 'NCCL_SOCKET_IFNAME', 'VLLM_ENABLE_CUDA_COMPATIBILITY', 'VLLM_USAGE_SOURCE', 'VLLM_WORKER_MULTIPROC_METHOD']
+(EngineCore pid=2506) INFO 11-03 18:54:16 [ray_env.py:111] To exclude env vars from copying, add them to /root/.config/vllm/ray_non_carry_over_env_vars.json
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m <frozen importlib._bootstrap_external>:1301: FutureWarning: The cuda.cudart module is deprecated and will be removed in a future release, please switch to use the cuda.bindings.runtime module instead.
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m <frozen importlib._bootstrap_external>:1301: FutureWarning: The cuda.nvrtc module is deprecated and will be removed in a future release, please switch to use the cuda.bindings.nvrtc module instead.
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Loading safetensors checkpoint shards:   0% Completed | 0/8 [00:00<?, ?it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Loading safetensors checkpoint shards:  12% Completed | 1/8 [00:04<00:33,  4.78s/it]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=454, ip=192.168.50.152)[0m <frozen importlib._bootstrap_external>:1301: FutureWarning: The cuda.cudart module is deprecated and will be removed in a future release, please switch to use the cuda.bindings.runtime module instead.
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=454, ip=192.168.50.152)[0m <frozen importlib._bootstrap_external>:1301: FutureWarning: The cuda.nvrtc module is deprecated and will be removed in a future release, please switch to use the cuda.bindings.nvrtc module instead.
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Loading safetensors checkpoint shards:  25% Completed | 2/8 [00:09<00:29,  4.90s/it]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Loading safetensors checkpoint shards:  38% Completed | 3/8 [00:14<00:24,  4.89s/it]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Loading safetensors checkpoint shards:  50% Completed | 4/8 [00:18<00:17,  4.34s/it]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Loading safetensors checkpoint shards: 100% Completed | 8/8 [00:18<00:00,  2.27s/it]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m 
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=454, ip=192.168.50.152)[0m WARNING 11-03 18:54:16 [system_utils.py:38] Overwriting environment variable LD_LIBRARY_PATH from '/usr/local/lib/python3.12/dist-packages/cv2/../../lib64:/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/cuda/lib64' to '/usr/local/lib/python3.12/dist-packages/cv2/../../lib64:/usr/local/lib/python3.12/dist-packages/cv2/../../lib64:/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/cuda/lib64'
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m WARNING 11-03 18:54:19 [worker_base.py:287] Missing `shared_worker_lock` argument from executor. This argument is needed for mm_processor_cache_type='shm'.
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m WARNING 11-03 18:54:16 [system_utils.py:38] Overwriting environment variable LD_LIBRARY_PATH from '/usr/local/lib/python3.12/dist-packages/cv2/../../lib64:/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/cuda/lib64' to '/usr/local/lib/python3.12/dist-packages/cv2/../../lib64:/usr/local/lib/python3.12/dist-packages/cv2/../../lib64:/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/cuda/lib64'
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m INFO 11-03 18:54:22 [parallel_state.py:1400] world_size=2 rank=0 local_rank=0 distributed_init_method=tcp://192.168.50.151:36869 backend=nccl
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m INFO 11-03 18:54:22 [pynccl.py:111] vLLM is using nccl==2.27.5
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m INFO 11-03 18:54:25 [parallel_state.py:1716] rank 0 in world size 2 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank N/A, EPLB rank N/A
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=454, ip=192.168.50.152)[0m WARNING 11-03 18:54:22 [worker_base.py:287] Missing `shared_worker_lock` argument from executor. This argument is needed for mm_processor_cache_type='shm'.
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m INFO 11-03 18:54:26 [gpu_model_runner.py:4735] Starting to load model /hf-cache/hub/models--Qwen--Qwen2.5-14B-Instruct/snapshots/cf98f3b3bbb457ad9e2bb7baf9a0125b6b88caa8...
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m ERROR 11-03 18:54:26 [fa_utils.py:145] Cannot use FA version 2 is not supported due to FA2 is only supported on devices with compute capability >= 8
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m INFO 11-03 18:54:26 [cuda.py:334] Using TRITON_ATTN attention backend out of potential backends: ['TRITON_ATTN', 'FLEX_ATTENTION'].
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m INFO 11-03 18:54:45 [default_loader.py:384] Loading weights took 18.17 seconds
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=454, ip=192.168.50.152)[0m INFO 11-03 18:54:22 [parallel_state.py:1400] world_size=2 rank=1 local_rank=0 distributed_init_method=tcp://192.168.50.151:36869 backend=nccl
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=454, ip=192.168.50.152)[0m INFO 11-03 18:54:25 [parallel_state.py:1716] rank 1 in world size 2 is assigned as DP rank 0, PP rank 1, PCP rank 0, TP rank 0, EP rank N/A, EPLB rank N/A
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=454, ip=192.168.50.152)[0m ERROR 11-03 18:54:26 [fa_utils.py:145] Cannot use FA version 2 is not supported due to FA2 is only supported on devices with compute capability >= 8
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=454, ip=192.168.50.152)[0m INFO 11-03 18:54:26 [cuda.py:334] Using TRITON_ATTN attention backend out of potential backends: ['TRITON_ATTN', 'FLEX_ATTENTION'].
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m INFO 11-03 18:54:46 [gpu_model_runner.py:4820] Model loading took 13.79 GiB memory and 18.624906 seconds
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m INFO 11-03 18:54:57 [backends.py:1051] Using cache directory: /root/.cache/vllm/torch_compile_cache/15f75c8e6b/rank_0_0/backbone for vLLM's torch.compile
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m INFO 11-03 18:54:57 [backends.py:1111] Dynamo bytecode transform time: 8.45 s
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=454, ip=192.168.50.152)[0m INFO 11-03 18:54:47 [default_loader.py:384] Loading weights took 20.73 seconds
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=454, ip=192.168.50.152)[0m INFO 11-03 18:54:48 [gpu_model_runner.py:4820] Model loading took 13.79 GiB memory and 21.138292 seconds
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m INFO 11-03 18:55:04 [backends.py:372] Cache the graph of compile range (1, 2048) for later use
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=454, ip=192.168.50.152)[0m INFO 11-03 18:54:59 [backends.py:1051] Using cache directory: /root/.cache/vllm/torch_compile_cache/7a2ea19b27/rank_1_0/backbone for vLLM's torch.compile
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=454, ip=192.168.50.152)[0m INFO 11-03 18:54:59 [backends.py:1111] Dynamo bytecode transform time: 10.47 s
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m INFO 11-03 18:55:09 [backends.py:390] Compiling a graph for compile range (1, 2048) takes 11.95 s
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m INFO 11-03 18:55:12 [decorators.py:655] saved AOT compiled function to /root/.cache/vllm/torch_compile_cache/torch_aot_compile/b270d523b32e7836e9220d4d52cba7c1fbad807602578dcc87b651d8d6141670/rank_0_0/model
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m INFO 11-03 18:55:12 [monitor.py:48] torch.compile took 22.91 s in total
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m INFO 11-03 18:55:12 [monitor.py:76] Initial profiling/warmup run took 0.66 s
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m INFO 11-03 18:55:13 [kv_cache_utils.py:829] Overriding num_gpu_blocks=0 with num_gpu_blocks_override=512
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m INFO 11-03 18:55:13 [gpu_model_runner.py:5876] Profiling CUDA graph memory: PIECEWISE=51 (largest=512), FULL=35 (largest=256)
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=454, ip=192.168.50.152)[0m INFO 11-03 18:55:13 [backends.py:372] Cache the graph of compile range (1, 2048) for later use
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m INFO 11-03 18:55:17 [gpu_model_runner.py:5955] Estimated CUDA graph memory: 0.37 GiB total
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m INFO 11-03 18:55:18 [gpu_worker.py:436] Available KV cache memory: 13.26 GiB
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m INFO 11-03 18:55:18 [gpu_worker.py:470] In v0.19, CUDA graph memory profiling will be enabled by default (VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=1), which more accurately accounts for CUDA graph memory during KV cache allocation. To try it now, set VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=1 and increase --gpu-memory-utilization from 0.9000 to 0.9116 to maintain the same effective KV cache size.
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=454, ip=192.168.50.152)[0m INFO 11-03 18:55:26 [backends.py:390] Compiling a graph for compile range (1, 2048) takes 26.88 s
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=454, ip=192.168.50.152)[0m INFO 11-03 18:55:29 [decorators.py:655] saved AOT compiled function to /root/.cache/vllm/torch_compile_cache/torch_aot_compile/21b7ecaedb2a0b0aba65cbe8a06ff35d4712bf88343a571be537b4e6c956d470/rank_1_0/model
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=454, ip=192.168.50.152)[0m INFO 11-03 18:55:29 [monitor.py:48] torch.compile took 39.78 s in total
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=454, ip=192.168.50.152)[0m INFO 11-03 18:55:30 [monitor.py:76] Initial profiling/warmup run took 1.24 s
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=454, ip=192.168.50.152)[0m INFO 11-03 18:55:46 [kv_cache_utils.py:829] Overriding num_gpu_blocks=0 with num_gpu_blocks_override=512
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=454, ip=192.168.50.152)[0m INFO 11-03 18:55:46 [gpu_model_runner.py:5876] Profiling CUDA graph memory: PIECEWISE=51 (largest=512), FULL=35 (largest=256)
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=454, ip=192.168.50.152)[0m INFO 11-03 18:55:54 [gpu_model_runner.py:5955] Estimated CUDA graph memory: 0.37 GiB total
+(EngineCore pid=2506) INFO 11-03 18:55:55 [kv_cache_utils.py:1319] GPU KV cache size: 144,816 tokens
+(EngineCore pid=2506) INFO 11-03 18:55:55 [kv_cache_utils.py:1324] Maximum concurrency for 8,192 tokens per request: 17.68x
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   0%|          | 0/51 [00:00<?, ?it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   2%|▏         | 1/51 [00:00<00:05,  8.63it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   4%|▍         | 2/51 [00:00<00:05,  8.89it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   6%|▌         | 3/51 [00:00<00:05,  9.06it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   8%|▊         | 4/51 [00:00<00:05,  9.16it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  10%|▉         | 5/51 [00:00<00:05,  9.12it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  12%|█▏        | 6/51 [00:00<00:04,  9.20it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  14%|█▎        | 7/51 [00:00<00:04,  9.20it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  16%|█▌        | 8/51 [00:00<00:04,  9.15it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  20%|█▉        | 10/51 [00:01<00:04,  9.60it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  24%|██▎       | 12/51 [00:01<00:04,  9.64it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  27%|██▋       | 14/51 [00:01<00:03,  9.77it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  31%|███▏      | 16/51 [00:01<00:03,  9.96it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  35%|███▌      | 18/51 [00:01<00:03, 10.63it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  39%|███▉      | 20/51 [00:01<00:02, 11.13it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  43%|████▎     | 22/51 [00:02<00:02, 11.43it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  47%|████▋     | 24/51 [00:02<00:02, 11.71it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  51%|█████     | 26/51 [00:02<00:02, 11.87it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  55%|█████▍    | 28/51 [00:02<00:01, 11.97it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  59%|█████▉    | 30/51 [00:02<00:01, 12.03it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  63%|██████▎   | 32/51 [00:02<00:01, 11.92it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  67%|██████▋   | 34/51 [00:03<00:01, 12.13it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  71%|███████   | 36/51 [00:03<00:01, 12.31it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  75%|███████▍  | 38/51 [00:03<00:01, 12.45it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  78%|███████▊  | 40/51 [00:03<00:00, 12.61it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  82%|████████▏ | 42/51 [00:03<00:00, 13.37it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  86%|████████▋ | 44/51 [00:03<00:00, 13.73it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  90%|█████████ | 46/51 [00:03<00:00, 14.93it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  94%|█████████▍| 48/51 [00:04<00:00, 15.62it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE): 100%|██████████| 51/51 [00:04<00:00, 16.93it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE): 100%|██████████| 51/51 [00:04<00:00, 11.99it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (decode, FULL):   0%|          | 0/35 [00:00<?, ?it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (decode, FULL):   6%|▌         | 2/35 [00:00<00:02, 12.46it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (decode, FULL):  11%|█▏        | 4/35 [00:00<00:02, 12.30it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (decode, FULL):  17%|█▋        | 6/35 [00:00<00:02, 12.36it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (decode, FULL):  23%|██▎       | 8/35 [00:00<00:02, 12.36it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (decode, FULL):  29%|██▊       | 10/35 [00:00<00:02, 12.42it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (decode, FULL):  34%|███▍      | 12/35 [00:00<00:01, 12.55it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (decode, FULL):  40%|████      | 14/35 [00:01<00:01, 12.61it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (decode, FULL):  46%|████▌     | 16/35 [00:01<00:01, 12.74it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (decode, FULL):  51%|█████▏    | 18/35 [00:01<00:01, 13.01it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (decode, FULL):  57%|█████▋    | 20/35 [00:01<00:01, 13.13it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (decode, FULL):  63%|██████▎   | 22/35 [00:01<00:00, 13.21it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (decode, FULL):  69%|██████▊   | 24/35 [00:01<00:00, 13.34it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (decode, FULL):  74%|███████▍  | 26/35 [00:01<00:00, 14.27it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (decode, FULL):  80%|████████  | 28/35 [00:02<00:00, 14.89it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (decode, FULL):  89%|████████▊ | 31/35 [00:03<00:01,  3.64it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (decode, FULL):  94%|█████████▍| 33/35 [00:04<00:00,  2.90it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m Capturing CUDA graphs (decode, FULL): 100%|██████████| 35/35 [00:06<00:00,  2.30it/s]Capturing CUDA graphs (decode, FULL): 100%|██████████| 35/35 [00:06<00:00,  5.57it/s]
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=454, ip=192.168.50.152)[0m INFO 11-03 18:55:55 [gpu_worker.py:436] Available KV cache memory: 14.09 GiB
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=454, ip=192.168.50.152)[0m INFO 11-03 18:55:55 [gpu_worker.py:470] In v0.19, CUDA graph memory profiling will be enabled by default (VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=1), which more accurately accounts for CUDA graph memory during KV cache allocation. To try it now, set VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=1 and increase --gpu-memory-utilization from 0.9000 to 0.9116 to maintain the same effective KV cache size.
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m INFO 11-03 18:56:06 [gpu_model_runner.py:6046] Graph capturing finished in 11 secs, took 0.36 GiB
+(EngineCore pid=2506) [36m(RayWorkerWrapper pid=2640)[0m INFO 11-03 18:56:06 [gpu_worker.py:597] CUDA graph pool memory: 0.36 GiB (actual), 0.37 GiB (estimated), difference: 0.01 GiB (2.2%).
+(EngineCore pid=2506) INFO 11-03 18:56:11 [core.py:283] init engine (profile, create kv cache, warmup model) took 82.95 seconds
+(EngineCore pid=2506) INFO 11-03 18:56:12 [vllm.py:790] Asynchronous scheduling is disabled.
+(APIServer pid=1) INFO 11-03 18:56:12 [api_server.py:592] Supported tasks: ['generate']
+(APIServer pid=1) INFO 11-03 18:56:13 [hf.py:314] Detected the chat template content format to be 'string'. You can set `--chat-template-content-format` to override this.
+(APIServer pid=1) INFO 11-03 18:56:13 [api_server.py:596] Starting vLLM server on http://0.0.0.0:8000
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:37] Available routes are:
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /openapi.json, Methods: HEAD, GET
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /docs, Methods: HEAD, GET
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /docs/oauth2-redirect, Methods: HEAD, GET
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /redoc, Methods: HEAD, GET
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /tokenize, Methods: POST
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /detokenize, Methods: POST
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /load, Methods: GET
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /version, Methods: GET
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /health, Methods: GET
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /metrics, Methods: GET
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /v1/models, Methods: GET
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /ping, Methods: GET
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /ping, Methods: POST
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /invocations, Methods: POST
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /v1/chat/completions, Methods: POST
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /v1/chat/completions/batch, Methods: POST
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /v1/responses, Methods: POST
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /v1/responses/{response_id}, Methods: GET
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /v1/responses/{response_id}/cancel, Methods: POST
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /v1/completions, Methods: POST
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /v1/messages, Methods: POST
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /v1/messages/count_tokens, Methods: POST
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /inference/v1/generate, Methods: POST
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /scale_elastic_ep, Methods: POST
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /is_scaling_elastic_ep, Methods: POST
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /v1/chat/completions/render, Methods: POST
+(APIServer pid=1) INFO 11-03 18:56:13 [launcher.py:46] Route: /v1/completions/render, Methods: POST
+(APIServer pid=1) INFO:     Started server process [1]
+(APIServer pid=1) INFO:     Waiting for application startup.
+(APIServer pid=1) INFO:     Application startup complete.
+(APIServer pid=1) INFO:     127.0.0.1:53904 - "GET /v1/models HTTP/1.1" 200 OK
+(EngineCore pid=2506) INFO 11-03 18:56:31 [ray_executor.py:561] RAY_CGRAPH_get_timeout is set to 300
+(EngineCore pid=2506) INFO 11-03 18:56:31 [ray_executor.py:565] VLLM_USE_RAY_COMPILED_DAG_CHANNEL_TYPE = auto
+(EngineCore pid=2506) INFO 11-03 18:56:31 [ray_executor.py:569] VLLM_USE_RAY_COMPILED_DAG_OVERLAP_COMM = False
+## ray-pp2-head: fim
+(APIServer pid=1) INFO:     127.0.0.1:35076 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:35112 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:35172 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:35182 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:35162 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:35058 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:35148 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:35118 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:35092 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:35002 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:34982 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:35132 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-03 19:12:43 [loggers.py:259] Engine 000: Avg prompt throughput: 1279.9 tokens/s, Avg generation throughput: 184.0 tokens/s, Running: 28 reqs, Waiting: 0 reqs, GPU KV cache usage: 10.1%, Prefix cache hit rate: 0.2%
+(APIServer pid=1) INFO:     192.168.50.151:52236 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-03 19:12:53 [loggers.py:259] Engine 000: Avg prompt throughput: 358.3 tokens/s, Avg generation throughput: 395.1 tokens/s, Running: 32 reqs, Waiting: 0 reqs, GPU KV cache usage: 14.1%, Prefix cache hit rate: 0.2%
+(APIServer pid=1) INFO:     192.168.50.151:39564 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-03 19:13:03 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 411.0 tokens/s, Running: 25 reqs, Waiting: 0 reqs, GPU KV cache usage: 13.3%, Prefix cache hit rate: 0.2%
+(APIServer pid=1) INFO:     127.0.0.1:34896 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:59324 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:35152 - "GET /metrics HTTP/1.1" 200 OK
+### 7. limpeza: apaga os dois pods e libera as GPUs   16:13:05
+pod "ray-pp2-head" deleted from vllm-estudo namespace
+pod "ray-pp2-worker" deleted from vllm-estudo namespace
+Name:               sabdiia01
+  nvidia.com/gpu     0           0
+Name:               sabdiia02
+  nvidia.com/gpu     0           0
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/ol-root  631G  171G  461G  27% /
+== fim 2026-11-03T16:13:07-03:00

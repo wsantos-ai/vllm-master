@@ -1,0 +1,54 @@
+livre em /hf-cache: 503 G
+Using Python 3.12.13 environment at: /usr
+Resolved 62 packages in 2.24s
+Downloading ray (66.9MiB)
+Downloading virtualenv (5.3MiB)
+Downloading cupy-cuda12x (107.7MiB)
+Downloading py-spy (2.8MiB)
+ Downloaded py-spy
+ Downloaded virtualenv
+ Downloaded ray
+ Downloaded cupy-cuda12x
+Prepared 16 packages in 20.89s
+Uninstalled 2 packages in 399ms
+Installed 16 packages in 2.44s
+ + aiohttp-cors==0.8.1
+ + colorful==0.5.8
+ - cupy-cuda12x==14.0.1
+ + cupy-cuda12x==13.6.0
+ + distlib==0.4.4
+ + fastrlock==0.8.4
+ + msgpack==1.2.4
+ + opencensus==0.11.4
+ + opencensus-context==0.1.3
+ - packaging==26.1
+ + packaging==26.3
+ + platformdirs==4.14.3
+ + py-spy==0.4.3
+ + python-discovery==1.9.2
+ + ray==2.48.0
+ + smart-open==9.0.2
+ + virtualenv==21.15.3
+ + wrapt==2.5.2
+ray 2.48.0 cupy 13.6.0
+Fetching 15 files:   0%|          | 0/15 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 15 files:   7%|▋         | 1/15 [00:00<00:02,  4.69it/s]Fetching 15 files:  20%|██        | 3/15 [00:00<00:01,  7.51it/s]Fetching 15 files:  27%|██▋       | 4/15 [07:32<28:42, 156.58s/it]Fetching 15 files:  33%|███▎      | 5/15 [07:57<18:50, 113.05s/it]Fetching 15 files:  60%|██████    | 9/15 [07:58<03:55, 39.32s/it] Fetching 15 files:  67%|██████▋   | 10/15 [07:59<02:39, 31.98s/it]Fetching 15 files: 100%|██████████| 15/15 [07:59<00:00, 31.97s/it]
+pesos em /hf-cache/hub/models--Qwen--Qwen2.5-14B-Instruct/snapshots/cf98f3b3bbb457ad9e2bb7baf9a0125b6b88caa8
+28G	/hf-cache/hub/models--Qwen--Qwen2.5-14B-Instruct
+bash: connect: Connection refused
+bash: line 1: /dev/tcp/192.168.50.151/6379: Connection refused
+aguardando o head...
+bash: connect: Connection refused
+bash: line 1: /dev/tcp/192.168.50.151/6379: Connection refused
+aguardando o head...
+[2026-11-03 18:53:12,314 W 1 1] global_state_accessor.cc:435: Retrying to get node with node ID 5df9c8ba384a70669618ba0fba6fb4387406d500ce486ed155887feb
+[2026-11-03 18:53:13,316 W 1 1] global_state_accessor.cc:435: Retrying to get node with node ID 5df9c8ba384a70669618ba0fba6fb4387406d500ce486ed155887feb
+2026-11-03 18:53:11,804	INFO scripts.py:1094 -- [37mLocal node IP[39m: [1m192.168.50.152[22m
+2026-11-03 18:53:14,319	SUCC scripts.py:1110 -- [32m--------------------[39m
+2026-11-03 18:53:14,320	SUCC scripts.py:1111 -- [32mRay runtime started.[39m
+2026-11-03 18:53:14,320	SUCC scripts.py:1112 -- [32m--------------------[39m
+2026-11-03 18:53:14,320	INFO scripts.py:1114 -- To terminate the Ray runtime, run
+2026-11-03 18:53:14,320	INFO scripts.py:1115 -- [1m  ray stop[22m
+2026-11-03 18:53:14,320	INFO scripts.py:1123 -- [36m[1m--block[22m[39m
+2026-11-03 18:53:14,320	INFO scripts.py:1124 -- This command will now block forever until terminated by a signal.
+2026-11-03 18:53:14,320	INFO scripts.py:1127 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.

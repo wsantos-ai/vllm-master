@@ -1,0 +1,20 @@
+== sabdiia02  2026-11-03T15:38:20-03:00
+### 1. disco: o cache do P-05 fica em /var/lib/vllm-estudo/hf-cache
+/var/lib está montado em: /
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/ol-root  631G  129G  503G  21% /
+/dev/mapper/ol-home  200G  138G   63G  69% /home
+### 2. imagem v0.19.1 no containerd
+imagem já presente
+REF                                                                                                                           TYPE                              
+docker.io/vllm/vllm-openai:v0.19.1                                                                                            application/vnd.docker.distributio
+docker.io/vllm/vllm-openai:v0.5.4                                                                                             application/vnd.docker.distributio
+docker.io/vllm/vllm-openai@sha256:2622f38a0aa646c15ccc27bd5033911a58fd94ac69fd8f86aba0692d77cfe5b9                            application/vnd.docker.distributio
+docker.io/vllm/vllm-openai@sha256:7ab0cf7b287876cec65752a1b7ac99790ecd2a609da80c4d1dd1fbeaf987abf6                            application/vnd.docker.distributio
+### 3. GPU e acesso à internet (o Ray e o modelo são baixados ao iniciar)
+memory.used [MiB], utilization.gpu [%], temperature.gpu
+0 MiB, 0 %, 28
+processos na GPU: (nenhum)
+PyPI: HTTP 200
+Hugging Face: HTTP 200
+== fim 2026-11-03T15:38:21-03:00
