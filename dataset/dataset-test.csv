@@ -1,0 +1,2296 @@
+﻿ID;Pergunta;Resposta;Categoria;Porte;Data_Referencia;Valor_Identificado;Banco;Tabela;Campos;SQL - resposta;SQL - resposta da data mais recente de cada ano e/ou por categoria
+1;Qual era a taxa de inadimplência das pessoas jurídicas de pequeno porte em 01/01/2016?;Em 01/01/2016, a taxa de inadimplência de pessoa jurídica de pequeno porte foi de 9,0%.;inadimplencia;Pequeno Porte;01/01/2016;9,00%;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 01. Inadimplência de pequeno porte em 01/01/2016
+SELECT   [DT_REGISTRO]
+        ,[vl_INDICADOR]
+
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE [DT_REGISTRO] = '2016-01-01'
+  AND [NM_INDICADOR] = 'Taxa de inadimplência de pessoa jurídica - pequeno porte';";"    -- taxa de Inadimplência da data mais recente de cada ano com as categorias 
+WITH Dados AS
+(
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]),
+                A.[NM_INDICADOR]
+            ORDER BY 
+                A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN (
+       
+        'Taxa de inadimplência de pessoa jurídica - pequeno porte',
+        'Taxa de inadimplência de pessoa jurídica - Pequeno porte - Sul',
+        'Taxa de inadimplência de pessoa jurídica - Pequeno porte - Sudeste',
+        'Taxa de inadimplência de pessoa jurídica - Pequeno porte - Norte',
+        'Taxa de inadimplência de pessoa jurídica - Pequeno porte - Nordeste',
+        'Taxa de inadimplência de pessoa jurídica - Pequeno porte - Centro',
+        'Taxa de inadimplência de pessoa jurídica - microempresa',
+        'Taxa de inadimplência de pessoa jurídica - Microempresa - Sul',
+        'Taxa de inadimplência de pessoa jurídica - Microempresa - Sudeste',
+        'Taxa de inadimplência de pessoa jurídica - Microempresa - Norte',
+        'Taxa de inadimplência de pessoa jurídica - Microempresa - Nordeste',
+        'Taxa de inadimplência de pessoa jurídica - Microempresa - Centro'
+
+    )
+)
+
+SELECT
+    [NM_INDICADOR],
+    [DT_REGISTRO],
+    [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY
+    [DT_REGISTRO],
+    [NM_INDICADOR];"
+2;Qual era a taxa de inadimplência das microempresas em 01/07/2019?;Em 01/07/2019, a taxa de inadimplência de pessoa jurídica – microempresa foi de 10,2%.;inadimplencia;Microempresa;01/07/2019;10,20%;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 02. Inadimplência de microempresas em 01/07/2019
+SELECT   [DT_REGISTRO] 
+        ,[vl_INDICADOR]
+
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE [DT_REGISTRO] = '2019-07-01'
+  AND [NM_INDICADOR] = 'Taxa de inadimplência de pessoa jurídica - microempresa';";"    -- taxa de Inadimplência da data mais recente de cada ano com as categorias 
+WITH Dados AS
+(
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]),
+                A.[NM_INDICADOR]
+            ORDER BY 
+                A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN (
+       
+        'Taxa de inadimplência de pessoa jurídica - pequeno porte',
+        'Taxa de inadimplência de pessoa jurídica - Pequeno porte - Sul',
+        'Taxa de inadimplência de pessoa jurídica - Pequeno porte - Sudeste',
+        'Taxa de inadimplência de pessoa jurídica - Pequeno porte - Norte',
+        'Taxa de inadimplência de pessoa jurídica - Pequeno porte - Nordeste',
+        'Taxa de inadimplência de pessoa jurídica - Pequeno porte - Centro',
+        'Taxa de inadimplência de pessoa jurídica - microempresa',
+        'Taxa de inadimplência de pessoa jurídica - Microempresa - Sul',
+        'Taxa de inadimplência de pessoa jurídica - Microempresa - Sudeste',
+        'Taxa de inadimplência de pessoa jurídica - Microempresa - Norte',
+        'Taxa de inadimplência de pessoa jurídica - Microempresa - Nordeste',
+        'Taxa de inadimplência de pessoa jurídica - Microempresa - Centro'
+
+    )
+)
+
+SELECT
+    [NM_INDICADOR],
+    [DT_REGISTRO],
+    [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY
+    [DT_REGISTRO],
+    [NM_INDICADOR];"
+3;Qual era a taxa de juros para empresas de pequeno porte na antecipação de fatura de cartão de crédito com recursos livres em 01/04/2018?;Em 01/04/2018, a taxa registrada foi de 30,3% ao ano.;juros;Pequeno Porte;01/04/2018;30,3% a.a.;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 03. Juros de pequeno porte em 01/04/2018
+SELECT  [DT_REGISTRO] 
+       ,[vl_INDICADOR]
+
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE [DT_REGISTRO] = '2018-04-01'
+  AND [NM_INDICADOR] = 'Taxa de juros de pessoa jurídica - pequeno porte - recursos livres';
+";"      -- taxa de juros da data mais recente de cada ano com as categorias 
+WITH Dados AS
+(
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]),
+                A.[NM_INDICADOR]
+            ORDER BY 
+                A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN (
+       
+        
+       
+        'Taxa de juros de pessoa jurídica - pequeno porte - recursos livres',
+        'Taxa de juros de pessoa jurídica  micro empresa - recursos livres'
+
+
+    )
+)
+
+SELECT
+    [NM_INDICADOR],
+    [DT_REGISTRO],
+    [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY
+    [DT_REGISTRO],
+    [NM_INDICADOR];"
+4;Qual era a taxa de juros das microempresas na antecipação de fatura de cartão de crédito com recursos livres em 01/10/2020?;Em 01/10/2020, a taxa de juros registrada foi de 37,0% ao ano.;juros;Microempresa;01/10/2020;37,0% a.a.;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 04. Juros de microempresas em 01/10/2020
+SELECT   [DT_REGISTRO] 
+        ,[vl_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE [DT_REGISTRO] = '2020-10-01'
+  AND [NM_INDICADOR] = 'Taxa de juros de pessoa jurídica  micro empresa - recursos livres';";"      -- taxa de juros da data mais recente de cada ano com as categorias 
+WITH Dados AS
+(
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]),
+                A.[NM_INDICADOR]
+            ORDER BY 
+                A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN (
+       
+        
+       
+        'Taxa de juros de pessoa jurídica - pequeno porte - recursos livres',
+        'Taxa de juros de pessoa jurídica  micro empresa - recursos livres'
+
+
+    )
+)
+
+SELECT
+    [NM_INDICADOR],
+    [DT_REGISTRO],
+    [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY
+    [DT_REGISTRO],
+    [NM_INDICADOR];"
+5;Qual era o saldo de crédito com recursos livres para pessoas jurídicas de pequeno porte em 01/07/2021?;Em 01/07/2021, o saldo registrado foi de R$ 249.999,50 milhões.;saldo_recursos_livres;Pequeno Porte;01/07/2021;R$ 249.999,50 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 05. Saldo de pequeno porte com recursos livres em 01/07/2021
+SELECT   [DT_REGISTRO] 
+        ,[vl_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE [DT_REGISTRO] = '2021-07-01'
+  AND [NM_INDICADOR] = 'Saldo de crédito pessoa jurídica por origem dos recursos - pequeno porte - recursos livres - Total';";"
+      -- saldo de recursos por origem da data mais recente de cada ano com as categorias 
+WITH Dados AS
+(
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]),
+                A.[NM_INDICADOR]
+            ORDER BY 
+                A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN (
+       
+      'Saldo de crédito pessoa jurídica por origem dos recursos - microempresa - recursos livres - Total',
+      'Saldo de crédito pessoa jurídica por origem dos recursos - pequeno porte - recursos livres - Total'
+      
+
+
+
+    )
+)
+
+SELECT
+    [NM_INDICADOR],
+    [DT_REGISTRO],
+    [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY
+    [DT_REGISTRO],
+    [NM_INDICADOR];"
+6;Qual era o saldo de crédito das empresas de pequeno porte da região Sul em 01/01/2019?;Em 01/01/2019, o saldo registrado para a região Sul foi de R$ 33.530,40 milhões.;regioes;Pequeno Porte;01/01/2019;R$ 33.530,40 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 06 a 10. Saldo de pequeno porte por região
+
+SELECT 
+    A.[NM_INDICADOR],
+    A.[DT_REGISTRO],
+    A.VL_INDICADOR
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+INNER JOIN (
+    VALUES
+        ('2019-01-01', 'Saldo de crédito pessoa jurídica por região - pequeno porte - Sul'),
+        ('2020-04-01', 'Saldo de crédito pessoa jurídica por região - pequeno porte - Sudeste'),
+        ('2017-10-01', 'Saldo de crédito pessoa jurídica por região - pequeno porte - Norte'),
+        ('2022-07-01', 'Saldo de crédito pessoa jurídica por região - pequeno porte - Nordeste'),
+        ('2016-04-01', 'Saldo de crédito pessoa jurídica por região - pequeno porte - Centro-Oeste')
+) AS V ([DT_REGISTRO], [NM_INDICADOR])
+    ON A.[DT_REGISTRO] = V.[DT_REGISTRO]
+   AND A.[NM_INDICADOR] = V.[NM_INDICADOR];";"  -- 06 a Saldo de pequeno porte por região dos valores mais recentes de cada ano
+
+   WITH Dados AS
+(
+    SELECT
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER
+        (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]),
+                A.[NM_INDICADOR]
+            ORDER BY 
+                A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN
+    (
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Sul',
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Sudeste',
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Norte',
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Nordeste',
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Centro-Oeste'
+    )
+)
+
+SELECT
+    YEAR([DT_REGISTRO]) AS [ANO],
+    [NM_INDICADOR],
+    [DT_REGISTRO],
+    [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY
+    [ANO],
+    [NM_INDICADOR];
+
+"
+7;Quanto era o saldo de crédito das empresas de pequeno porte do Sudeste em 01/04/2020?;Em 01/04/2020, o saldo registrado para a região Sudeste foi de R$ 76.403,90 milhões.;regioes;Pequeno Porte;01/04/2020;R$ 76.403,90 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 06 a 10. Saldo de pequeno porte por região
+
+SELECT 
+    A.[NM_INDICADOR],
+    A.[DT_REGISTRO],
+    A.VL_INDICADOR
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+INNER JOIN (
+    VALUES
+        ('2019-01-01', 'Saldo de crédito pessoa jurídica por região - pequeno porte - Sul'),
+        ('2020-04-01', 'Saldo de crédito pessoa jurídica por região - pequeno porte - Sudeste'),
+        ('2017-10-01', 'Saldo de crédito pessoa jurídica por região - pequeno porte - Norte'),
+        ('2022-07-01', 'Saldo de crédito pessoa jurídica por região - pequeno porte - Nordeste'),
+        ('2016-04-01', 'Saldo de crédito pessoa jurídica por região - pequeno porte - Centro-Oeste')
+) AS V ([DT_REGISTRO], [NM_INDICADOR])
+    ON A.[DT_REGISTRO] = V.[DT_REGISTRO]
+   AND A.[NM_INDICADOR] = V.[NM_INDICADOR];";"  -- 06 a Saldo de pequeno porte por região dos valores mais recentes de cada ano
+
+   WITH Dados AS
+(
+    SELECT
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER
+        (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]),
+                A.[NM_INDICADOR]
+            ORDER BY 
+                A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN
+    (
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Sul',
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Sudeste',
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Norte',
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Nordeste',
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Centro-Oeste'
+    )
+)
+
+SELECT
+    YEAR([DT_REGISTRO]) AS [ANO],
+    [NM_INDICADOR],
+    [DT_REGISTRO],
+    [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY
+    [ANO],
+    [NM_INDICADOR];
+
+"
+8;Qual o saldo de crédito das pessoas jurídicas de pequeno porte da região Norte em 01/10/2017?;Em 01/10/2017, o saldo registrado para a região Norte foi de R$ 5.768,90 milhões.;regioes;Pequeno Porte;01/10/2017;R$ 5.768,90 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 06 a 10. Saldo de pequeno porte por região
+
+SELECT 
+    A.[NM_INDICADOR],
+    A.[DT_REGISTRO],
+    A.VL_INDICADOR
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+INNER JOIN (
+    VALUES
+        ('2019-01-01', 'Saldo de crédito pessoa jurídica por região - pequeno porte - Sul'),
+        ('2020-04-01', 'Saldo de crédito pessoa jurídica por região - pequeno porte - Sudeste'),
+        ('2017-10-01', 'Saldo de crédito pessoa jurídica por região - pequeno porte - Norte'),
+        ('2022-07-01', 'Saldo de crédito pessoa jurídica por região - pequeno porte - Nordeste'),
+        ('2016-04-01', 'Saldo de crédito pessoa jurídica por região - pequeno porte - Centro-Oeste')
+) AS V ([DT_REGISTRO], [NM_INDICADOR])
+    ON A.[DT_REGISTRO] = V.[DT_REGISTRO]
+   AND A.[NM_INDICADOR] = V.[NM_INDICADOR];";"  -- 06 a Saldo de pequeno porte por região dos valores mais recentes de cada ano
+
+   WITH Dados AS
+(
+    SELECT
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER
+        (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]),
+                A.[NM_INDICADOR]
+            ORDER BY 
+                A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN
+    (
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Sul',
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Sudeste',
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Norte',
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Nordeste',
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Centro-Oeste'
+    )
+)
+
+SELECT
+    YEAR([DT_REGISTRO]) AS [ANO],
+    [NM_INDICADOR],
+    [DT_REGISTRO],
+    [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY
+    [ANO],
+    [NM_INDICADOR];
+
+"
+9;Quanto as empresas de pequeno porte do Nordeste tinham de saldo de crédito em 01/07/2022?;Em 01/07/2022, o saldo registrado para a região Nordeste foi de R$ 43.893,80 milhões.;regioes;Pequeno Porte;01/07/2022;R$ 43.893,80 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 06 a 10. Saldo de pequeno porte por região
+
+SELECT 
+    A.[NM_INDICADOR],
+    A.[DT_REGISTRO],
+    A.VL_INDICADOR
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+INNER JOIN (
+    VALUES
+        ('2019-01-01', 'Saldo de crédito pessoa jurídica por região - pequeno porte - Sul'),
+        ('2020-04-01', 'Saldo de crédito pessoa jurídica por região - pequeno porte - Sudeste'),
+        ('2017-10-01', 'Saldo de crédito pessoa jurídica por região - pequeno porte - Norte'),
+        ('2022-07-01', 'Saldo de crédito pessoa jurídica por região - pequeno porte - Nordeste'),
+        ('2016-04-01', 'Saldo de crédito pessoa jurídica por região - pequeno porte - Centro-Oeste')
+) AS V ([DT_REGISTRO], [NM_INDICADOR])
+    ON A.[DT_REGISTRO] = V.[DT_REGISTRO]
+   AND A.[NM_INDICADOR] = V.[NM_INDICADOR];";"  -- 06 a Saldo de pequeno porte por região dos valores mais recentes de cada ano
+
+   WITH Dados AS
+(
+    SELECT
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER
+        (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]),
+                A.[NM_INDICADOR]
+            ORDER BY 
+                A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN
+    (
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Sul',
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Sudeste',
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Norte',
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Nordeste',
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Centro-Oeste'
+    )
+)
+
+SELECT
+    YEAR([DT_REGISTRO]) AS [ANO],
+    [NM_INDICADOR],
+    [DT_REGISTRO],
+    [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY
+    [ANO],
+    [NM_INDICADOR];
+
+"
+10;Qual era o saldo de crédito das empresas de pequeno porte do Centro-Oeste em 01/04/2016?;Em 01/04/2016, o saldo registrado para a região Centro-Oeste foi de R$ 17.261,60 milhões.;regioes;Pequeno Porte;01/04/2016;R$ 17.261,60 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 06 a 10. Saldo de pequeno porte por região
+
+SELECT 
+    A.[NM_INDICADOR],
+    A.[DT_REGISTRO],
+    A.VL_INDICADOR
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+INNER JOIN (
+    VALUES
+        ('2019-01-01', 'Saldo de crédito pessoa jurídica por região - pequeno porte - Sul'),
+        ('2020-04-01', 'Saldo de crédito pessoa jurídica por região - pequeno porte - Sudeste'),
+        ('2017-10-01', 'Saldo de crédito pessoa jurídica por região - pequeno porte - Norte'),
+        ('2022-07-01', 'Saldo de crédito pessoa jurídica por região - pequeno porte - Nordeste'),
+        ('2016-04-01', 'Saldo de crédito pessoa jurídica por região - pequeno porte - Centro-Oeste')
+) AS V ([DT_REGISTRO], [NM_INDICADOR])
+    ON A.[DT_REGISTRO] = V.[DT_REGISTRO]
+   AND A.[NM_INDICADOR] = V.[NM_INDICADOR];";"  -- 06 a Saldo de pequeno porte por região dos valores mais recentes de cada ano
+
+   WITH Dados AS
+(
+    SELECT
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER
+        (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]),
+                A.[NM_INDICADOR]
+            ORDER BY 
+                A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN
+    (
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Sul',
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Sudeste',
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Norte',
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Nordeste',
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Centro-Oeste'
+    )
+)
+
+SELECT
+    YEAR([DT_REGISTRO]) AS [ANO],
+    [NM_INDICADOR],
+    [DT_REGISTRO],
+    [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY
+    [ANO],
+    [NM_INDICADOR];
+
+"
+11;Qual era o saldo de crédito com recursos livres das microempresas em 01/10/2019?;Em 01/10/2019, o saldo registrado foi de R$ 46.853,8 milhões.;saldo_recursos_livres;Microempresa;01/10/2019;R$ 46.853,80 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 11. Saldo de microempresas com recursos livres em 01/10/2019
+SELECT   [DT_REGISTRO] 
+        ,VL_INDICADOR
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE [DT_REGISTRO] = '2019-10-01'
+  AND [NM_INDICADOR] = 'Saldo de crédito pessoa jurídica por origem dos recursos - microempresa - recursos livres - Total';";
+12;Qual era o saldo de crédito das microempresas da região Sul em 01/04/2021?;Em 01/04/2021, o saldo registrado para as microempresas da região Sul foi de R$ 14.251,30 milhões.;regioes;Microempresa;01/04/2021;R$ 14.251,30 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 12 a 16. Saldo de microempresas por região
+SELECT 
+    A.[NM_INDICADOR],
+    A.[DT_REGISTRO],
+    A.VL_INDICADOR
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+INNER JOIN (
+    VALUES
+        ('2021-04-01', 'Saldo de crédito pessoa jurídica por região - microempresa - Sul'),
+        ('2018-07-01', 'Saldo de crédito pessoa jurídica por região - microempresa - Sudeste'),
+        ('2023-04-01', 'Saldo de crédito pessoa jurídica por região - microempresa - Norte'),
+        ('2020-10-01', 'Saldo de crédito pessoa jurídica por região - microempresa - Nordeste'),
+        ('2022-04-01', 'Saldo de crédito pessoa jurídica por região - microempresa - Centro-Oeste')
+) AS F ([DT_REGISTRO], [NM_INDICADOR])
+    ON A.[DT_REGISTRO] = F.[DT_REGISTRO]
+   AND A.[NM_INDICADOR] = F.[NM_INDICADOR]
+ORDER BY 
+    A.[DT_REGISTRO],
+    A.[NM_INDICADOR];";"-- 12 a 16. Saldo de microempresas por região dos valores mais recentes de cada ano
+
+WITH Dados AS
+(
+    SELECT
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER
+        (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]),
+                A.[NM_INDICADOR]
+            ORDER BY 
+                A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN
+    (
+        'Saldo de crédito pessoa jurídica por região - microempresa - Sul',
+        'Saldo de crédito pessoa jurídica por região - microempresa - Sudeste',
+        'Saldo de crédito pessoa jurídica por região - microempresa - Norte',
+        'Saldo de crédito pessoa jurídica por região - microempresa - Nordeste',
+        'Saldo de crédito pessoa jurídica por região - microempresa - Centro-Oeste'
+    )
+)
+
+SELECT
+    YEAR([DT_REGISTRO]) AS [ANO],
+    [NM_INDICADOR],
+    [DT_REGISTRO],
+    [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY
+    [ANO],
+    [NM_INDICADOR];
+
+"
+13;Quanto era o saldo de crédito das microempresas do Sudeste em 01/07/2018?;Em 01/07/2018, o saldo registrado para as microempresas da região Sudeste foi de R$ 18.844,00 milhões.;regioes;Microempresa;01/07/2018;R$ 18.844,00 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 12 a 16. Saldo de microempresas por região
+SELECT 
+    A.[NM_INDICADOR],
+    A.[DT_REGISTRO],
+    A.VL_INDICADOR
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+INNER JOIN (
+    VALUES
+        ('2021-04-01', 'Saldo de crédito pessoa jurídica por região - microempresa - Sul'),
+        ('2018-07-01', 'Saldo de crédito pessoa jurídica por região - microempresa - Sudeste'),
+        ('2023-04-01', 'Saldo de crédito pessoa jurídica por região - microempresa - Norte'),
+        ('2020-10-01', 'Saldo de crédito pessoa jurídica por região - microempresa - Nordeste'),
+        ('2022-04-01', 'Saldo de crédito pessoa jurídica por região - microempresa - Centro-Oeste')
+) AS F ([DT_REGISTRO], [NM_INDICADOR])
+    ON A.[DT_REGISTRO] = F.[DT_REGISTRO]
+   AND A.[NM_INDICADOR] = F.[NM_INDICADOR]
+ORDER BY 
+    A.[DT_REGISTRO],
+    A.[NM_INDICADOR];";"-- 12 a 16. Saldo de microempresas por região dos valores mais recentes de cada ano
+
+WITH Dados AS
+(
+    SELECT
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER
+        (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]),
+                A.[NM_INDICADOR]
+            ORDER BY 
+                A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN
+    (
+        'Saldo de crédito pessoa jurídica por região - microempresa - Sul',
+        'Saldo de crédito pessoa jurídica por região - microempresa - Sudeste',
+        'Saldo de crédito pessoa jurídica por região - microempresa - Norte',
+        'Saldo de crédito pessoa jurídica por região - microempresa - Nordeste',
+        'Saldo de crédito pessoa jurídica por região - microempresa - Centro-Oeste'
+    )
+)
+
+SELECT
+    YEAR([DT_REGISTRO]) AS [ANO],
+    [NM_INDICADOR],
+    [DT_REGISTRO],
+    [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY
+    [ANO],
+    [NM_INDICADOR];
+
+"
+14;Qual era o saldo de crédito das microempresas da região Norte em 01/04/2023?;Em 01/04/2023, o saldo registrado para as microempresas da região Norte foi de R$ 2.724,20 milhões.;regioes;Microempresa;01/04/2023;R$ 2.724,20 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 12 a 16. Saldo de microempresas por região
+SELECT 
+    A.[NM_INDICADOR],
+    A.[DT_REGISTRO],
+    A.VL_INDICADOR
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+INNER JOIN (
+    VALUES
+        ('2021-04-01', 'Saldo de crédito pessoa jurídica por região - microempresa - Sul'),
+        ('2018-07-01', 'Saldo de crédito pessoa jurídica por região - microempresa - Sudeste'),
+        ('2023-04-01', 'Saldo de crédito pessoa jurídica por região - microempresa - Norte'),
+        ('2020-10-01', 'Saldo de crédito pessoa jurídica por região - microempresa - Nordeste'),
+        ('2022-04-01', 'Saldo de crédito pessoa jurídica por região - microempresa - Centro-Oeste')
+) AS F ([DT_REGISTRO], [NM_INDICADOR])
+    ON A.[DT_REGISTRO] = F.[DT_REGISTRO]
+   AND A.[NM_INDICADOR] = F.[NM_INDICADOR]
+ORDER BY 
+    A.[DT_REGISTRO],
+    A.[NM_INDICADOR];";"-- 12 a 16. Saldo de microempresas por região dos valores mais recentes de cada ano
+
+WITH Dados AS
+(
+    SELECT
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER
+        (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]),
+                A.[NM_INDICADOR]
+            ORDER BY 
+                A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN
+    (
+        'Saldo de crédito pessoa jurídica por região - microempresa - Sul',
+        'Saldo de crédito pessoa jurídica por região - microempresa - Sudeste',
+        'Saldo de crédito pessoa jurídica por região - microempresa - Norte',
+        'Saldo de crédito pessoa jurídica por região - microempresa - Nordeste',
+        'Saldo de crédito pessoa jurídica por região - microempresa - Centro-Oeste'
+    )
+)
+
+SELECT
+    YEAR([DT_REGISTRO]) AS [ANO],
+    [NM_INDICADOR],
+    [DT_REGISTRO],
+    [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY
+    [ANO],
+    [NM_INDICADOR];
+
+"
+15;Quanto era o saldo de crédito das microempresas nordestinas em 01/10/2020?;Em 01/10/2020, o saldo registrado para as microempresas da região Nordeste foi de R$ 7.320,90 milhões.;regioes;Microempresa;01/10/2020;R$ 7.320,90 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 12 a 16. Saldo de microempresas por região
+SELECT 
+    A.[NM_INDICADOR],
+    A.[DT_REGISTRO],
+    A.VL_INDICADOR
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+INNER JOIN (
+    VALUES
+        ('2021-04-01', 'Saldo de crédito pessoa jurídica por região - microempresa - Sul'),
+        ('2018-07-01', 'Saldo de crédito pessoa jurídica por região - microempresa - Sudeste'),
+        ('2023-04-01', 'Saldo de crédito pessoa jurídica por região - microempresa - Norte'),
+        ('2020-10-01', 'Saldo de crédito pessoa jurídica por região - microempresa - Nordeste'),
+        ('2022-04-01', 'Saldo de crédito pessoa jurídica por região - microempresa - Centro-Oeste')
+) AS F ([DT_REGISTRO], [NM_INDICADOR])
+    ON A.[DT_REGISTRO] = F.[DT_REGISTRO]
+   AND A.[NM_INDICADOR] = F.[NM_INDICADOR]
+ORDER BY 
+    A.[DT_REGISTRO],
+    A.[NM_INDICADOR];";"-- 12 a 16. Saldo de microempresas por região dos valores mais recentes de cada ano
+
+WITH Dados AS
+(
+    SELECT
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER
+        (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]),
+                A.[NM_INDICADOR]
+            ORDER BY 
+                A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN
+    (
+        'Saldo de crédito pessoa jurídica por região - microempresa - Sul',
+        'Saldo de crédito pessoa jurídica por região - microempresa - Sudeste',
+        'Saldo de crédito pessoa jurídica por região - microempresa - Norte',
+        'Saldo de crédito pessoa jurídica por região - microempresa - Nordeste',
+        'Saldo de crédito pessoa jurídica por região - microempresa - Centro-Oeste'
+    )
+)
+
+SELECT
+    YEAR([DT_REGISTRO]) AS [ANO],
+    [NM_INDICADOR],
+    [DT_REGISTRO],
+    [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY
+    [ANO],
+    [NM_INDICADOR];
+
+"
+16;Qual era o saldo de crédito das microempresas do Centro-Oeste em 01/04/2022?;Em 01/04/2022, o saldo registrado para as microempresas da região Centro-Oeste foi de R$ 10.493,10 milhões.;regioes;Microempresa;01/04/2022;R$ 10.493,10 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 12 a 16. Saldo de microempresas por região
+SELECT 
+    A.[NM_INDICADOR],
+    A.[DT_REGISTRO],
+    A.VL_INDICADOR
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+INNER JOIN (
+    VALUES
+        ('2021-04-01', 'Saldo de crédito pessoa jurídica por região - microempresa - Sul'),
+        ('2018-07-01', 'Saldo de crédito pessoa jurídica por região - microempresa - Sudeste'),
+        ('2023-04-01', 'Saldo de crédito pessoa jurídica por região - microempresa - Norte'),
+        ('2020-10-01', 'Saldo de crédito pessoa jurídica por região - microempresa - Nordeste'),
+        ('2022-04-01', 'Saldo de crédito pessoa jurídica por região - microempresa - Centro-Oeste')
+) AS F ([DT_REGISTRO], [NM_INDICADOR])
+    ON A.[DT_REGISTRO] = F.[DT_REGISTRO]
+   AND A.[NM_INDICADOR] = F.[NM_INDICADOR]
+ORDER BY 
+    A.[DT_REGISTRO],
+    A.[NM_INDICADOR];";"-- 12 a 16. Saldo de microempresas por região dos valores mais recentes de cada ano
+
+WITH Dados AS
+(
+    SELECT
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER
+        (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]),
+                A.[NM_INDICADOR]
+            ORDER BY 
+                A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN
+    (
+        'Saldo de crédito pessoa jurídica por região - microempresa - Sul',
+        'Saldo de crédito pessoa jurídica por região - microempresa - Sudeste',
+        'Saldo de crédito pessoa jurídica por região - microempresa - Norte',
+        'Saldo de crédito pessoa jurídica por região - microempresa - Nordeste',
+        'Saldo de crédito pessoa jurídica por região - microempresa - Centro-Oeste'
+    )
+)
+
+SELECT
+    YEAR([DT_REGISTRO]) AS [ANO],
+    [NM_INDICADOR],
+    [DT_REGISTRO],
+    [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY
+    [ANO],
+    [NM_INDICADOR];
+
+"
+17;Qual era o saldo de crédito de empresas de pequeno porte com prazo acima de 5 anos em 01/01/2014?;Em 01/01/2014, o saldo registrado para operações com prazo acima de 5 anos foi de R$ 50.340,80 milhões.;prazos;Pequeno Porte;01/01/2014;R$ 50.340,80 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 17 a 20. Saldo de pequeno porte por prazo
+SELECT 
+    A.[NM_INDICADOR],
+    A.[DT_REGISTRO],
+    A.[VL_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+INNER JOIN (
+    VALUES
+        ('2014-01-01', 'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - acima de 5 anos'),
+        ('2016-07-01', 'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - até 1 ano'),
+        ('2019-10-01', 'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - maior que 1 a 2 anos'),
+        ('2020-07-01', 'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - maior que 2 a 5 anos')
+) AS F ([DT_REGISTRO], [NM_INDICADOR])
+    ON A.[DT_REGISTRO] = F.[DT_REGISTRO]
+   AND A.[NM_INDICADOR] = F.[NM_INDICADOR]
+ORDER BY 
+    A.[DT_REGISTRO],
+    A.[NM_INDICADOR];";"-- 17 a 20. Saldo de pequeno porte por prazo da data mais recente de cada ano
+WITH Dados AS (
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]),
+                A.[NM_INDICADOR]
+            ORDER BY 
+                A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    INNER JOIN (
+        VALUES
+            ('Saldo de crédito de pessoa jurídica por prazo - pequeno porte - acima de 5 anos'),
+            ('Saldo de crédito de pessoa jurídica por prazo - pequeno porte - até 1 ano'),
+            ('Saldo de crédito de pessoa jurídica por prazo - pequeno porte - maior que 1 a 2 anos'),
+            ('Saldo de crédito de pessoa jurídica por prazo - pequeno porte - maior que 2 a 5 anos')
+    ) AS F ([NM_INDICADOR])
+        ON A.[NM_INDICADOR] = F.[NM_INDICADOR]
+)
+SELECT 
+    [NM_INDICADOR],
+    [DT_REGISTRO],
+    [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY 
+    [DT_REGISTRO],
+    [NM_INDICADOR];"
+18;Quanto era o saldo de crédito das empresas de pequeno porte com prazo de até 1 ano em 01/07/2016?;Em 01/07/2016, o saldo registrado para operações com prazo de até 1 ano foi de R$ 22.530,70 milhões.;prazos;Pequeno Porte;01/07/2016;R$ 22.530,70 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 17 a 20. Saldo de pequeno porte por prazo
+SELECT 
+    A.[NM_INDICADOR],
+    A.[DT_REGISTRO],
+    A.[VL_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+INNER JOIN (
+    VALUES
+        ('2014-01-01', 'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - acima de 5 anos'),
+        ('2016-07-01', 'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - até 1 ano'),
+        ('2019-10-01', 'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - maior que 1 a 2 anos'),
+        ('2020-07-01', 'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - maior que 2 a 5 anos')
+) AS F ([DT_REGISTRO], [NM_INDICADOR])
+    ON A.[DT_REGISTRO] = F.[DT_REGISTRO]
+   AND A.[NM_INDICADOR] = F.[NM_INDICADOR]
+ORDER BY 
+    A.[DT_REGISTRO],
+    A.[NM_INDICADOR];";"-- 17 a 20. Saldo de pequeno porte por prazo da data mais recente de cada ano
+WITH Dados AS (
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]),
+                A.[NM_INDICADOR]
+            ORDER BY 
+                A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    INNER JOIN (
+        VALUES
+            ('Saldo de crédito de pessoa jurídica por prazo - pequeno porte - acima de 5 anos'),
+            ('Saldo de crédito de pessoa jurídica por prazo - pequeno porte - até 1 ano'),
+            ('Saldo de crédito de pessoa jurídica por prazo - pequeno porte - maior que 1 a 2 anos'),
+            ('Saldo de crédito de pessoa jurídica por prazo - pequeno porte - maior que 2 a 5 anos')
+    ) AS F ([NM_INDICADOR])
+        ON A.[NM_INDICADOR] = F.[NM_INDICADOR]
+)
+SELECT 
+    [NM_INDICADOR],
+    [DT_REGISTRO],
+    [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY 
+    [DT_REGISTRO],
+    [NM_INDICADOR];"
+19;Qual era o saldo de crédito das empresas de pequeno porte com prazo maior que 1 e até 2 anos em 01/10/2019?;Em 01/10/2019, o saldo registrado foi de R$ 13.004,10 milhões.;prazos;Pequeno Porte;01/10/2019;R$ 13.004,10 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 17 a 20. Saldo de pequeno porte por prazo
+SELECT 
+    A.[NM_INDICADOR],
+    A.[DT_REGISTRO],
+    A.[VL_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+INNER JOIN (
+    VALUES
+        ('2014-01-01', 'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - acima de 5 anos'),
+        ('2016-07-01', 'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - até 1 ano'),
+        ('2019-10-01', 'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - maior que 1 a 2 anos'),
+        ('2020-07-01', 'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - maior que 2 a 5 anos')
+) AS F ([DT_REGISTRO], [NM_INDICADOR])
+    ON A.[DT_REGISTRO] = F.[DT_REGISTRO]
+   AND A.[NM_INDICADOR] = F.[NM_INDICADOR]
+ORDER BY 
+    A.[DT_REGISTRO],
+    A.[NM_INDICADOR];";"-- 17 a 20. Saldo de pequeno porte por prazo da data mais recente de cada ano
+WITH Dados AS (
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]),
+                A.[NM_INDICADOR]
+            ORDER BY 
+                A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    INNER JOIN (
+        VALUES
+            ('Saldo de crédito de pessoa jurídica por prazo - pequeno porte - acima de 5 anos'),
+            ('Saldo de crédito de pessoa jurídica por prazo - pequeno porte - até 1 ano'),
+            ('Saldo de crédito de pessoa jurídica por prazo - pequeno porte - maior que 1 a 2 anos'),
+            ('Saldo de crédito de pessoa jurídica por prazo - pequeno porte - maior que 2 a 5 anos')
+    ) AS F ([NM_INDICADOR])
+        ON A.[NM_INDICADOR] = F.[NM_INDICADOR]
+)
+SELECT 
+    [NM_INDICADOR],
+    [DT_REGISTRO],
+    [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY 
+    [DT_REGISTRO],
+    [NM_INDICADOR];"
+20;Qual era o saldo de crédito das empresas de pequeno porte com prazo maior que 2 e até 5 anos em 01/07/2020?;Em 01/07/2020, o saldo registrado foi de R$ 127.938,8 milhões.;prazos;Pequeno Porte;01/07/2020;R$ 127.938,80 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 17 a 20. Saldo de pequeno porte por prazo
+SELECT 
+    A.[NM_INDICADOR],
+    A.[DT_REGISTRO],
+    A.[VL_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+INNER JOIN (
+    VALUES
+        ('2014-01-01', 'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - acima de 5 anos'),
+        ('2016-07-01', 'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - até 1 ano'),
+        ('2019-10-01', 'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - maior que 1 a 2 anos'),
+        ('2020-07-01', 'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - maior que 2 a 5 anos')
+) AS F ([DT_REGISTRO], [NM_INDICADOR])
+    ON A.[DT_REGISTRO] = F.[DT_REGISTRO]
+   AND A.[NM_INDICADOR] = F.[NM_INDICADOR]
+ORDER BY 
+    A.[DT_REGISTRO],
+    A.[NM_INDICADOR];";"-- 17 a 20. Saldo de pequeno porte por prazo da data mais recente de cada ano
+WITH Dados AS (
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]),
+                A.[NM_INDICADOR]
+            ORDER BY 
+                A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    INNER JOIN (
+        VALUES
+            ('Saldo de crédito de pessoa jurídica por prazo - pequeno porte - acima de 5 anos'),
+            ('Saldo de crédito de pessoa jurídica por prazo - pequeno porte - até 1 ano'),
+            ('Saldo de crédito de pessoa jurídica por prazo - pequeno porte - maior que 1 a 2 anos'),
+            ('Saldo de crédito de pessoa jurídica por prazo - pequeno porte - maior que 2 a 5 anos')
+    ) AS F ([NM_INDICADOR])
+        ON A.[NM_INDICADOR] = F.[NM_INDICADOR]
+)
+SELECT 
+    [NM_INDICADOR],
+    [DT_REGISTRO],
+    [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY 
+    [DT_REGISTRO],
+    [NM_INDICADOR];"
+21;Qual era o saldo de crédito de empresas de pequeno porte na faixa menor que R$ 1 mil em 01/04/2018?;Em 01/04/2018, o saldo registrado nessa faixa foi de R$ 2.191,50 milhões.;faixas_valor;Pequeno Porte;01/04/2018;R$ 2.191,50 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 21 a 26. Saldo de pequeno porte por faixa de [DT_REGISTRO]
+SELECT 
+    A.[NM_INDICADOR],
+    A.[DT_REGISTRO],
+    A.[VL_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+INNER JOIN (
+    VALUES
+        ('2018-04-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Menor que 1 mil'),
+        ('2019-07-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 1 mil a 5 mil'),
+        ('2015-01-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 5 mil a 10 mil'),
+        ('2022-04-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 10 mil a 50 mil'),
+        ('2021-10-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 50 mil a 100 mil'),
+        ('2022-10-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Acima de 100 mil')
+) AS F ([DT_REGISTRO], [NM_INDICADOR])
+    ON A.[DT_REGISTRO] = F.[DT_REGISTRO]
+    AND A.[NM_INDICADOR] = F.[NM_INDICADOR]
+
+ORDER BY 
+    A.[DT_REGISTRO],
+    A.[NM_INDICADOR];";"-- 21 a 26. Saldo de pequeno porte por faixa de [DT_REGISTRO] da data mais recente de cada ano
+WITH Dados AS
+(
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]),
+                A.[NM_INDICADOR]
+            ORDER BY 
+                A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN (
+        'Saldo de crédito de pessoa jurídica por faixa de valor- pequeno porte - Menor que 1 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 1 mil a 5 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 5 mil a 10 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 10 mil a 50 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 50 mil a 100 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Acima de 100 mil'
+    )
+)
+
+SELECT
+    [NM_INDICADOR],
+    [DT_REGISTRO],
+    [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY
+    [DT_REGISTRO],
+    [NM_INDICADOR];
+
+
+"
+22;Quanto era o saldo de crédito das empresas de pequeno porte na faixa de R$ 1 mil a R$ 5 mil em 01/07/2019?;Em 01/07/2019, o saldo registrado nessa faixa foi de R$ 6.140,10 milhões.;faixas_valor;Pequeno Porte;01/07/2019;R$ 6.140,10 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 21 a 26. Saldo de pequeno porte por faixa de [DT_REGISTRO]
+SELECT 
+    A.[NM_INDICADOR],
+    A.[DT_REGISTRO],
+    A.[VL_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+INNER JOIN (
+    VALUES
+        ('2018-04-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Menor que 1 mil'),
+        ('2019-07-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 1 mil a 5 mil'),
+        ('2015-01-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 5 mil a 10 mil'),
+        ('2022-04-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 10 mil a 50 mil'),
+        ('2021-10-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 50 mil a 100 mil'),
+        ('2022-10-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Acima de 100 mil')
+) AS F ([DT_REGISTRO], [NM_INDICADOR])
+    ON A.[DT_REGISTRO] = F.[DT_REGISTRO]
+    AND A.[NM_INDICADOR] = F.[NM_INDICADOR]
+
+ORDER BY 
+    A.[DT_REGISTRO],
+    A.[NM_INDICADOR];";"-- 21 a 26. Saldo de pequeno porte por faixa de [DT_REGISTRO] da data mais recente de cada ano
+WITH Dados AS
+(
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]),
+                A.[NM_INDICADOR]
+            ORDER BY 
+                A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN (
+        'Saldo de crédito de pessoa jurídica por faixa de valor- pequeno porte - Menor que 1 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 1 mil a 5 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 5 mil a 10 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 10 mil a 50 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 50 mil a 100 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Acima de 100 mil'
+    )
+)
+
+SELECT
+    [NM_INDICADOR],
+    [DT_REGISTRO],
+    [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY
+    [DT_REGISTRO],
+    [NM_INDICADOR];
+
+
+"
+23;Qual era o saldo de crédito de pequeno porte na faixa de R$ 5 mil a R$ 10 mil em 01/01/2015?;Em 01/01/2015, o saldo registrado nessa faixa foi de R$ 8.170,30 milhões.;faixas_valor;Pequeno Porte;01/01/2015;R$ 8.170,30 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 21 a 26. Saldo de pequeno porte por faixa de [DT_REGISTRO]
+SELECT 
+    A.[NM_INDICADOR],
+    A.[DT_REGISTRO],
+    A.[VL_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+INNER JOIN (
+    VALUES
+        ('2018-04-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Menor que 1 mil'),
+        ('2019-07-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 1 mil a 5 mil'),
+        ('2015-01-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 5 mil a 10 mil'),
+        ('2022-04-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 10 mil a 50 mil'),
+        ('2021-10-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 50 mil a 100 mil'),
+        ('2022-10-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Acima de 100 mil')
+) AS F ([DT_REGISTRO], [NM_INDICADOR])
+    ON A.[DT_REGISTRO] = F.[DT_REGISTRO]
+    AND A.[NM_INDICADOR] = F.[NM_INDICADOR]
+
+ORDER BY 
+    A.[DT_REGISTRO],
+    A.[NM_INDICADOR];";"-- 21 a 26. Saldo de pequeno porte por faixa de [DT_REGISTRO] da data mais recente de cada ano
+WITH Dados AS
+(
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]),
+                A.[NM_INDICADOR]
+            ORDER BY 
+                A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN (
+        'Saldo de crédito de pessoa jurídica por faixa de valor- pequeno porte - Menor que 1 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 1 mil a 5 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 5 mil a 10 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 10 mil a 50 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 50 mil a 100 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Acima de 100 mil'
+    )
+)
+
+SELECT
+    [NM_INDICADOR],
+    [DT_REGISTRO],
+    [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY
+    [DT_REGISTRO],
+    [NM_INDICADOR];
+
+
+"
+24;Qual era o saldo de crédito das empresas de pequeno porte na faixa de R$ 10 mil a R$ 50 mil em 01/04/2022?;Em 01/04/2022, o saldo registrado nessa faixa foi de R$ 54.552,80 milhões.;faixas_valor;Pequeno Porte;01/04/2022;R$ 54.552,80 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 21 a 26. Saldo de pequeno porte por faixa de [DT_REGISTRO]
+SELECT 
+    A.[NM_INDICADOR],
+    A.[DT_REGISTRO],
+    A.[VL_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+INNER JOIN (
+    VALUES
+        ('2018-04-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Menor que 1 mil'),
+        ('2019-07-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 1 mil a 5 mil'),
+        ('2015-01-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 5 mil a 10 mil'),
+        ('2022-04-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 10 mil a 50 mil'),
+        ('2021-10-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 50 mil a 100 mil'),
+        ('2022-10-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Acima de 100 mil')
+) AS F ([DT_REGISTRO], [NM_INDICADOR])
+    ON A.[DT_REGISTRO] = F.[DT_REGISTRO]
+    AND A.[NM_INDICADOR] = F.[NM_INDICADOR]
+
+ORDER BY 
+    A.[DT_REGISTRO],
+    A.[NM_INDICADOR];";"-- 21 a 26. Saldo de pequeno porte por faixa de [DT_REGISTRO] da data mais recente de cada ano
+WITH Dados AS
+(
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]),
+                A.[NM_INDICADOR]
+            ORDER BY 
+                A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN (
+        'Saldo de crédito de pessoa jurídica por faixa de valor- pequeno porte - Menor que 1 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 1 mil a 5 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 5 mil a 10 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 10 mil a 50 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 50 mil a 100 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Acima de 100 mil'
+    )
+)
+
+SELECT
+    [NM_INDICADOR],
+    [DT_REGISTRO],
+    [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY
+    [DT_REGISTRO],
+    [NM_INDICADOR];
+
+
+"
+25;Quanto era o saldo de crédito das empresas de pequeno porte na faixa de R$ 50 mil a R$ 100 mil em 01/10/2021?;Em 01/10/2021, o saldo registrado nessa faixa foi de R$ 52.971,30 milhões.;faixas_valor;Pequeno Porte;01/10/2021;R$ 52.971,30 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 21 a 26. Saldo de pequeno porte por faixa de [DT_REGISTRO]
+SELECT 
+    A.[NM_INDICADOR],
+    A.[DT_REGISTRO],
+    A.[VL_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+INNER JOIN (
+    VALUES
+        ('2018-04-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Menor que 1 mil'),
+        ('2019-07-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 1 mil a 5 mil'),
+        ('2015-01-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 5 mil a 10 mil'),
+        ('2022-04-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 10 mil a 50 mil'),
+        ('2021-10-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 50 mil a 100 mil'),
+        ('2022-10-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Acima de 100 mil')
+) AS F ([DT_REGISTRO], [NM_INDICADOR])
+    ON A.[DT_REGISTRO] = F.[DT_REGISTRO]
+    AND A.[NM_INDICADOR] = F.[NM_INDICADOR]
+
+ORDER BY 
+    A.[DT_REGISTRO],
+    A.[NM_INDICADOR];";"-- 21 a 26. Saldo de pequeno porte por faixa de [DT_REGISTRO] da data mais recente de cada ano
+WITH Dados AS
+(
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]),
+                A.[NM_INDICADOR]
+            ORDER BY 
+                A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN (
+        'Saldo de crédito de pessoa jurídica por faixa de valor- pequeno porte - Menor que 1 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 1 mil a 5 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 5 mil a 10 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 10 mil a 50 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 50 mil a 100 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Acima de 100 mil'
+    )
+)
+
+SELECT
+    [NM_INDICADOR],
+    [DT_REGISTRO],
+    [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY
+    [DT_REGISTRO],
+    [NM_INDICADOR];
+
+
+"
+26;Qual era o saldo de crédito das empresas de pequeno porte na faixa acima de R$ 100 mil em 01/10/2022?;Em 01/10/2022, o saldo registrado nessa faixa foi de R$ 207.578,50 milhões.;faixas_valor;Pequeno Porte;01/10/2022;R$ 207.578,50 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 21 a 26. Saldo de pequeno porte por faixa de [DT_REGISTRO]
+SELECT 
+    A.[NM_INDICADOR],
+    A.[DT_REGISTRO],
+    A.[VL_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+INNER JOIN (
+    VALUES
+        ('2018-04-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Menor que 1 mil'),
+        ('2019-07-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 1 mil a 5 mil'),
+        ('2015-01-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 5 mil a 10 mil'),
+        ('2022-04-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 10 mil a 50 mil'),
+        ('2021-10-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 50 mil a 100 mil'),
+        ('2022-10-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Acima de 100 mil')
+) AS F ([DT_REGISTRO], [NM_INDICADOR])
+    ON A.[DT_REGISTRO] = F.[DT_REGISTRO]
+    AND A.[NM_INDICADOR] = F.[NM_INDICADOR]
+
+ORDER BY 
+    A.[DT_REGISTRO],
+    A.[NM_INDICADOR];";"-- 21 a 26. Saldo de pequeno porte por faixa de [DT_REGISTRO] da data mais recente de cada ano
+WITH Dados AS
+(
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]),
+                A.[NM_INDICADOR]
+            ORDER BY 
+                A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN (
+        'Saldo de crédito de pessoa jurídica por faixa de valor- pequeno porte - Menor que 1 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 1 mil a 5 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 5 mil a 10 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 10 mil a 50 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 50 mil a 100 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Acima de 100 mil'
+    )
+)
+
+SELECT
+    [NM_INDICADOR],
+    [DT_REGISTRO],
+    [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY
+    [DT_REGISTRO],
+    [NM_INDICADOR];
+
+
+"
+27;Qual era a taxa de inadimplência das microempresas e das empresas de pequeno porte (EPP) em 01/01/2020?;Em 01/01/2020, a inadimplência das microempresas era de 10,0%, enquanto a das EPP era de 5,0%. Portanto, a taxa das microempresas era maior nessa data.;inadimplencia;Microempresa e Pequeno Porte;01/01/2020;Microempresa: 10,0% | Pequeno Porte: 5,0%;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 27. Inadimplência de microempresas e EPP em 01/01/2020
+SELECT   [DT_REGISTRO]
+        ,[NM_INDICADOR]
+       ,FORMAT([VL_INDICADOR]/100, 'p')
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE [DT_REGISTRO] = '2020-01-01'
+  AND [NM_INDICADOR] IN (
+        'Taxa de inadimplência de pessoa jurídica - microempresa',
+        'Taxa de inadimplência de pessoa jurídica - pequeno porte'
+  );";"  -- Taxa de inadimplência da data mais recente de cada ano (Microempresa e Pequeno Porte)
+WITH Dados AS (
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY YEAR(A.[DT_REGISTRO]), A.[NM_INDICADOR]
+            ORDER BY A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN (
+        'Taxa de inadimplência de pessoa jurídica - microempresa',
+        'Taxa de inadimplência de pessoa jurídica - pequeno porte'
+    )
+)
+SELECT [NM_INDICADOR], [DT_REGISTRO], format([VL_INDICADOR]/100, 'p')
+FROM Dados
+WHERE RN = 1
+ORDER BY [DT_REGISTRO], [NM_INDICADOR];"
+28;Compare o saldo de crédito das EPP do Nordeste e do Centro-Oeste em 01/10/2022.;Em 01/10/2022, o saldo das EPP do Nordeste era de R$ 45.748,10 milhões e o do Centro-Oeste, de R$ 40.745,60 milhões. O Nordeste apresentava o maior saldo entre as duas regiões.;regioes;Pequeno Porte;01/10/2022;Nordeste: R$ 45.748,10 milhões | Centro-Oeste: R$ 40.745,60 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 28. Saldo de crédito das EPP do Nordeste e Centro-Oeste em 01/10/2022
+SELECT   [DT_REGISTRO]
+        ,[NM_INDICADOR]
+        ,[VL_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE [DT_REGISTRO] = '2022-10-01'
+  AND [NM_INDICADOR] IN (
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Nordeste',
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Centro-Oeste'
+  );";"  -- Saldo de pequeno porte por região na data mais recente de cada ano
+WITH Dados AS (
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY YEAR(A.[DT_REGISTRO]), A.[NM_INDICADOR]
+            ORDER BY A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN (
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Nordeste',
+        'Saldo de crédito pessoa jurídica por região - pequeno porte - Centro-Oeste'
+    )
+)
+SELECT YEAR([DT_REGISTRO]) AS [ANO], [NM_INDICADOR], [DT_REGISTRO], [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY [ANO], [NM_INDICADOR];"
+29;Entre Sul e Sudeste, qual tinha maior saldo de crédito para microempresas em 01/04/2023?;Em 01/04/2023, o Sudeste tinha R$ 32.471,50 milhões e o Sul, R$ 17.834,40 milhões. Portanto, entre as duas regiões, o Sudeste tinha o maior saldo.;regioes;Microempresa;01/04/2023;Sudeste: R$ 32.471,50 milhões | Sul: R$ 17.834,40 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 29. Saldo de crédito de microempresas do Sul e Sudeste em 01/04/2023
+SELECT   [DT_REGISTRO]
+        ,[NM_INDICADOR]
+        ,[VL_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE [DT_REGISTRO] = '2023-04-01'
+  AND [NM_INDICADOR] IN (
+        'Saldo de crédito pessoa jurídica por região - microempresa - Sul',
+        'Saldo de crédito pessoa jurídica por região - microempresa - Sudeste'
+  );";"  -- Saldo de microempresas por região na data mais recente de cada ano
+WITH Dados AS (
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY YEAR(A.[DT_REGISTRO]), A.[NM_INDICADOR]
+            ORDER BY A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN (
+        'Saldo de crédito pessoa jurídica por região - microempresa - Sul',
+        'Saldo de crédito pessoa jurídica por região - microempresa - Sudeste'
+    )
+)
+SELECT YEAR([DT_REGISTRO]) AS [ANO], [NM_INDICADOR], [DT_REGISTRO], [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY [ANO], [NM_INDICADOR];"
+30;Compare o saldo de crédito das EPP com prazo de 2 a 5 anos e acima de 5 anos em 01/10/2022.;Em 01/10/2022, o saldo para prazo maior que 2 e até 5 anos era de R$ 202.112,60 milhões, enquanto o saldo acima de 5 anos era de R$ 81.602,5 milhões. O saldo para o prazo maior que 2 e até 5 anos era maior.;prazos;Pequeno Porte;01/10/2022;>2 e <=5 anos: R$ 202.112,60 milhões | >5 anos: R$ 81.602,50 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 30. Saldo de crédito das EPP por prazo em 01/10/2022
+SELECT   [DT_REGISTRO]
+        ,[NM_INDICADOR]
+        ,[VL_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE [DT_REGISTRO] = '2022-10-01'
+  AND [NM_INDICADOR] IN (
+        'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - maior que 2 a 5 anos',
+        'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - acima de 5 anos'
+  );";"  -- Saldo de pequeno porte por prazo na data mais recente de cada ano
+WITH Dados AS (
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY YEAR(A.[DT_REGISTRO]), A.[NM_INDICADOR]
+            ORDER BY A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN (
+        'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - maior que 2 a 5 anos',
+        'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - acima de 5 anos'
+    )
+)
+SELECT [NM_INDICADOR], [DT_REGISTRO], [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY [DT_REGISTRO], [NM_INDICADOR];"
+31;Como se comparavam os saldos de crédito com recursos livres de EPP e microempresas em 01/04/2023?;Em 01/04/2023, o saldo das EPP era de R$ 313.650,40 milhões e o das microempresas, de R$ 60.553,50 milhões. O saldo das EPP era maior.;saldo_recursos_livres;Microempresa e Pequeno Porte;01/04/2023;EPP: R$ 313.650,40 milhões | Microempresa: R$ 60.553,50 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 31. Saldo de crédito com recursos livres de EPP e microempresas em 01/04/2023
+SELECT   [DT_REGISTRO]
+        ,[NM_INDICADOR]
+        ,[VL_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE [DT_REGISTRO] = '2023-04-01'
+  AND [NM_INDICADOR] IN (
+        'Saldo de crédito pessoa jurídica por origem dos recursos - pequeno porte - recursos livres - Total',
+        'Saldo de crédito pessoa jurídica por origem dos recursos - microempresa - recursos livres - Total'
+  );";"  -- Saldo por origem dos recursos na data mais recente de cada ano
+WITH Dados AS (
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY YEAR(A.[DT_REGISTRO]), A.[NM_INDICADOR]
+            ORDER BY A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] like  'Saldo de crédito pessoa jurídica por origem dos recursos - %'
+        
+    
+)
+SELECT [NM_INDICADOR], [DT_REGISTRO], [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY [DT_REGISTRO], [NM_INDICADOR];"
+32;Qual faixa tinha maior saldo de crédito para EPP em 01/07/2020: R$ 10 mil a R$ 50 mil ou R$ 50 mil a R$ 100 mil?;Em 01/07/2020, a faixa de R$ 10 mil a R$ 50 mil registrava R$ 40.272,70 milhões, ante R$ 38.355,40 milhões na faixa de R$ 50 mil a R$ 100 mil. Portanto, a primeira faixa possuia maior saldo.;faixas_valor;Pequeno Porte;01/07/2020;R$ 10 mil a R$ 50 mil: R$ 40.272,70 milhões | R$ 50 mil a R$ 100 mil: R$ 38.355,40 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 32. Saldo de crédito de EPP por faixas de valor em 01/07/2020
+SELECT   [DT_REGISTRO]
+        ,[NM_INDICADOR]
+        ,[VL_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE [DT_REGISTRO] = '2020-07-01'
+  AND [NM_INDICADOR] IN (
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 10 mil a 50 mil',
+        'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 50 mil a 100 mil'
+  );";"  -- Saldo de EPP por faixa de valor na data mais recente de cada ano
+WITH Dados AS (
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY YEAR(A.[DT_REGISTRO]), A.[NM_INDICADOR]
+            ORDER BY A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] like
+        'Saldo de crédito de pessoa jurídica por faixa de valor - %'
+      
+    
+)
+SELECT [NM_INDICADOR], [DT_REGISTRO], [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY [DT_REGISTRO], [NM_INDICADOR];"
+33;Como evoluiu a taxa de inadimplência das EPP ao longo de 2021?;Em 2021, a taxa de inadimplência das EPP foi de 3,5% em 01/01, 3,8% em 01/04, 3,8% em 01/07 e 4,1% em 01/10.;inadimplencia;Pequeno Porte;2021;01/01: 3,5% | 01/04: 3,8% | 01/07: 3,8% | 01/10: 4,1%;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 33. Inadimplência de EPP ao longo de 2021
+SELECT   [DT_REGISTRO]
+        ,format([VL_INDICADOR]/100, 'p')
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE YEAR([DT_REGISTRO]) = 2021
+  AND [NM_INDICADOR] = 'Taxa de inadimplência de pessoa jurídica - pequeno porte'
+ORDER BY [DT_REGISTRO];";"-- Inadimplência de EPP na data mais recente de cada ano
+WITH Dados AS (
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY YEAR(A.[DT_REGISTRO]), A.[NM_INDICADOR]
+            ORDER BY A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] like 'Taxa de inadimplência de pessoa jurídica - %'
+)
+SELECT [NM_INDICADOR], [DT_REGISTRO], format([VL_INDICADOR]/100, 'p')
+FROM Dados
+WHERE RN = 1
+ORDER BY [DT_REGISTRO];"
+34;Mostre a trajetória trimestral da taxa de juros das microempresas com recursos livres em 2022.;As taxas foram 39,9% em 01/01/2022, 37,8% em 01/04, 37,6% em 01/07 e 37,0% em 01/10.;juros;Microempresa;2022;01/01: 39,9% | 01/04: 37,8% | 01/07: 37,6% | 01/10: 37,0%;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 34. Taxa de juros das microempresas em 2022
+SELECT   [DT_REGISTRO]
+        ,format([VL_INDICADOR]/100, 'p')
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE YEAR([DT_REGISTRO]) = 2022
+  AND [NM_INDICADOR] = 'Taxa de juros de pessoa jurídica  micro empresa - recursos livres'
+ORDER BY [DT_REGISTRO];";"-- Taxa de juros das microempresas na data mais recente de cada ano
+WITH Dados AS (
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY YEAR(A.[DT_REGISTRO]), A.[NM_INDICADOR]
+            ORDER BY A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] like 'Taxa de juros de pessoa jurídica %'
+)
+SELECT [NM_INDICADOR], [DT_REGISTRO], format([VL_INDICADOR]/100, 'p')
+FROM Dados
+WHERE RN = 1
+ORDER BY [DT_REGISTRO];"
+35;Como se comportou o saldo de crédito das microempresas do Sudeste durante 2020?;O saldo foi de R$ 25.881,50 milhões em 01/2020, R$ 26.739,40 em 01/04, R$ 24.032,60 em 01/07 e R$ 34.145,00 em 01/10.;regioes;Microempresa;2020;01/01: R$ 25.881,50 milhões | 01/04: R$ 26.739,40 milhões | 01/07: R$ 24.032,60 milhões | 01/10: R$ 34.145,00 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 36. Saldo de crédito de EPP na região Sul em 2019
+SELECT   [DT_REGISTRO]
+        ,[VL_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE YEAR([DT_REGISTRO]) = 2020
+  AND [NM_INDICADOR] = 'Saldo de crédito pessoa jurídica por região - microempresa - Sudeste'
+ORDER BY [DT_REGISTRO];";"-- Saldo de EPP da região Sul na data mais recente de cada ano
+WITH Dados AS (
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY YEAR(A.[DT_REGISTRO]), A.[NM_INDICADOR]
+            ORDER BY A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] like 'Saldo de crédito pessoa jurídica por região - %'
+)
+SELECT [NM_INDICADOR], [DT_REGISTRO], [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY [DT_REGISTRO];"
+36;Qual foi a evolução trimestral do saldo de crédito das EPP da região Sul em 2019?;Os valores foram R$ 33.530,40 milhões de reais em 01/2019, R$ 34.873,00 em 01/04, R$ 36.572,60 em 01/07 e R$ 37.583,20 em 01/10.;regioes;Pequeno Porte;2019;01/01: R$ 33.530,40 milhões | 01/04: R$ 34.873,00 milhões | 01/07: R$ 36.572,60 milhões | 01/10: R$ 37.583,20 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 37. Saldo de EPP na faixa acima de 100 mil em 2022
+SELECT   [DT_REGISTRO]
+        ,[VL_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE YEAR([DT_REGISTRO]) = 2019
+  AND [NM_INDICADOR] = 'Saldo de crédito pessoa jurídica por região - pequeno porte - Sul'
+ORDER BY [DT_REGISTRO];";"-- Saldo de EPP na faixa acima de 100 mil na data mais recente de cada ano
+WITH Dados AS (
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY YEAR(A.[DT_REGISTRO]), A.[NM_INDICADOR]
+            ORDER BY A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] like 'Saldo de crédito de pessoa jurídica por faixa de valor - %'
+)
+SELECT [NM_INDICADOR], [DT_REGISTRO], [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY [DT_REGISTRO];"
+37;Mostre a evolução do saldo de crédito das EPP na faixa acima de R$ 100 mil em 2022.;Em 2022, os valores foram R$ 168.550,20 milhões em 01/01, R$ 170.011,80 em 01/04, R$ 196.216,90 em 01/07 e R$ 207.578,50 em 01/10.;faixas_valor;Pequeno Porte;2022;01/01: R$ 168.550,20 milhões | 01/04: R$ 170.011,80 milhões | 01/07: R$ 196.216,90 milhões | 01/10: R$ 207.578,50 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 38. Saldo de EPP com recursos livres em 2020
+SELECT   [DT_REGISTRO]
+        ,[VL_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE YEAR([DT_REGISTRO]) = 2022
+  AND [NM_INDICADOR] = 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Acima de 100 mil'
+ORDER BY [DT_REGISTRO];";"-- Saldo de EPP com recursos livres na data mais recente de cada ano
+WITH Dados AS (
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY YEAR(A.[DT_REGISTRO]), A.[NM_INDICADOR]
+            ORDER BY A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] like 'Saldo de crédito pessoa jurídica por origem dos recursos - %'
+)
+SELECT [NM_INDICADOR], [DT_REGISTRO], [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY [DT_REGISTRO];"
+38;Como evoluiu o saldo de crédito com recursos livres das EPP ao longo de 2020?;O saldo foi de R$ 136.985,20 milhões em 01/2020, R$ 140.377,30 em 01/04, R$ 194.351,60 em 01/07 e R$ 203.050,40 em 01/10.;saldo_recursos_livres;Pequeno Porte;2020;01/01: R$ 136.985,20 milhões | 01/04: R$ 140.377,30 milhões | 01/07: R$ 194.351,60 milhões | 01/10: R$ 203.050,40 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 38. Saldo de EPP com recursos livres em 2020
+SELECT   [DT_REGISTRO]
+        ,[VL_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE YEAR([DT_REGISTRO]) = 2020
+  AND [NM_INDICADOR] = 'Saldo de crédito pessoa jurídica por origem dos recursos - pequeno porte - recursos livres - Total'
+ORDER BY [DT_REGISTRO];";"-- Saldo de EPP com recursos livres na data mais recente de cada ano
+WITH Dados AS (
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY YEAR(A.[DT_REGISTRO]), A.[NM_INDICADOR]
+            ORDER BY A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] like 'Saldo de crédito pessoa jurídica por origem dos recursos - %'
+)
+SELECT [NM_INDICADOR], [DT_REGISTRO], [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY [DT_REGISTRO];"
+39;Como evoluiu a inadimplência das EPP no primeiro trimestre dos anos entre 2019 e 2023?;A taxa de inadimplencia no primeiro trimestre de cada ano foi: 5,9% em 01/2019, 5,0% em 01/2020, 3,5% em 01/2021, 4,1% em 01/2022 e 5,9% em 01/2023.;inadimplencia;Pequeno Porte;2019–2023;2019: 5,9% | 2020: 5,0% | 2021: 3,5% | 2022: 4,1% | 2023: 5,9%;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 39. Inadimplência das EPP no 1º trimestre de 2019 a 2023
+SELECT   [DT_REGISTRO]
+        ,FORMAT([VL_INDICADOR]/100, 'P')
+        
+        FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE [NM_INDICADOR] = 'Taxa de inadimplência de pessoa jurídica - pequeno porte'
+  AND MONTH([DT_REGISTRO]) = 1 AND DAY([DT_REGISTRO]) = 1
+  AND YEAR([DT_REGISTRO]) BETWEEN 2019 AND 2023
+ORDER BY [DT_REGISTRO];";"-- Inadimplência de EPP na data mais recente de cada ano
+WITH Dados AS (
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        FORMAT(A.[VL_INDICADOR] / 100.0, 'P2', 'pt-BR') AS [VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]), 
+                A.[NM_INDICADOR]
+            ORDER BY A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] LIKE 'Taxa de inadimplência de pessoa jurídica -%'
+)
+SELECT 
+    [NM_INDICADOR],
+    [DT_REGISTRO],
+    [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY [DT_REGISTRO];"
+40;Qual era a diferença entre as taxas de inadimplência de microempresas e EPP em 01/07/2019?;Em 01/07/2019, a inadimplência era de 10,2% para microempresas e 5,3% para EPP. A diferença era de 4.9 pontos percentuais.;inadimplencia;Microempresa e Pequeno Porte;01/07/2019;Microempresa: 10,2% | Pequeno Porte: 5,3% | Diferença: 4,9 p.p.;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 40. Inadimplência de microempresas e EPP em 01/07/2019
+  SELECT
+    [DT_REGISTRO],
+
+    FORMAT(MAX(CASE 
+        WHEN [NM_INDICADOR] = 
+            'Taxa de inadimplência de pessoa jurídica - microempresa'
+        THEN [VL_INDICADOR]
+    END)/100, 'P')  AS [MICROEMPRESA],
+
+   FORMAT( MAX(CASE 
+        WHEN [NM_INDICADOR] = 
+            'Taxa de inadimplência de pessoa jurídica - pequeno porte'
+        THEN [VL_INDICADOR]
+    END)/100, 'P') AS [EPP],
+
+    Format((MAX(CASE 
+        WHEN [NM_INDICADOR] = 
+            'Taxa de inadimplência de pessoa jurídica - pequeno porte'
+        THEN [VL_INDICADOR]
+    END/100)
+    -
+    MAX(CASE 
+        WHEN [NM_INDICADOR] = 
+            'Taxa de inadimplência de pessoa jurídica - microempresa'
+        THEN [VL_INDICADOR]
+    END)/100), 'P') AS [DIFERENCA_EPP_MICRO]
+
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE [DT_REGISTRO] = '2019-07-01'
+  AND [NM_INDICADOR] IN (
+        'Taxa de inadimplência de pessoa jurídica - microempresa',
+        'Taxa de inadimplência de pessoa jurídica - pequeno porte'
+  )
+GROUP BY [DT_REGISTRO];";"-- Inadimplência por porte na data mais recente de cada ano
+WITH Dados AS (
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]), 
+                A.[NM_INDICADOR]
+            ORDER BY A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN (
+        'Taxa de inadimplência de pessoa jurídica - microempresa',
+        'Taxa de inadimplência de pessoa jurídica - pequeno porte'
+    )
+),
+DadosAno AS (
+    SELECT 
+        [DT_REGISTRO],
+        [NM_INDICADOR],
+        [VL_INDICADOR]
+    FROM Dados
+    WHERE RN = 1
+),
+DadosPivot AS (
+    SELECT
+        [DT_REGISTRO],
+
+        MAX(CASE 
+            WHEN [NM_INDICADOR] = 
+                'Taxa de inadimplência de pessoa jurídica - microempresa'
+            THEN [VL_INDICADOR]
+        END) AS [Microempresa],
+
+        MAX(CASE 
+            WHEN [NM_INDICADOR] = 
+                'Taxa de inadimplência de pessoa jurídica - pequeno porte'
+            THEN [VL_INDICADOR]
+        END) AS [EPP]
+
+    FROM DadosAno
+    GROUP BY [DT_REGISTRO]
+)
+SELECT
+    [DT_REGISTRO],
+
+    FORMAT([Microempresa]/100, 'P2', 'pt-BR') AS [Microempresa],
+
+    FORMAT([EPP]/100, 'P2', 'pt-BR') AS [EPP],
+
+    FORMAT(
+        (([EPP] - [Microempresa])/100),
+        'P2',
+        'pt-BR'
+    ) AS [diferença EPP e Microempresa]
+
+FROM DadosPivot
+ORDER BY [DT_REGISTRO];"
+41;Quanto variou percentualmente o saldo de crédito com recursos livres das microempresas entre 01/01/2021 e 01/01/2023?;O saldo passou de R$ 43.641,70 para R$ 58.166,60 milhões. Houve aumento de aproximadamente 33,3%.;saldo_recursos_livres;Microempresa;01/01/2021 a 01/01/2023;01/01/2021: R$ 43.641,70 milhões | 01/01/2023: R$ 58.166,60 milhões (+33,3%);dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 41. Saldo com recursos livres de microempresas em 01/01/2021 e 01/01/2023
+SELECT   [DT_REGISTRO]
+        ,[VL_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE [DT_REGISTRO] IN ('2021-01-01', '2023-01-01')
+  AND [NM_INDICADOR] = 'Saldo de crédito pessoa jurídica por origem dos recursos - microempresa - recursos livres - Total'
+ORDER BY [DT_REGISTRO];";"-- Saldo com recursos livres de microempresas na data mais recente de cada ano
+WITH Dados AS (
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY YEAR(A.[DT_REGISTRO]), A.[NM_INDICADOR]
+            ORDER BY A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] like 'Saldo de crédito pessoa jurídica por origem dos recursos - %'
+)
+SELECT [NM_INDICADOR], [DT_REGISTRO], [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY [DT_REGISTRO];"
+42;Qual região tinha o maior saldo de crédito para EPP em 01/04/2022?;Em 01/04/2022, os saldos eram: Norte R$ 15.985,50, Nordeste R$ 39.547,60, Centro-Oeste R$ 35.825,80, Sudeste R$ 128.504,40 e Sul R$ 74.023,60 milhões. Portanto, o Sudeste apresentava o maior saldo.;regioes;Pequeno Porte;01/04/2022;Sudeste (R$ 128.504,40 milhões);dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 42. Saldo de EPP por região em 01/04/2022
+SELECT  Top 1 [DT_REGISTRO]
+        ,[NM_INDICADOR]
+        ,[VL_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE [DT_REGISTRO] = '2022-04-01'
+  AND [NM_INDICADOR] LIKE 'Saldo de crédito pessoa jurídica por região - pequeno porte -%'
+ORDER BY [VL_INDICADOR] DESC;";"-- Saldo de EPP por região na data mais recente de cada ano
+WITH Dados AS (
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY YEAR(A.[DT_REGISTRO]), A.[NM_INDICADOR]
+            ORDER BY A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] LIKE 'Saldo de crédito pessoa jurídica por região - pequeno porte -%'
+)
+SELECT YEAR([DT_REGISTRO]) AS [ANO], [NM_INDICADOR], [DT_REGISTRO], [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY [ANO], [NM_INDICADOR];"
+43;Qual região tinha o menor saldo de crédito para microempresas em 01/10/2021?;Em 01/10/2021, o menor valor entre as cinco regiões era o da região Norte, com R$ 2.139,20 milhões.;regioes;Microempresa;01/10/2021;Norte (R$ 2.139,20 milhões);dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 43. Saldo de microempresas por região em 01/10/2021
+SELECT  top 1 [DT_REGISTRO]
+        ,[NM_INDICADOR]
+        ,[VL_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE [DT_REGISTRO] = '2021-10-01'
+  AND [NM_INDICADOR] LIKE 'Saldo de crédito pessoa jurídica por região - microempresa -%'
+ORDER BY [VL_INDICADOR] ASC;";"-- Saldo de microempresas por região na data mais recente de cada ano
+WITH Dados AS (
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY YEAR(A.[DT_REGISTRO]), A.[NM_INDICADOR]
+            ORDER BY A.[DT_REGISTRO] ASC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] LIKE 'Saldo de crédito pessoa jurídica por região - microempresa -%'
+)
+SELECT YEAR([DT_REGISTRO]) AS [ANO], [NM_INDICADOR], [DT_REGISTRO], [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY [ANO], [NM_INDICADOR];"
+44;Qual era a diferença entre o saldo das EPP com prazo de 2 a 5 anos e o saldo com prazo de até 1 ano em 01/04/2023?;Em 01/04/2023, os valores eram R$ 202.159,30 e R$ 33.925,90 milhões, respectivamente. A diferença era de R$ 168.233,40 milhões.;prazos;Pequeno Porte;01/04/2023;>2 e <=5 anos: R$ 202.159,30 milhões | <=1 ano: R$ 33.925,90 milhões | Diferença: R$ 168.233,40 milhões;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 44. Saldo de EPP por prazos em 01/04/2023
+SELECT
+    [DT_REGISTRO],
+
+    MAX(CASE 
+        WHEN [NM_INDICADOR] = 
+            'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - maior que 2 a 5 anos'
+        THEN [VL_INDICADOR]
+    END) AS [Maior que 2 a 5 anos],
+
+    MAX(CASE 
+        WHEN [NM_INDICADOR] = 
+            'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - até 1 ano'
+        THEN [VL_INDICADOR]
+    END) AS [Até 1 ano],
+
+    MAX(CASE 
+        WHEN [NM_INDICADOR] = 
+            'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - maior que 2 a 5 anos'
+        THEN [VL_INDICADOR]
+    END)
+    -
+    MAX(CASE 
+        WHEN [NM_INDICADOR] = 
+            'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - até 1 ano'
+        THEN [VL_INDICADOR]
+    END) AS [Diferença]
+
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+
+WHERE [DT_REGISTRO] = '2023-04-01'
+  AND [NM_INDICADOR] IN (
+        'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - maior que 2 a 5 anos',
+        'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - até 1 ano'
+  )
+
+GROUP BY [DT_REGISTRO];";"-- Saldo de EPP por prazo na data mais recente de cada ano
+WITH Dados AS (
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]), 
+                A.[NM_INDICADOR]
+            ORDER BY A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] IN (
+        'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - maior que 2 a 5 anos',
+        'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - até 1 ano'
+    )
+),
+DadosFiltrados AS (
+    SELECT
+        YEAR([DT_REGISTRO]) AS [Ano],
+        [DT_REGISTRO],
+        [NM_INDICADOR],
+        [VL_INDICADOR]
+    FROM Dados
+    WHERE RN = 1
+)
+SELECT
+    [Ano],
+    MAX([DT_REGISTRO]) AS [DT_REGISTRO],
+
+    MAX(CASE 
+        WHEN [NM_INDICADOR] = 
+            'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - maior que 2 a 5 anos'
+        THEN [VL_INDICADOR]
+    END) AS [Maior que 2 a 5 anos],
+
+    MAX(CASE 
+        WHEN [NM_INDICADOR] = 
+            'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - até 1 ano'
+        THEN [VL_INDICADOR]
+    END) AS [Até 1 ano],
+
+    MAX(CASE 
+        WHEN [NM_INDICADOR] = 
+            'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - maior que 2 a 5 anos'
+        THEN [VL_INDICADOR]
+    END)
+    -
+    MAX(CASE 
+        WHEN [NM_INDICADOR] = 
+            'Saldo de crédito de pessoa jurídica por prazo - pequeno porte - até 1 ano'
+        THEN [VL_INDICADOR]
+    END) AS [Diferença]
+
+FROM DadosFiltrados
+GROUP BY [Ano]
+ORDER BY [Ano];"
+45;Qual foi a redução percentual da taxa de juros para antecipação de fatura de cartão das EPP entre 01/01/2018 e 01/01/2020?;A taxa passou de 33,4% para 16,6%. Houve uma redução de aproximadamente 50,3%.;juros;Pequeno Porte;01/01/2018 a 01/01/2020;01/01/2018: 33,4% | 01/01/2020: 16,6% (-50,3%);dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 45. Taxa de juros de EPP: comparação 2018 x 2020
+SELECT
+    CONCAT(
+        FORMAT(
+            MAX(CASE 
+                WHEN [DT_REGISTRO] = '2018-01-01'
+                THEN [VL_INDICADOR]
+            END), 
+            '0.00'
+        ), '%'
+    ) AS [Taxa 2018],
+
+    CONCAT(
+        FORMAT(
+            MAX(CASE 
+                WHEN [DT_REGISTRO] = '2020-01-01'
+                THEN [VL_INDICADOR]
+            END), 
+            '0.00'
+        ), '%'
+    ) AS [Taxa 2020],
+
+    CONCAT(
+        FORMAT(
+            MAX(CASE 
+                WHEN [DT_REGISTRO] = '2020-01-01'
+                THEN [VL_INDICADOR]
+            END)
+            -
+            MAX(CASE 
+                WHEN [DT_REGISTRO] = '2018-01-01'
+                THEN [VL_INDICADOR]
+            END),
+            '0.00'
+        ), '%'
+    ) AS [Diferença em pontos percentuais],
+
+    CONCAT(
+        FORMAT(
+            (
+                (
+                    MAX(CASE 
+                        WHEN [DT_REGISTRO] = '2020-01-01'
+                        THEN [VL_INDICADOR]
+                    END)
+                    -
+                    MAX(CASE 
+                        WHEN [DT_REGISTRO] = '2018-01-01'
+                        THEN [VL_INDICADOR]
+                    END)
+                )
+                /
+                NULLIF(
+                    MAX(CASE 
+                        WHEN [DT_REGISTRO] = '2018-01-01'
+                        THEN [VL_INDICADOR]
+                    END),
+                    0
+                )
+            ) * 100,
+            '0.00'
+        ), '%'
+    ) AS [Variação percentual]
+    
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+
+WHERE [DT_REGISTRO] IN ('2018-01-01', '2020-01-01')
+  AND [NM_INDICADOR] = 
+      'Taxa de juros de pessoa jurídica - pequeno porte - recursos livres';";"
+
+-- 45. Taxa de juros de EPP: vários períodos
+WITH Dados AS (
+    SELECT
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        YEAR(A.[DT_REGISTRO]) AS [Ano],
+        ROW_NUMBER() OVER (
+            PARTITION BY 
+                YEAR(A.[DT_REGISTRO]),
+                A.[NM_INDICADOR]
+            ORDER BY A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] =
+        'Taxa de juros de pessoa jurídica - pequeno porte - recursos livres'
+),
+DadosAno AS (
+    SELECT
+        [Ano],
+        [DT_REGISTRO],
+        [VL_INDICADOR]
+    FROM Dados
+    WHERE RN = 1
+),
+Calculo AS (
+    SELECT
+        [Ano],
+        [DT_REGISTRO],
+        [VL_INDICADOR],
+
+        LAG([VL_INDICADOR]) OVER (
+            ORDER BY [Ano]
+        ) AS [Taxa Ano Anterior]
+
+    FROM DadosAno
+)
+SELECT
+    [Ano],
+    [DT_REGISTRO],
+
+    -- Taxa do período
+    CONCAT(
+        FORMAT([VL_INDICADOR], '0.00'),
+        '%'
+    ) AS [Taxa],
+
+    -- Diferença em pontos percentuais
+    CASE
+        WHEN [Taxa Ano Anterior] IS NULL THEN NULL
+        ELSE CONCAT(
+            FORMAT(
+                [VL_INDICADOR] - [Taxa Ano Anterior],
+                '0.00'
+            ),
+            ' p.p.'
+        )
+    END AS [Diferença em pontos percentuais],
+
+    -- Variação percentual
+    CASE
+        WHEN [Taxa Ano Anterior] IS NULL 
+             OR [Taxa Ano Anterior] = 0
+        THEN NULL
+        ELSE CONCAT(
+            FORMAT(
+                (
+                    ([VL_INDICADOR] - [Taxa Ano Anterior])
+                    / [Taxa Ano Anterior]
+                ) * 100,
+                '0.00'
+            ),
+            '%'
+        )
+    END AS [Variação percentual]
+
+FROM Calculo
+ORDER BY [Ano];"
+46;Quais foram a maior e a menor taxa de inadimplência das EPP na série disponível?;O maior valor foi 10,9% em 01/01/2017 e o menor foi 2,6% em 01/10/2020.;inadimplencia;Pequeno Porte;Série Histórica;Maior: 10,9% (01/01/2017) | Menor: 2,6% (01/10/2020);dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 46. Maior e menor taxa de inadimplência de EPP na série
+SELECT   MAX([VL_INDICADOR]) AS Maior_Taxa
+        ,MIN([VL_INDICADOR]) AS Menor_Taxa
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE [NM_INDICADOR] = 'Taxa de inadimplência de pessoa jurídica - pequeno porte';";"-- 46. Maior e menor taxa de inadimplência de EPP por Categoria
+SELECT
+    
+    [NM_INDICADOR],
+    MAX([VL_INDICADOR]) AS Maior_Taxa,
+    MIN([VL_INDICADOR]) AS Menor_Taxa
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE [NM_INDICADOR] like 
+    'Taxa de inadimplência de pessoa jurídica - %'
+GROUP BY [NM_INDICADOR]"
+47;Qual faixa de valor apresentava o maior saldo de crédito das EPP em 01/10/2022?;Comparando as seis faixas disponíveis, a maior era acima de R$ 100 mil, com saldo de R$ 207.578,50 milhões em 01/10/2022.;faixas_valor;Pequeno Porte;01/10/2022;Acima de R$ 100 mil (R$ 207.578,50 milhões);dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 47. Saldo de EPP por faixas de valor em 01/10/2022
+SELECT  Top 1 [DT_REGISTRO]
+        ,[NM_INDICADOR]
+        ,[VL_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE [DT_REGISTRO] = '2022-10-01'
+  AND [NM_INDICADOR] LIKE 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte -%'
+ORDER BY [VL_INDICADOR] DESC;";"-- Saldo de EPP por faixa de valor na data mais recente de cada ano
+WITH Dados AS (
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY YEAR(A.[DT_REGISTRO]), A.[NM_INDICADOR]
+            ORDER BY A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] LIKE 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte -%'
+)
+SELECT [NM_INDICADOR], [DT_REGISTRO], [VL_INDICADOR]
+FROM Dados
+WHERE RN = 1
+ORDER BY [DT_REGISTRO], [NM_INDICADOR];"
+48;Qual foi a taxa média de inadimplência das microempresas em 2022?;A taxa média de inadimplência das microempresas em 2022 foi de 5,65%, considerando a média das quatro observações trimestrais do ano.;inadimplencia;Microempresa;2022;5,65%;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 48. Taxa média de inadimplência de microempresas em 2022
+SELECT   Format(AVG([VL_INDICADOR])/100, 'p') AS Taxa_Media_2022
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE YEAR([DT_REGISTRO]) = 2022
+  AND [NM_INDICADOR] = 'Taxa de inadimplência de pessoa jurídica - microempresa';";"-- Inadimplência de microempresas na data mais recente de cada ano
+WITH Dados AS (
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY YEAR(A.[DT_REGISTRO]), A.[NM_INDICADOR]
+            ORDER BY A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] = 'Taxa de inadimplência de pessoa jurídica - microempresa'
+)
+SELECT [NM_INDICADOR], [DT_REGISTRO], FORMAT([VL_INDICADOR]/100, 'p')
+FROM Dados
+WHERE RN = 1
+ORDER BY [DT_REGISTRO];"
+49;Mostre a evolução mensal da inadimplência das microempresas em 2022.;A série fornecida não é mensal, mas trimestral. Em 2022, as observações disponíveis são 5,6% em 01/01, 5,4% em 01/04, 5,5% em 01/07 e 6,1% em 01/10.;inadimplencia;Microempresa;2022;01/01: 5,6% | 01/04: 5,4% | 01/07: 5,5% | 01/10: 6,1%;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 49. Evolução da inadimplência das microempresas em 2022
+SELECT   [DT_REGISTRO]
+        ,format([VL_INDICADOR]/100, 'p')
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]
+WHERE YEAR([DT_REGISTRO]) = 2022
+  AND [NM_INDICADOR] = 'Taxa de inadimplência de pessoa jurídica - microempresa'
+ORDER BY [DT_REGISTRO];";"-- Inadimplência de microempresas na data mais recente de cada ano
+WITH Dados AS (
+    SELECT 
+        A.[NM_INDICADOR],
+        A.[DT_REGISTRO],
+        A.[VL_INDICADOR],
+        ROW_NUMBER() OVER (
+            PARTITION BY YEAR(A.[DT_REGISTRO]), A.[NM_INDICADOR]
+            ORDER BY A.[DT_REGISTRO] DESC
+        ) AS RN
+    FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+    WHERE A.[NM_INDICADOR] like 'Taxa de inadimplência de pessoa jurídica - %'
+)
+SELECT [NM_INDICADOR], [DT_REGISTRO], FORMAT([VL_INDICADOR]/100, 'p')
+FROM Dados
+WHERE RN = 1
+ORDER BY [DT_REGISTRO];"
+50;Qual era o saldo de crédito das EPP do Sudeste, na faixa acima de R$ 100 mil, em 01/10/2022?;Não é possível determinar esse valor com as bases fornecidas.;faixas_valor / regioes;Pequeno Porte;01/10/2022;207578,5;dataabdichico;ACESSO_AO_CREDITO_BACEN_F;"       [DT_REGISTRO]
+      ,[NM_INDICADOR]
+      ,[vl_INDICADOR]";"-- 21 a 26. Saldo de pequeno porte por faixa de [DT_REGISTRO]
+SELECT 
+    A.[NM_INDICADOR],
+    A.[DT_REGISTRO],
+    A.[VL_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+INNER JOIN (
+    VALUES
+       -- ('2018-04-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Menor que 1 mil'),
+       -- ('2019-07-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 1 mil a 5 mil'),
+       -- ('2015-01-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 5 mil a 10 mil'),
+       -- ('2022-04-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 10 mil a 50 mil'),
+      --  ('2021-10-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 50 mil a 100 mil'),
+        ('2022-10-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Acima de 100 mil')
+) AS F ([DT_REGISTRO], [NM_INDICADOR])
+    ON A.[DT_REGISTRO] = F.[DT_REGISTRO]
+    AND A.[NM_INDICADOR] = F.[NM_INDICADOR]
+
+ORDER BY 
+    A.[DT_REGISTRO],
+    A.[NM_INDICADOR];";"-- 21 a 26. Saldo de pequeno porte por faixa de [DT_REGISTRO]
+SELECT 
+    A.[NM_INDICADOR],
+    A.[DT_REGISTRO],
+    A.[VL_INDICADOR]
+FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] AS A
+INNER JOIN (
+    VALUES
+        ('2018-04-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Menor que 1 mil'),
+        ('2019-07-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 1 mil a 5 mil'),
+        ('2015-01-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 5 mil a 10 mil'),
+        ('2022-04-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 10 mil a 50 mil'),
+        ('2021-10-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 50 mil a 100 mil'),
+        ('2022-10-01', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Acima de 100 mil')
+) AS F ([DT_REGISTRO], [NM_INDICADOR])
+    ON A.[DT_REGISTRO] = F.[DT_REGISTRO]
+    AND A.[NM_INDICADOR] = F.[NM_INDICADOR]
+
+ORDER BY 
+    A.[DT_REGISTRO],
+    A.[NM_INDICADOR];"
+;;;;;;;;;;;
