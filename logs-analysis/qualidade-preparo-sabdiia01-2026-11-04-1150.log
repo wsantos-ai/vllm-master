@@ -1,0 +1,16 @@
+== sabdiia01  2026-11-04T11:50:42-03:00  preparo do teste de qualidade
+'/tmp/qualidade-copia/coletar-respostas.py' -> 'qualidade/coletar-respostas.py'
+'/tmp/qualidade-copia/gabarito-qualidade.json' -> 'qualidade/gabarito-qualidade.json'
+'/tmp/qualidade-copia/pontuar-respostas.py' -> 'qualidade/pontuar-respostas.py'
+'/tmp/qualidade-copia/qualidade.sh' -> 'qualidade/qualidade.sh'
+-rw-r--r-- 1 root root   4352 Nov  4 11:50 coletar-respostas.py
+-rw-r--r-- 1 root root 122916 Nov  4 11:50 gabarito-qualidade.json
+-rw-r--r-- 1 root root  14847 Nov  4 11:50 pontuar-respostas.py
+-rw-r--r-- 1 root root  12218 Nov  4 11:50 qualidade.sh
+c28c8e7c2d034a7b7ff0511e2a63bc9b18e9b77865f8cf25a47d7322bff56ad7  qualidade.sh
+01ff573ecb4b2616e429ded7014908e39e5d66e8d03eb5f590b5671121003dff  coletar-respostas.py
+aea4b7f08ee3e4e1930f755db62b1a865a4624344d79b93cfda7981c50e624a5  pontuar-respostas.py
+3d7a26c2f524b989abfb5aa5c3268059f6f719ede82c3e1d6a670df8d22173b7  gabarito-qualidade.json
+qualidade.sh sem erro de sintaxe
+entradas com id no gabarito (esperado >= 50): 50
+flags de tool call presentes
