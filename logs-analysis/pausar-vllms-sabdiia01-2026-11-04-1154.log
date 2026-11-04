@@ -1,0 +1,51 @@
+== sabdiia01  2026-11-04T11:54:58-03:00  pausa de vllms
+### 1. estado antes
+NAME                          READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                     SELECTOR
+deployment.apps/vllm-server   3/3     3            3           19h   vllm         vllm/vllm-openai:v0.19.1   app=vllm-server
+
+NAME                        DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE   CONTAINERS   IMAGES                      SELECTOR
+daemonset.apps/ray-worker   3         3         3       3            3           <none>          21h   ray-worker   rayproject/ray:latest-gpu   app=ray-worker
+
+NAME                               READY   STATUS    RESTARTS         AGE   IP               NODE        NOMINATED NODE   READINESS GATES
+pod/ray-worker-96stn               1/1     Running   85 (9m10s ago)   19h   10.244.179.120   sabdiia01   <none>           <none>
+pod/ray-worker-dsk58               1/1     Running   85 (7m7s ago)    19h   10.244.182.129   sabdiia02   <none>           <none>
+pod/ray-worker-ldtx4               1/1     Running   85 (6m54s ago)   19h   10.244.50.139    sabdiia03   <none>           <none>
+pod/vllm-server-5489c5f447-2l7rq   1/1     Running   0                19h   10.244.50.165    sabdiia03   <none>           <none>
+pod/vllm-server-5489c5f447-sk7xg   1/1     Running   0                19h   10.244.179.72    sabdiia01   <none>           <none>
+pod/vllm-server-5489c5f447-tvwkf   1/1     Running   0                19h   10.244.182.183   sabdiia02   <none>           <none>
+Name:               sabdiia01
+  nvidia.com/gpu     1           1
+Name:               sabdiia02
+  nvidia.com/gpu     1           1
+Name:               sabdiia03
+  nvidia.com/gpu     1            1
+### 2. cópia de segurança
+vllms-backup-2026-11-04-1154.yaml: 205 linhas
+## vllms-replicas-2026-11-04-1154.txt
+deployment/vllm-server 3
+daemonset/ray-worker ds
+## pods sem dono (não são parados por este bloco)
+(nenhum)
+### 3. pausando   11:54:59
+deployment.apps/vllm-server scaled
+daemonset.apps/ray-worker patched
+### 4. aguardando os pods saírem (até 5 min)
+11:54:59 ainda: ray-worker-96stn(Terminating) ray-worker-dsk58(Terminating) ray-worker-ldtx4(Terminating) vllm-server-5489c5f447-2l7rq(Terminating) vllm-server-5489c5f447-sk7xg(Terminating) vllm-server-5489c5f447-tvwkf(Terminating) 
+11:55:09 ainda: ray-worker-96stn(Terminating) ray-worker-dsk58(Terminating) ray-worker-ldtx4(Terminating) vllm-server-5489c5f447-2l7rq(Terminating) 
+11:55:19 ainda: ray-worker-96stn(Terminating) ray-worker-dsk58(Terminating) ray-worker-ldtx4(Terminating) 
+11:55:29 ainda: ray-worker-dsk58(Terminating) ray-worker-ldtx4(Terminating) 
+### 5. estado depois
+NAME                          READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                     SELECTOR
+deployment.apps/vllm-server   0/0     0            0           19h   vllm         vllm/vllm-openai:v0.19.1   app=vllm-server
+
+NAME                        DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR              AGE   CONTAINERS   IMAGES                      SELECTOR
+daemonset.apps/ray-worker   0         0         0       0            0           vllm-estudo/pausado=true   21h   ray-worker   rayproject/ray:latest-gpu   app=ray-worker
+Name:               sabdiia01
+  nvidia.com/gpu     0           0
+Name:               sabdiia02
+  nvidia.com/gpu     0           0
+Name:               sabdiia03
+  nvidia.com/gpu     0            0
+processos na GPU de sabdiia01: (nenhum)
+Para restaurar: Bloco R de runbooks/pausar-vllms.md (lê vllms-replicas-2026-11-04-1154.txt)
+== fim 2026-11-04T11:55:40-03:00
