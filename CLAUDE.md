@@ -118,6 +118,7 @@ COMANDOS.md         — glossário de comandos por pergunta, com marca [executad
                       ao usar um comando novo no chat ou num runbook, acrescente-o aqui
 runbooks/           — procedimentos executáveis (inventário, primeiro arranque, diagnóstico)
 configs/            — manifestos K8s, Dockerfiles e values usados de verdade, com cabeçalho de ambiente
+qualidade/          — teste de qualidade: gabarito gerado de dataset/dataset-test.csv, coletor, pontuador
 logs-analysis/      — evidência bruta: logs e saídas que ancoram os achados
 medicoes/           — (criar quando necessário) uma medição [B-xxx] por arquivo
 ```

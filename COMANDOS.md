@@ -462,6 +462,28 @@ A *tag* da imagem (caso 3) é só um rótulo; como evidência vale o que o vLLM 
 | `sabdiia02` | nenhuma registrada (a `v0.6.4` saiu do registro, as camadas ficaram, AC-09) | não |
 | `sabdiia03` | `v0.6.4` | **sim**, o deepseek |
 
+### Teste de qualidade (*tool calling* + resposta, sem o banco)
+
+Procedimento completo: [runbooks/teste-qualidade-modelos.md](runbooks/teste-qualidade-modelos.md).
+Os arquivos ficam em [`qualidade/`](qualidade/).
+
+```bash
+# o servidor subiu com tool calling? (procure --enable-auto-tool-choice --tool-call-parser hermes) [não executado]
+kubectl exec -n vllm-estudo vllm-qual -- sh -c 'for p in /proc/[0-9]*/cmdline; do tr "\0" " " < $p 2>/dev/null | grep -E "vllm serve"; done | sort -u'
+
+# um candidato inteiro: sobe, coleta 50 perguntas, pontua e apaga (servidor sabdiia01)  [não executado]
+cd /home/utec/vllm-estudo && bash qualidade/qualidade.sh 7b 2>&1 | tee qualidade-7b-$(hostname -s)-$(date +%F-%H%M).log
+```
+
+```powershell
+# gerar o gabarito a partir do CSV (estação)                        [executado 2026-11-04]
+python C:\www\vllm-master\qualidade\montar-gabarito.py
+
+# repontuar uma coleta, ou comparar duas (controle Ray x 1 GPU), sem GPU (estação) [executado 2026-11-04, com coletas simuladas]
+python C:\www\vllm-master\qualidade\pontuar-respostas.py C:\www\vllm-master\qualidade\gabarito-qualidade.json respostas.jsonl
+python C:\www\vllm-master\qualidade\pontuar-respostas.py C:\www\vllm-master\qualidade\gabarito-qualidade.json base.jsonl --comparar outra.jsonl
+```
+
 ## 6. Hugging Face
 
 Rodam **dentro** do *pod* do deepseek, que tem o `HF_TOKEN`. O segundo grava ~1 KB no PVC `hf-cache`.
