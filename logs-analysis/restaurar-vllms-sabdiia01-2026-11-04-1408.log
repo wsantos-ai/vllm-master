@@ -1,0 +1,28 @@
+== sabdiia01  2026-11-04T14:08:02-03:00  restauração de vllms
+restaurando a partir de vllms-replicas-2026-11-04-1154.txt
+deployment/vllm-server 3
+daemonset/ray-worker ds
+### 1. restaurando   14:08:02
+deployment.apps/vllm-server scaled
+daemonset.apps/ray-worker patched
+### 2. estado depois de 90 s
+NAME                          READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                     SELECTOR
+deployment.apps/vllm-server   0/3     3            0           21h   vllm         vllm/vllm-openai:v0.19.1   app=vllm-server
+
+NAME                        DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE   CONTAINERS   IMAGES                      SELECTOR
+daemonset.apps/ray-worker   3         3         3       3            3           <none>          24h   ray-worker   rayproject/ray:latest-gpu   app=ray-worker
+
+NAME                               READY   STATUS    RESTARTS   AGE   IP               NODE        NOMINATED NODE   READINESS GATES
+pod/ray-worker-7mmsv               1/1     Running   0          90s   10.244.182.151   sabdiia02   <none>           <none>
+pod/ray-worker-9ghm4               1/1     Running   0          90s   10.244.50.188    sabdiia03   <none>           <none>
+pod/ray-worker-pl7s5               1/1     Running   0          90s   10.244.179.86    sabdiia01   <none>           <none>
+pod/vllm-server-5489c5f447-7pw5c   0/1     Running   0          90s   10.244.182.155   sabdiia02   <none>           <none>
+pod/vllm-server-5489c5f447-98jzb   0/1     Running   0          90s   10.244.179.123   sabdiia01   <none>           <none>
+pod/vllm-server-5489c5f447-lm4pn   0/1     Running   0          90s   10.244.50.140    sabdiia03   <none>           <none>
+Name:               sabdiia01
+  nvidia.com/gpu     1           1
+Name:               sabdiia02
+  nvidia.com/gpu     1           1
+Name:               sabdiia03
+  nvidia.com/gpu     1            1
+== fim 2026-11-04T14:09:32-03:00
