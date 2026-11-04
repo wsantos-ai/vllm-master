@@ -1,0 +1,184 @@
+== sabdiia01  2026-11-04T11:59:21-03:00  teste de qualidade: 7b (Qwen/Qwen2.5-7B-Instruct, Ray=0)
+resultados em /home/utec/vllm-estudo/qualidade/resultados/2026-11-04-1159-7b
+### 1. pré-condições
+Name:               sabdiia01
+  nvidia.com/gpu     0           0
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/ol-root  631G  170G  462G  27% /
+/dev/mapper/ol-home  200G  168G   33G  84% /home
+### 2. manifesto e criação   11:59:22
+namespace/vllm-estudo unchanged
+16:      python3 -c "from huggingface_hub import snapshot_download as s; print('pesos em', s('Qwen/Qwen2.5-7B-Instruct', local_files_only=True))" || HF_HUB_OFFLINE=0 python3 -c "from huggingface_hub import snapshot_download as s; print('pesos em', s('Qwen/Qwen
+17:      exec vllm serve Qwen/Qwen2.5-7B-Instruct --dtype float16 --max-model-len 8192 --gpu-memory-utilization 0.90 --generation-config vllm --enable-auto-tool-choice --tool-call-parser hermes --host 0.0.0.0 --port 8000
+pod/vllm-qual created
+### 3. aguardando o servidor (até 60 min)   11:59:22
+11:59:22 vllm-qual=Pending/false | 
+11:59:53 vllm-qual=Running/false | (APIServer pid=1) INFO 11-04 14:59:44 [arg_utils.py:665] HF_HUB_OFFLINE is True, replace model_id [Qwen/Qwen2.5-7B-Instruct] to model_path [/hf-cache/hub/models
+12:00:23 vllm-qual=Running/false | (EngineCore pid=196) Loading safetensors checkpoint shards:  75% Completed | 3/4 [00:14<00:05,  5.79s/it]
+12:00:53 vllm-qual=Running/false | (EngineCore pid=196) INFO 11-04 15:00:51 [backends.py:390] Compiling a graph for compile range (1, 2048) takes 10.22 s
+12:01:23 vllm-qual=Running/false | (EngineCore pid=196) INFO 11-04 15:01:22 [core.py:283] init engine (profile, create kv cache, warmup model) took 50.78 seconds
+pronto=1 depois de 2 min
+NAME        READY   STATUS    RESTARTS   AGE     IP               NODE        NOMINATED NODE   READINESS GATES
+vllm-qual   1/1     Running   0          2m31s   10.244.179.107   sabdiia01   <none>           <none>
+### 4. servidor: versão, comando, parser de tool call
+vllm 0.19.1
+/usr/bin/python3 /usr/local/bin/vllm serve Qwen/Qwen2.5-7B-Instruct --dtype float16 --max-model-len 8192 --gpu-memory-utilization 0.90 --generation-config vllm --enable-auto-tool-choice --tool-call-parser hermes --host 0.0.0.0 --port 8000 
+sh -c for p in /proc/[0-9]*/cmdline; do tr "\0" " " < $p 2>/dev/null | grep -E "vllm serve" ; done | sort -u | cut -c1-600 
+(APIServer pid=1) INFO 11-04 14:59:44 [utils.py:233] non-default args: {'model_tag': 'Qwen/Qwen2.5-7B-Instruct', 'enable_auto_tool_choice': True, 'tool_call_parser': 'hermes', 'host': '0.0.0.0', 'model': 'Qwen/Qwen2.5-7B-Instruct', 'dtype': 'float16'
+(EngineCore pid=196) INFO 11-04 15:00:31 [gpu_model_runner.py:4820] Model loading took 14.25 GiB memory and 25.381237 seconds
+(EngineCore pid=196) INFO 11-04 15:01:10 [kv_cache_utils.py:1319] GPU KV cache size: 246,016 tokens
+(EngineCore pid=196) INFO 11-04 15:01:10 [kv_cache_utils.py:1324] Maximum concurrency for 8,192 tokens per request: 30.03x
+(APIServer pid=1) INFO 11-04 15:01:24 [parser_manager.py:202] "auto" tool choice has been enabled.
+### 5. coleta: 50 perguntas x 2 chamadas, 1 de cada vez   12:01:57
+[ 1/50] ID  1  etapa1: tool_call 3.7 s | etapa2: 0.9 s  A taxa de inadimplência das pessoas jurídicas de pequeno porte em 01/01/2016 era de 9,0%.
+[ 2/50] ID  2  etapa1: tool_call 2.0 s | etapa2: 0.8 s  A taxa de inadimplência das microempresas em 01/07/2019 era de 10,2%.
+[ 3/50] ID  3  etapa1: tool_call 2.2 s | etapa2: 1.1 s  A taxa de juros para empresas de pequeno porte na antecipação de fatura de cartão de crédi
+[ 4/50] ID  4  etapa1: tool_call 2.2 s | etapa2: 1.1 s  A taxa de juros das microempresas na antecipação de fatura de cartão de crédito com recurs
+[ 5/50] ID  5  etapa1: tool_call 2.2 s | etapa2: 1.2 s  O saldo de crédito com recursos livres para pessoas jurídicas de pequeno porte em 01/07/20
+[ 6/50] ID  6  etapa1: tool_call 2.0 s | etapa2: 1.0 s  O saldo de crédito das empresas de pequeno porte da região Sul em 01/01/2019 era de R$ 33.
+[ 7/50] ID  7  etapa1: tool_call 2.2 s | etapa2: 1.0 s  O saldo de crédito das empresas de pequeno porte do Sudeste em 01/04/2020 era de R$ 76.403
+[ 8/50] ID  8  etapa1: tool_call 2.0 s | etapa2: 1.0 s  O saldo de crédito das pessoas jurídicas de pequeno porte da região Norte em 01/10/2017 fo
+[ 9/50] ID  9  etapa1: tool_call 2.1 s | etapa2: 1.0 s  As empresas de pequeno porte do Nordeste tinham um saldo de crédito de R$ 43.893,80 milhõe
+[10/50] ID 10  etapa1: tool_call 2.0 s | etapa2: 1.0 s  O saldo de crédito das empresas de pequeno porte do Centro-Oeste em 01/04/2016 era de R$ 1
+[11/50] ID 11  etapa1: tool_call 2.2 s | etapa2: 1.0 s  O saldo de crédito com recursos livres das microempresas em 01/10/2019 era de R$ 46.853,80
+[12/50] ID 12  etapa1: tool_call 2.0 s | etapa2: 0.9 s  O saldo de crédito das microempresas da região Sul em 01/04/2021 era de R$ 14.251,30 milhõ
+[13/50] ID 13  etapa1: tool_call 2.0 s | etapa2: 1.0 s  O saldo de crédito das microempresas do Sudeste em 01/07/2018 era de R$ 18.844,00 milhões.
+[14/50] ID 14  etapa1: tool_call 2.0 s | etapa2: 0.9 s  O saldo de crédito das microempresas da região Norte em 01/04/2023 era de R$ 2.724,20 milh
+[15/50] ID 15  etapa1: tool_call 2.0 s | etapa2: 0.9 s  O saldo de crédito das microempresas nordestinas em 01/10/2020 era de R$ 7.320,90 milhões.
+[16/50] ID 16  etapa1: tool_call 2.0 s | etapa2: 1.0 s  O saldo de crédito das microempresas do Centro-Oeste em 01/04/2022 era de R$ 10.493,10 mil
+[17/50] ID 17  etapa1: tool_call 2.2 s | etapa2: 1.1 s  O saldo de crédito de empresas de pequeno porte com prazo acima de 5 anos em 01/01/2014 er
+[18/50] ID 18  etapa1: tool_call 2.1 s | etapa2: 1.1 s  O saldo de crédito das empresas de pequeno porte com prazo de até 1 ano em 01/07/2016 era 
+[19/50] ID 19  etapa1: tool_call 2.2 s | etapa2: 1.2 s  O saldo de crédito das empresas de pequeno porte com prazo maior que 1 e até 2 anos em 01/
+[20/50] ID 20  etapa1: tool_call 2.2 s | etapa2: 1.2 s  O saldo de crédito das empresas de pequeno porte com prazo maior que 2 e até 5 anos em 01/
+[21/50] ID 21  etapa1: tool_call 2.2 s | etapa2: 1.1 s  O saldo de crédito de empresas de pequeno porte na faixa menor que R$ 1 mil em 01/04/2018 
+[22/50] ID 22  etapa1: tool_call 2.2 s | etapa2: 1.2 s  O saldo de crédito das empresas de pequeno porte na faixa de R$ 1 mil a R$ 5 mil em 01/07/
+[23/50] ID 23  etapa1: tool_call 2.3 s | etapa2: 1.2 s  O saldo de crédito de pequeno porte na faixa de R$ 5 mil a R$ 10 mil em 01/01/2015 era de 
+[24/50] ID 24  etapa1: tool_call 2.3 s | etapa2: 1.3 s  O saldo de crédito das empresas de pequeno porte na faixa de R$ 10 mil a R$ 50 mil em 01/0
+[25/50] ID 25  etapa1: tool_call 2.3 s | etapa2: 1.3 s  O saldo de crédito das empresas de pequeno porte na faixa de R$ 50 mil a R$ 100 mil em 01/
+[26/50] ID 26  etapa1: tool_call 2.2 s | etapa2: 1.2 s  O saldo de crédito das empresas de pequeno porte na faixa acima de R$ 100 mil em 01/10/202
+[27/50] ID 27  etapa1: tool_call 2.8 s | etapa2: 1.1 s  A taxa de inadimplência de microempresas em 01/01/2020 era de 10,0%, enquanto para as empr
+[28/50] ID 28  etapa1: tool_call 4.3 s | etapa2: 1.4 s  O saldo de crédito das EPP do Nordeste em 01/10/2022 foi de R$ 45.748,10 milhões, enquanto
+[29/50] ID 29  etapa1: tool_call 2.5 s | etapa2: 1.7 s  Em 01/04/2023, o Sul tinha um saldo de crédito para microempresas de R$ 17.834,40 milhões,
+[30/50] ID 30  etapa1: tool_call 2.7 s | etapa2: 1.8 s  Em 01/10/2022, o saldo de crédito das EPP com prazo maior que 2 a 5 anos foi de R$ 202.112
+[31/50] ID 31  etapa1: tool_call 2.4 s | etapa2: 1.4 s  Em 01/04/2023, o saldo de crédito com recursos livres para pequeno porte foi de R$ 313,65 
+[32/50] ID 32  etapa1: tool_call 3.4 s | etapa2: 1.4 s  Em 01/07/2020, a faixa que tinha maior saldo de crédito para EPP era de R$ 10 mil a R$ 50 
+[33/50] ID 33  etapa1: tool_call 2.2 s | etapa2: 3.1 s  A taxa de inadimplência das EPP (Empresas de Pequeno Porte) evoluiu ao longo de 2021 confo
+[34/50] ID 34  etapa1: tool_call 2.2 s | etapa2: 2.4 s  A trajetória trimestral da taxa de juros das microempresas com recursos livres em 2022 foi
+[35/50] ID 35  etapa1: tool_call 3.5 s | etapa2: 3.0 s  O saldo de crédito das microempresas do Sudeste apresentou variações ao longo de 2020. No 
+[36/50] ID 36  etapa1: tool_call 2.2 s | etapa2: 1.9 s  O saldo de crédito das EPP da região Sul evoluiu de R$ 33.530,40 milhões em janeiro de 201
+[37/50] ID 37  etapa1: tool_call 2.4 s | etapa2: 1.8 s  O saldo de crédito das EPP na faixa acima de R$ 100 mil evoluiu de R$ 168.550,20 milhões e
+[38/50] ID 38  etapa1: tool_call 2.3 s | etapa2: 3.5 s  O saldo de crédito com recursos livres das EPP evoluiu ao longo de 2020 conforme mostrado 
+[39/50] ID 39  etapa1: tool_call 3.0 s | etapa2: 3.3 s  A taxa de inadimplência das EPP (Empresas de Pequeno Porte) evoluiu da seguinte forma no p
+[40/50] ID 40  etapa1: tool_call 3.0 s | etapa2: 1.5 s  A diferença entre as taxas de inadimplência de microempresas e EPP em 01/07/2019 era de 4,
+[41/50] ID 41  etapa1: tool_call 2.7 s | etapa2: 3.1 s  O saldo de crédito com recursos livres das microempresas variou de R$ 43.641,70 milhões em
+[42/50] ID 42  etapa1: tool_call 2.4 s | etapa2: 1.1 s  O Sul era a região com o maior saldo de crédito para EPP em 01/04/2022, com R$ 74.023,60 m
+[43/50] ID 43  etapa1: tool_call 2.3 s | etapa2: 1.0 s  A região Norte tinha o menor saldo de crédito para microempresas em 01/10/2021, com R$ 2.1
+[44/50] ID 44  etapa1: tool_call 3.0 s | etapa2: 2.2 s  Em 01/04/2023, o saldo das EPP com prazo maior que 2 a 5 anos era de R$ 202.159,30 milhões
+[45/50] ID 45  etapa1: tool_call 2.6 s | etapa2: 1.7 s  A taxa de juros para antecipação de fatura de cartão das EPP reduziu de 33,4% em 01/01/201
+[46/50] ID 46  etapa1: tool_call 2.5 s | etapa2: 0.9 s  A maior taxa de inadimplência de pequenas empresas (EPP) na série disponível foi de 10,9% 
+[47/50] ID 47  etapa1: tool_call 2.1 s | etapa2: 1.5 s  O saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Acima de 100 mi
+[48/50] ID 48  etapa1: tool_call 2.6 s | etapa2: 1.8 s  A taxa média de inadimplência das microempresas em 2022 foi de 5,75%. Isso foi calculado c
+[49/50] ID 49  etapa1: SEM tool_call 4.2 s | etapa2: 2.5 s  A evolução da inadimplência das microempresas em 2022 foi a seguinte:  - Em janeiro, a tax
+[50/50] ID 50  etapa1: tool_call 2.5 s | etapa2: 1.4 s  O saldo de crédito das EPP do Sudeste, na faixa acima de R$ 100 mil, em 01/10/2022 era de 
+fim: 2026-11-04T15:05:15.231762+00:00
+linhas gravadas: 51 (esperado 51)   12:05:15
+### 6. nota
+# Teste de qualidade — Qwen/Qwen2.5-7B-Instruct
+
+vLLM `0.19.1`, gabarito `2026-11-04`, início 2026-11-04T15:01:58.183878+00:00, 50 perguntas (49 na nota automática). Parâmetros: `{"temperature": 0, "top_p": 1, "repetition_penalty": 1.0, "chat_template_kwargs": {"enable_thinking": false}}`.
+
+| Medida | Resultado |
+|---|---|
+| Etapa 1 — formato (`tool_calls` válido) | 48/49 = 98 % (IC 95 %: 89-100 %) |
+| Etapa 1 — indicadores certos | 38/49 = 78 % (IC 95 %: 64-87 %) |
+| Etapa 1 — datas certas | 47/49 = 96 % (IC 95 %: 86-99 %) |
+| **Etapa 1 — consulta certa** (formato + indicadores + datas, aproximada) | **37/49 = 76 % (IC 95 %: 62-85 %)** |
+| **Etapa 2 — resposta certa** (com os dados certos) | **40/49 = 82 % (IC 95 %: 69-90 %)** |
+| As duas certas | 32/49 = 65 % (IC 95 %: 51-77 %) |
+| Latência etapa 1 (1 usuário) | p50 2.25 s, p95 3.73 s, máx 4.30 s |
+| Latência etapa 2 (1 usuário) | p50 1.19 s, p95 3.08 s, máx 3.53 s |
+| Latência por pergunta (1 + 2, sem o SQL) | p50 3.46 s, p95 6.37 s, máx 6.70 s |
+| *Tokens* gerados na etapa 2 | média 65, máx 159 |
+
+## Por categoria
+
+| Categoria | n | Etapa 1 | Etapa 2 |
+|---|---|---|---|
+| faixas_valor | 9 | 8 | 6 |
+| inadimplencia | 9 | 7 | 9 |
+| juros | 4 | 2 | 3 |
+| prazos | 6 | 5 | 6 |
+| regioes | 16 | 12 | 14 |
+| saldo_recursos_livres | 5 | 3 | 2 |
+
+## Falhas (revisar à mão: a etapa 1 é aproximada)
+
+| ID | Etapa | Motivo | SQL ou resposta |
+|---|---|---|---|
+| 3 | etapa 1 | faltam indicadores: Taxa de juros de pessoa jurídica - pequeno porte - recursos livres | `SELECT [DT_REGISTRO], [VL_INDICADOR] FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] WHERE [NM_INDICADOR] = 'Taxa de juros de pessoa jurídica  micro empresa - recursos livres' AND [DT_REGISTRO]` |
+| 5 | etapa 1 | faltam indicadores: Saldo de crédito pessoa jurídica por origem dos recursos - pequeno porte - recursos livres - Total | `SELECT [DT_REGISTRO], [VL_INDICADOR] FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] WHERE [NM_INDICADOR] = 'Saldo de crédito pessoa jurídica por origem dos recursos - pequeno porte - Total' AN` |
+| 5 | etapa 2 | faltam: 2021-07-01 Saldo de crédito pessoa jurídica por origem dos recursos - pequeno porte - recursos livres - Total = 250000 | O saldo de crédito com recursos livres para pessoas jurídicas de pequeno porte em 01/07/2021 era de R$ 249,999,500,00 milhões. |
+| 7 | etapa 1 | faltam indicadores: Saldo de crédito pessoa jurídica por região - pequeno porte - Sudeste | `SELECT [VL_INDICADOR] FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] WHERE [DT_REGISTRO] = '2020-04-01' AND [NM_INDICADOR] = 'Saldo de crédito de pessoa jurídica por região - pequeno porte - S` |
+| 21 | etapa 1 | faltam indicadores: Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Menor que 1 mil | `SELECT [VL_INDICADOR] FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] WHERE [DT_REGISTRO] = '2018-04-01' AND [NM_INDICADOR] = 'Saldo de crédito de pessoa jurídica por faixa de valor- pequeno po` |
+| 28 | etapa 1 | faltam indicadores: Saldo de crédito pessoa jurídica por região - pequeno porte - Centro-Oeste; Saldo de crédito pessoa jurídica por região - pequeno porte - No | `SELECT [VL_INDICADOR] AS Saldo_Nordeste FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] WHERE [NM_INDICADOR] = 'Saldo de crédito de pessoa jurídica por faixa de valor- pequeno porte - Menor que` |
+| 31 | etapa 1 | faltam indicadores: Saldo de crédito pessoa jurídica por origem dos recursos - pequeno porte - recursos livres - Total | `SELECT [DT_REGISTRO], [NM_INDICADOR], [VL_INDICADOR] FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] WHERE [DT_REGISTRO] = '2023-04-01' AND ([NM_INDICADOR] LIKE '%EPP - recursos livres%' OR [NM` |
+| 31 | etapa 2 | faltam: 2023-04-01 Saldo de crédito pessoa jurídica por origem dos recursos - pequeno porte - recursos livres - Total = 313650; 2023-04-01 Saldo de crédito pess | Em 01/04/2023, o saldo de crédito com recursos livres para pequeno porte foi de R$ 313,65 milhões, enquanto para microempresas foi de R$ 60,55 milhões. |
+| 32 | etapa 2 | faltam: 2020-07-01 Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 50 mil a 100 mil = 38355.4 | Em 01/07/2020, a faixa que tinha maior saldo de crédito para EPP era de R$ 10 mil a R$ 50 mil, com um saldo de R$ 40.272,70 milhões. |
+| 36 | etapa 2 | faltam: 2019-04-01 Saldo de crédito pessoa jurídica por região - pequeno porte - Sul = 34873; 2019-07-01 Saldo de crédito pessoa jurídica por região - pequeno p | O saldo de crédito das EPP da região Sul evoluiu de R$ 33.530,40 milhões em janeiro de 2019 para R$ 37.583,20 milhões em outubro de 2019. Isso representa um aumento de R$ 4.052,80 milhões no período. |
+| 37 | etapa 2 | faltam: 2022-04-01 Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Acima de 100 mil = 170012; 2022-07-01 Saldo de crédito de pessoa jur | O saldo de crédito das EPP na faixa acima de R$ 100 mil evoluiu de R$ 168.550,20 milhões em janeiro de 2022 para R$ 207.578,50 milhões em outubro de 2022. |
+| 39 | etapa 1 | não filtra 1º de janeiro de 2019 a 2023 | `SELECT [DT_REGISTRO], [VL_INDICADOR] FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] WHERE [NM_INDICADOR] = 'Taxa de inadimplência de pessoa jurídica - Pequeno porte' AND [DT_REGISTRO] BETWEEN ` |
+| 41 | etapa 2 | faltam: variação % = 33.2822 | O saldo de crédito com recursos livres das microempresas variou de R$ 43.641,70 milhões em 01/01/2021 para R$ 58.166,60 milhões em 01/01/2023. A variação percentual foi de:  \[ \frac{58166.6 - 43641.7 |
+| 42 | etapa 1 | faltam indicadores: Saldo de crédito pessoa jurídica por região - pequeno porte - Norte; Saldo de crédito pessoa jurídica por região - pequeno porte - Nordeste; | `SELECT TOP 1 [NM_REGIAO], [VL_INDICADOR] FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] WHERE [DT_REGISTRO] = '2022-04-01' AND [NM_INDICADOR] = 'Saldo de crédito pessoa jurídica por região - p` |
+| 42 | etapa 2 | faltam: Sudeste = 128504; termo "sudeste" | O Sul era a região com o maior saldo de crédito para EPP em 01/04/2022, com R$ 74.023,60 milhões. |
+| 43 | etapa 1 | faltam indicadores: Saldo de crédito pessoa jurídica por região - microempresa - Norte; Saldo de crédito pessoa jurídica por região - microempresa - Nordeste; S | `SELECT TOP 1 [NM_REGIAO], [VL_INDICADOR] FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] WHERE [DT_REGISTRO] = '2021-10-01' AND [NM_INDICADOR] = 'Saldo de crédito pessoa jurídica por região - m` |
+| 44 | etapa 1 | faltam indicadores: Saldo de crédito de pessoa jurídica por prazo - pequeno porte - maior que 2 a 5 anos | `SELECT FORMAT(DT_REGISTRO, 'yyyy-MM-dd') AS Data, [VL_INDICADOR] FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] WHERE [NM_INDICADOR] IN ('Saldo de crédito de pessoa jurídica por prazo - pequen` |
+| 45 | etapa 1 | faltam indicadores: Taxa de juros de pessoa jurídica - pequeno porte - recursos livres | `SELECT [DT_REGISTRO], [VL_INDICADOR] FROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F] WHERE [NM_INDICADOR] = 'Taxa de juros de pessoa jurídica  micro empresa - recursos livres' AND [DT_REGISTRO]` |
+| 45 | etapa 2 | faltam: variação % = -50.2994 | A taxa de juros para antecipação de fatura de cartão das EPP reduziu de 33,4% em 01/01/2018 para 16,6% em 01/01/2020, representando uma redução de 16,8 percentage points. |
+| 47 | etapa 2 | faltam: 2022-10-01 Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Acima de 100 mil = 207578 | O saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Acima de 100 mil apresentava o maior saldo de crédito das EPP em 01/10/2022, no valor de R$ 207,58 milhões. |
+| 49 | etapa 1 | sem tool_calls (respondeu em texto) | `` |
+| 50 | revisão manual | não existe indicador por região E faixa; a resposta certa é dizer que a base não | O saldo de crédito das EPP do Sudeste, na faixa acima de R$ 100 mil, em 01/10/2022 era de R$ 207.578,50 milhões. |
+
+## Alerta: números sem lastro na resposta (podem ser contas legítimas)
+
+| ID | Números | Resposta |
+|---|---|---|
+| 5 | 250 | O saldo de crédito com recursos livres para pessoas jurídicas de pequeno porte em 01/07/2021 era de R$ 249,999,500,00 milhões. |
+| 31 | 313.65, 60.55 | Em 01/04/2023, o saldo de crédito com recursos livres para pequeno porte foi de R$ 313,65 milhões, enquanto para microempresas foi de R$ 60,55 milhões. |
+| 34 | 1, 1, 2, 1, 3, 1 | A trajetória trimestral da taxa de juros das microempresas com recursos livres em 2022 foi a seguinte:  - 1º trimestre (1º de janeiro): 39,9% - 2º trimestre (1º |
+| 35 | 1, 1 | O saldo de crédito das microempresas do Sudeste apresentou variações ao longo de 2020. No início do ano, em 01 de janeiro, o saldo era de R$ 25.881,50 milhões.  |
+| 36 | 4052.8 | O saldo de crédito das EPP da região Sul evoluiu de R$ 33.530,40 milhões em janeiro de 2019 para R$ 37.583,20 milhões em outubro de 2019. Isso representa um aum |
+| 41 | 100, 33.55, 33.55 | O saldo de crédito com recursos livres das microempresas variou de R$ 43.641,70 milhões em 01/01/2021 para R$ 58.166,60 milhões em 01/01/2023. A variação percen |
+| 45 | 16.8 | A taxa de juros para antecipação de fatura de cartão das EPP reduziu de 33,4% em 01/01/2018 para 16,6% em 01/01/2020, representando uma redução de 16,8 percenta |
+| 47 | 207.58 | O saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - Acima de 100 mil apresentava o maior saldo de crédito das EPP em 01/10/2022, no valor |
+| 48 | 5.75 | A taxa média de inadimplência das microempresas em 2022 foi de 5,75%. Isso foi calculado com base nos valores de 5,6%, 5,4%, 5,5% e 6,1% observados nos trimestr |
+### 7. estrangulamento de 01 depois da coleta (a nota não depende dele; a latência sim)
+        SW Power Cap                                   : Not Active
+        HW Slowdown                                    : Not Active
+            HW Thermal Slowdown                        : Not Active
+            HW Power Brake Slowdown                    : Not Active
+        SW Thermal Slowdown                            : Not Active
+        SW Power Capping                               : 441274130666 us
+        SW Thermal Slowdown                            : 0 us
+        HW Thermal Slowdown                            : 0 us
+### 8. logs dos pods em /home/utec/vllm-estudo/qualidade/resultados/2026-11-04-1159-7b
+## vllm-qual (230 linhas): fim
+(APIServer pid=1) INFO 11-04 15:04:55 [loggers.py:259] Engine 000: Avg prompt throughput: 64.2 tokens/s, Avg generation throughput: 46.4 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.6%, Prefix cache hit rate: 89.2%
+(APIServer pid=1) INFO:     127.0.0.1:54830 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:54832 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:54848 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:54858 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:49480 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:49230 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:49234 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:05:05 [loggers.py:259] Engine 000: Avg prompt throughput: 86.4 tokens/s, Avg generation throughput: 45.7 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.6%, Prefix cache hit rate: 89.3%
+(APIServer pid=1) INFO:     127.0.0.1:49242 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:48750 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:49246 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:36194 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:05:15 [loggers.py:259] Engine 000: Avg prompt throughput: 98.3 tokens/s, Avg generation throughput: 45.8 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.8%, Prefix cache hit rate: 89.0%
+(APIServer pid=1) INFO:     127.0.0.1:36210 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+### 9. limpeza: apaga os pods e libera as GPUs   12:05:15
+pod "vllm-qual" deleted from vllm-estudo namespace
+Name:               sabdiia01
+  nvidia.com/gpu     0           0
+== fim 2026-11-04T12:05:18-03:00   resultados em /home/utec/vllm-estudo/qualidade/resultados/2026-11-04-1159-7b

@@ -1,0 +1,444 @@
+Using Python 3.12.13 environment at: /usr
+Resolved 62 packages in 1.32s
+Downloading virtualenv (5.4MiB)
+Downloading py-spy (2.8MiB)
+Downloading cupy-cuda12x (107.7MiB)
+Downloading ray (66.9MiB)
+ Downloaded py-spy
+ Downloaded virtualenv
+ Downloaded ray
+ Downloaded cupy-cuda12x
+Prepared 16 packages in 3.64s
+Uninstalled 2 packages in 141ms
+Installed 16 packages in 1.80s
+ + aiohttp-cors==0.8.1
+ + colorful==0.5.8
+ - cupy-cuda12x==14.0.1
+ + cupy-cuda12x==13.6.0
+ + distlib==0.4.4
+ + fastrlock==0.8.4
+ + msgpack==1.2.4
+ + opencensus==0.11.4
+ + opencensus-context==0.1.3
+ - packaging==26.1
+ + packaging==26.3
+ + platformdirs==4.14.4
+ + py-spy==0.4.3
+ + python-discovery==1.9.4
+ + ray==2.48.0
+ + smart-open==9.0.2
+ + virtualenv==21.15.5
+ + wrapt==2.5.2
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/local/lib/python3.12/dist-packages/huggingface_hub/utils/_validators.py", line 88, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/huggingface_hub/_snapshot_download.py", line 310, in snapshot_download
+    raise LocalEntryNotFoundError(
+huggingface_hub.errors.LocalEntryNotFoundError: Cannot find an appropriate cached snapshot folder for the specified revision on the local disk and outgoing traffic has been disabled. To enable repo look-ups and downloads online, pass 'local_files_only=False' as input.
+Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 11 files:   9%|▉         | 1/11 [00:00<00:05,  1.98it/s]Fetching 11 files:  36%|███▋      | 4/11 [04:05<07:44, 66.34s/it]Fetching 11 files: 100%|██████████| 11/11 [04:05<00:00, 22.33s/it]
+pesos em /hf-cache/hub/models--Qwen--Qwen2.5-7B-Instruct/snapshots/a09a35458c702b33eeacc393d103063234e8bc28
+2026-11-04 15:10:27,631	INFO usage_lib.py:467 -- Usage stats collection is enabled by default without user confirmation because this terminal is detected to be non-interactive. To disable this, add `--disable-usage-stats` to the command that starts the cluster, or run the following command: `ray disable-usage-stats` before starting the cluster. See https://docs.ray.io/en/master/cluster/usage-stats.html for more details.
+2026-11-04 15:10:27,631	INFO scripts.py:913 -- [37mLocal node IP[39m: [1m192.168.50.151[22m
+2026-11-04 15:10:31,872	SUCC scripts.py:949 -- [32m--------------------[39m
+2026-11-04 15:10:31,872	SUCC scripts.py:950 -- [32mRay runtime started.[39m
+2026-11-04 15:10:31,872	SUCC scripts.py:951 -- [32m--------------------[39m
+2026-11-04 15:10:31,872	INFO scripts.py:953 -- [36mNext steps[39m
+2026-11-04 15:10:31,872	INFO scripts.py:956 -- To add another node to this Ray cluster, run
+2026-11-04 15:10:31,872	INFO scripts.py:959 -- [1m  ray start --address='192.168.50.151:6379'[22m
+2026-11-04 15:10:31,872	INFO scripts.py:968 -- To connect to this Ray cluster:
+2026-11-04 15:10:31,873	INFO scripts.py:970 -- [35mimport[39m[26m ray
+2026-11-04 15:10:31,873	INFO scripts.py:971 -- ray[35m.[39m[26minit(_node_ip_address[35m=[39m[26m[33m'192.168.50.151'[39m[26m)
+2026-11-04 15:10:31,873	INFO scripts.py:983 -- To submit a Ray job using the Ray Jobs CLI:
+2026-11-04 15:10:31,873	INFO scripts.py:984 -- [1m  RAY_ADDRESS='http://127.0.0.1:8265' ray job submit --working-dir . -- python my_script.py[22m
+2026-11-04 15:10:31,873	INFO scripts.py:993 -- See https://docs.ray.io/en/latest/cluster/running-applications/job-submission/index.html 
+2026-11-04 15:10:31,873	INFO scripts.py:997 -- for more information on submitting Ray jobs to the Ray cluster.
+2026-11-04 15:10:31,873	INFO scripts.py:1002 -- To terminate the Ray runtime, run
+2026-11-04 15:10:31,873	INFO scripts.py:1003 -- [1m  ray stop[22m
+2026-11-04 15:10:31,873	INFO scripts.py:1006 -- To view the status of the cluster, use
+2026-11-04 15:10:31,873	INFO scripts.py:1007 --   [1mray status[22m[26m
+2026-11-04 15:10:31,873	INFO scripts.py:1011 -- To monitor and debug Ray, view the dashboard at 
+2026-11-04 15:10:31,873	INFO scripts.py:1012 --   [1m127.0.0.1:8265[22m[26m
+2026-11-04 15:10:31,873	INFO scripts.py:1019 -- [4mIf connection to the dashboard fails, check your firewall settings and network configuration.[24m
+======== Autoscaler status: 2026-11-04 15:10:43.429783 ========
+Node status
+---------------------------------------------------------------
+Active:
+ 1 node_09eeeeb9a3a6fc530450ec5c159c262e56b5e4b9a589ae774f14ab26
+Pending:
+ (no pending nodes)
+Recent failures:
+ (no failures)
+
+Resources
+---------------------------------------------------------------
+Total Usage:
+ 0.0/16.0 CPU
+ 0.0/1.0 GPU
+ 0B/56.97GiB memory
+ 0B/3.73GiB object_store_memory
+
+Total Constraints:
+ (no request_resources() constraints)
+Total Demands:
+ (no resource demands)
+(APIServer pid=1) INFO 11-04 15:11:05 [utils.py:299] 
+(APIServer pid=1) INFO 11-04 15:11:05 [utils.py:299]        █     █     █▄   ▄█
+(APIServer pid=1) INFO 11-04 15:11:05 [utils.py:299]  ▄▄ ▄█ █     █     █ ▀▄▀ █  version 0.19.1
+(APIServer pid=1) INFO 11-04 15:11:05 [utils.py:299]   █▄█▀ █     █     █     █  model   Qwen/Qwen2.5-7B-Instruct
+(APIServer pid=1) INFO 11-04 15:11:05 [utils.py:299]    ▀▀  ▀▀▀▀▀ ▀▀▀▀▀ ▀     ▀
+(APIServer pid=1) INFO 11-04 15:11:05 [utils.py:299] 
+(APIServer pid=1) INFO 11-04 15:11:05 [utils.py:233] non-default args: {'model_tag': 'Qwen/Qwen2.5-7B-Instruct', 'enable_auto_tool_choice': True, 'tool_call_parser': 'hermes', 'host': '0.0.0.0', 'model': 'Qwen/Qwen2.5-7B-Instruct', 'dtype': 'float16', 'max_model_len': 8192, 'generation_config': 'vllm', 'distributed_executor_backend': 'ray', 'pipeline_parallel_size': 2}
+(APIServer pid=1) INFO 11-04 15:11:05 [arg_utils.py:665] HF_HUB_OFFLINE is True, replace model_id [Qwen/Qwen2.5-7B-Instruct] to model_path [/hf-cache/hub/models--Qwen--Qwen2.5-7B-Instruct/snapshots/a09a35458c702b33eeacc393d103063234e8bc28]
+(APIServer pid=1) INFO 11-04 15:11:15 [model.py:549] Resolved architecture: Qwen2ForCausalLM
+(APIServer pid=1) WARNING 11-04 15:11:15 [model.py:2016] Casting torch.bfloat16 to torch.float16.
+(APIServer pid=1) INFO 11-04 15:11:15 [model.py:1678] Using max model len 8192
+(APIServer pid=1) WARNING 11-04 15:11:15 [vllm.py:780] Async scheduling will be disabled because it is not supported with the `ray` distributed executor backend. 
+(APIServer pid=1) INFO 11-04 15:11:15 [vllm.py:790] Asynchronous scheduling is disabled.
+(EngineCore pid=2501) INFO 11-04 15:11:26 [core.py:105] Initializing a V1 LLM engine (v0.19.1) with config: model='/hf-cache/hub/models--Qwen--Qwen2.5-7B-Instruct/snapshots/a09a35458c702b33eeacc393d103063234e8bc28', speculative_config=None, tokenizer='/hf-cache/hub/models--Qwen--Qwen2.5-7B-Instruct/snapshots/a09a35458c702b33eeacc393d103063234e8bc28', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=False, dtype=torch.float16, max_seq_len=8192, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=2, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=None, enforce_eager=False, enable_return_routed_experts=False, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False), seed=0, served_model_name=/hf-cache/hub/models--Qwen--Qwen2.5-7B-Instruct/snapshots/a09a35458c702b33eeacc393d103063234e8bc28, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.VLLM_COMPILE: 3>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['none'], 'splitting_ops': ['vllm::unified_attention', 'vllm::unified_attention_with_output', 'vllm::unified_mla_attention', 'vllm::unified_mla_attention_with_output', 'vllm::mamba_mixer2', 'vllm::mamba_mixer', 'vllm::short_conv', 'vllm::linear_attention', 'vllm::plamo2_mamba_mixer', 'vllm::gdn_attention_core', 'vllm::olmo_hybrid_gdn_full_forward', 'vllm::kda_attention', 'vllm::sparse_attn_indexer', 'vllm::rocm_aiter_sparse_attn_indexer', 'vllm::unified_kv_cache_update', 'vllm::unified_mla_kv_cache_update'], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_images_per_batch': 0, 'compile_sizes': [], 'compile_ranges_endpoints': [2048], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'size_asserts': False, 'alignment_asserts': False, 'scalar_asserts': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.FULL_AND_PIECEWISE: (2, 1)>, 'cudagraph_num_of_warmups': 1, 'cudagraph_capture_sizes': [1, 2, 4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232, 240, 248, 256, 272, 288, 304, 320, 336, 352, 368, 384, 400, 416, 432, 448, 464, 480, 496, 512], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': False, 'fuse_act_quant': False, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': False}, 'max_cudagraph_capture_size': 512, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': True, 'static_all_moe_layers': []}
+(EngineCore pid=2501) WARNING 11-04 15:11:26 [ray_utils.py:376] Tensor parallel size (2) exceeds available GPUs (1). This may result in Ray placement group allocation failures. Consider reducing tensor_parallel_size to 1 or less, or ensure your Ray cluster has 2 GPUs available.
+(EngineCore pid=2501) 2026-11-04 15:11:26,250	INFO worker.py:1747 -- Connecting to existing Ray cluster at address: 192.168.50.151:6379...
+(EngineCore pid=2501) 2026-11-04 15:11:26,265	INFO worker.py:1918 -- Connected to Ray cluster. View the dashboard at [1m[32mhttp://127.0.0.1:8265 [39m[22m
+(EngineCore pid=2501) INFO 11-04 15:11:26 [ray_utils.py:441] No current placement group found. Creating a new placement group.
+(EngineCore pid=2501) INFO 11-04 15:11:41 [ray_env.py:100] Env var prefixes to copy: ['HF_', 'HUGGING_FACE_', 'LMCACHE_', 'NCCL_', 'UCX_', 'VLLM_']
+(EngineCore pid=2501) INFO 11-04 15:11:41 [ray_env.py:101] Copying the following environment variables to workers: ['HF_HOME', 'HF_HUB_OFFLINE', 'LD_LIBRARY_PATH', 'NCCL_SOCKET_IFNAME', 'VLLM_ENABLE_CUDA_COMPATIBILITY', 'VLLM_USAGE_SOURCE', 'VLLM_WORKER_MULTIPROC_METHOD']
+(EngineCore pid=2501) INFO 11-04 15:11:41 [ray_env.py:111] To exclude env vars from copying, add them to /root/.config/vllm/ray_non_carry_over_env_vars.json
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m <frozen importlib._bootstrap_external>:1301: FutureWarning: The cuda.cudart module is deprecated and will be removed in a future release, please switch to use the cuda.bindings.runtime module instead.
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m <frozen importlib._bootstrap_external>:1301: FutureWarning: The cuda.nvrtc module is deprecated and will be removed in a future release, please switch to use the cuda.bindings.nvrtc module instead.
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Loading safetensors checkpoint shards:   0% Completed | 0/4 [00:00<?, ?it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Loading safetensors checkpoint shards:  25% Completed | 1/4 [00:04<00:14,  4.83s/it]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=410, ip=192.168.50.152)[0m <frozen importlib._bootstrap_external>:1301: FutureWarning: The cuda.cudart module is deprecated and will be removed in a future release, please switch to use the cuda.bindings.runtime module instead.
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=410, ip=192.168.50.152)[0m <frozen importlib._bootstrap_external>:1301: FutureWarning: The cuda.nvrtc module is deprecated and will be removed in a future release, please switch to use the cuda.bindings.nvrtc module instead.
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Loading safetensors checkpoint shards:  50% Completed | 2/4 [00:09<00:09,  4.62s/it]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Loading safetensors checkpoint shards: 100% Completed | 4/4 [00:09<00:00,  2.33s/it]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m 
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=410, ip=192.168.50.152)[0m WARNING 11-04 15:11:41 [system_utils.py:38] Overwriting environment variable LD_LIBRARY_PATH from '/usr/local/lib/python3.12/dist-packages/cv2/../../lib64:/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/cuda/lib64' to '/usr/local/lib/python3.12/dist-packages/cv2/../../lib64:/usr/local/lib/python3.12/dist-packages/cv2/../../lib64:/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/cuda/lib64'
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m WARNING 11-04 15:11:44 [worker_base.py:287] Missing `shared_worker_lock` argument from executor. This argument is needed for mm_processor_cache_type='shm'.
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=410, ip=192.168.50.152)[0m INFO 11-04 15:11:48 [parallel_state.py:1400] world_size=2 rank=1 local_rank=0 distributed_init_method=tcp://192.168.50.151:46785 backend=nccl
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m WARNING 11-04 15:11:41 [system_utils.py:38] Overwriting environment variable LD_LIBRARY_PATH from '/usr/local/lib/python3.12/dist-packages/cv2/../../lib64:/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/cuda/lib64' to '/usr/local/lib/python3.12/dist-packages/cv2/../../lib64:/usr/local/lib/python3.12/dist-packages/cv2/../../lib64:/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/cuda/lib64'
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m INFO 11-04 15:11:48 [pynccl.py:111] vLLM is using nccl==2.27.5
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=410, ip=192.168.50.152)[0m INFO 11-04 15:11:49 [parallel_state.py:1716] rank 1 in world size 2 is assigned as DP rank 0, PP rank 1, PCP rank 0, TP rank 0, EP rank N/A, EPLB rank N/A
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=410, ip=192.168.50.152)[0m WARNING 11-04 15:11:48 [worker_base.py:287] Missing `shared_worker_lock` argument from executor. This argument is needed for mm_processor_cache_type='shm'.
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m INFO 11-04 15:11:51 [gpu_model_runner.py:4735] Starting to load model /hf-cache/hub/models--Qwen--Qwen2.5-7B-Instruct/snapshots/a09a35458c702b33eeacc393d103063234e8bc28...
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=410, ip=192.168.50.152)[0m ERROR 11-04 15:11:51 [fa_utils.py:145] Cannot use FA version 2 is not supported due to FA2 is only supported on devices with compute capability >= 8
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m INFO 11-04 15:11:51 [cuda.py:334] Using TRITON_ATTN attention backend out of potential backends: ['TRITON_ATTN', 'FLEX_ATTENTION'].
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=410, ip=192.168.50.152)[0m INFO 11-04 15:12:00 [default_loader.py:384] Loading weights took 9.05 seconds
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m INFO 11-04 15:11:48 [parallel_state.py:1400] world_size=2 rank=0 local_rank=0 distributed_init_method=tcp://192.168.50.151:46785 backend=nccl
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m INFO 11-04 15:11:49 [parallel_state.py:1716] rank 0 in world size 2 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank N/A, EPLB rank N/A
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m ERROR 11-04 15:11:51 [fa_utils.py:145] Cannot use FA version 2 is not supported due to FA2 is only supported on devices with compute capability >= 8
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=410, ip=192.168.50.152)[0m INFO 11-04 15:11:51 [cuda.py:334] Using TRITON_ATTN attention backend out of potential backends: ['TRITON_ATTN', 'FLEX_ATTENTION'].
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=410, ip=192.168.50.152)[0m INFO 11-04 15:12:01 [gpu_model_runner.py:4820] Model loading took 7.13 GiB memory and 9.393942 seconds
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m INFO 11-04 15:12:08 [backends.py:1051] Using cache directory: /root/.cache/vllm/torch_compile_cache/5e7581e3e9/rank_0_0/backbone for vLLM's torch.compile
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m INFO 11-04 15:12:08 [backends.py:1111] Dynamo bytecode transform time: 6.23 s
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m INFO 11-04 15:12:01 [default_loader.py:384] Loading weights took 9.33 seconds
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m INFO 11-04 15:12:02 [gpu_model_runner.py:4820] Model loading took 7.13 GiB memory and 9.674769 seconds
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m INFO 11-04 15:12:14 [backends.py:372] Cache the graph of compile range (1, 2048) for later use
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=410, ip=192.168.50.152)[0m INFO 11-04 15:12:11 [backends.py:1051] Using cache directory: /root/.cache/vllm/torch_compile_cache/cb87bb2bba/rank_1_0/backbone for vLLM's torch.compile
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=410, ip=192.168.50.152)[0m INFO 11-04 15:12:11 [backends.py:1111] Dynamo bytecode transform time: 8.62 s
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m INFO 11-04 15:12:20 [backends.py:390] Compiling a graph for compile range (1, 2048) takes 11.39 s
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m INFO 11-04 15:12:21 [decorators.py:655] saved AOT compiled function to /root/.cache/vllm/torch_compile_cache/torch_aot_compile/8bbca1edc8ecd403bed089cfea4e98db9d22050580a28cde8d865b616981f601/rank_0_0/model
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m INFO 11-04 15:12:21 [monitor.py:48] torch.compile took 18.83 s in total
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m INFO 11-04 15:12:21 [monitor.py:76] Initial profiling/warmup run took 0.40 s
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m INFO 11-04 15:12:22 [kv_cache_utils.py:829] Overriding num_gpu_blocks=0 with num_gpu_blocks_override=512
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m INFO 11-04 15:12:22 [gpu_model_runner.py:5876] Profiling CUDA graph memory: PIECEWISE=51 (largest=512), FULL=35 (largest=256)
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=410, ip=192.168.50.152)[0m INFO 11-04 15:12:22 [backends.py:372] Cache the graph of compile range (1, 2048) for later use
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m INFO 11-04 15:12:26 [gpu_model_runner.py:5955] Estimated CUDA graph memory: 0.20 GiB total
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m INFO 11-04 15:12:26 [gpu_worker.py:436] Available KV cache memory: 20.37 GiB
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m INFO 11-04 15:12:26 [gpu_worker.py:470] In v0.19, CUDA graph memory profiling will be enabled by default (VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=1), which more accurately accounts for CUDA graph memory during KV cache allocation. To try it now, set VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=1 and increase --gpu-memory-utilization from 0.9000 to 0.9064 to maintain the same effective KV cache size.
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=410, ip=192.168.50.152)[0m INFO 11-04 15:12:35 [backends.py:390] Compiling a graph for compile range (1, 2048) takes 23.86 s
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=410, ip=192.168.50.152)[0m INFO 11-04 15:12:36 [decorators.py:655] saved AOT compiled function to /root/.cache/vllm/torch_compile_cache/torch_aot_compile/293365706dfb8fc4c45bf746f09f67e7c6f8b2d8ec5a0b71f73c50fac92dcbf7/rank_1_0/model
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=410, ip=192.168.50.152)[0m INFO 11-04 15:12:36 [monitor.py:48] torch.compile took 34.39 s in total
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=410, ip=192.168.50.152)[0m INFO 11-04 15:12:37 [monitor.py:76] Initial profiling/warmup run took 0.45 s
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=410, ip=192.168.50.152)[0m INFO 11-04 15:12:51 [kv_cache_utils.py:829] Overriding num_gpu_blocks=0 with num_gpu_blocks_override=512
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=410, ip=192.168.50.152)[0m INFO 11-04 15:12:51 [gpu_model_runner.py:5876] Profiling CUDA graph memory: PIECEWISE=51 (largest=512), FULL=35 (largest=256)
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=410, ip=192.168.50.152)[0m INFO 11-04 15:12:59 [gpu_model_runner.py:5955] Estimated CUDA graph memory: 0.20 GiB total
+(EngineCore pid=2501) INFO 11-04 15:12:59 [kv_cache_utils.py:1319] GPU KV cache size: 762,928 tokens
+(EngineCore pid=2501) INFO 11-04 15:12:59 [kv_cache_utils.py:1324] Maximum concurrency for 8,192 tokens per request: 93.13x
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   0%|          | 0/51 [00:00<?, ?it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   4%|▍         | 2/51 [00:00<00:03, 16.32it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   8%|▊         | 4/51 [00:00<00:02, 16.74it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  12%|█▏        | 6/51 [00:00<00:02, 16.93it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  16%|█▌        | 8/51 [00:00<00:02, 17.13it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  22%|██▏       | 11/51 [00:00<00:02, 18.38it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  25%|██▌       | 13/51 [00:00<00:02, 18.42it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  29%|██▉       | 15/51 [00:00<00:01, 18.16it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  35%|███▌      | 18/51 [00:00<00:01, 19.32it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  39%|███▉      | 20/51 [00:01<00:01, 17.39it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  45%|████▌     | 23/51 [00:01<00:01, 19.06it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  51%|█████     | 26/51 [00:01<00:01, 20.22it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  57%|█████▋    | 29/51 [00:01<00:01, 21.00it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  63%|██████▎   | 32/51 [00:01<00:00, 21.12it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  69%|██████▊   | 35/51 [00:01<00:00, 21.66it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  75%|███████▍  | 38/51 [00:01<00:00, 22.33it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  80%|████████  | 41/51 [00:02<00:00, 23.36it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  88%|████████▊ | 45/51 [00:02<00:00, 25.93it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  96%|█████████▌| 49/51 [00:02<00:00, 27.91it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE): 100%|██████████| 51/51 [00:02<00:00, 21.74it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (decode, FULL):   0%|          | 0/35 [00:00<?, ?it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (decode, FULL):   9%|▊         | 3/35 [00:00<00:01, 22.76it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (decode, FULL):  17%|█▋        | 6/35 [00:00<00:01, 22.45it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (decode, FULL):  26%|██▌       | 9/35 [00:00<00:01, 23.13it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (decode, FULL):  34%|███▍      | 12/35 [00:00<00:00, 23.38it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (decode, FULL):  43%|████▎     | 15/35 [00:00<00:00, 22.82it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (decode, FULL):  51%|█████▏    | 18/35 [00:00<00:00, 23.03it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (decode, FULL):  60%|██████    | 21/35 [00:00<00:00, 23.81it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (decode, FULL):  69%|██████▊   | 24/35 [00:01<00:00, 24.58it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (decode, FULL):  80%|████████  | 28/35 [00:01<00:00, 27.24it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (decode, FULL):  89%|████████▊ | 31/35 [00:03<00:01,  3.39it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m Capturing CUDA graphs (decode, FULL): 100%|██████████| 35/35 [00:05<00:00,  3.16it/s]Capturing CUDA graphs (decode, FULL): 100%|██████████| 35/35 [00:05<00:00,  6.53it/s]
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=410, ip=192.168.50.152)[0m INFO 11-04 15:12:59 [gpu_worker.py:436] Available KV cache memory: 20.78 GiB
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=410, ip=192.168.50.152)[0m INFO 11-04 15:12:59 [gpu_worker.py:470] In v0.19, CUDA graph memory profiling will be enabled by default (VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=1), which more accurately accounts for CUDA graph memory during KV cache allocation. To try it now, set VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=1 and increase --gpu-memory-utilization from 0.9000 to 0.9064 to maintain the same effective KV cache size.
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m INFO 11-04 15:13:08 [gpu_model_runner.py:6046] Graph capturing finished in 8 secs, took 0.29 GiB
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=2635)[0m INFO 11-04 15:13:08 [gpu_worker.py:597] CUDA graph pool memory: 0.29 GiB (actual), 0.2 GiB (estimated), difference: 0.08 GiB (28.8%).
+(EngineCore pid=2501) INFO 11-04 15:13:14 [core.py:283] init engine (profile, create kv cache, warmup model) took 72.28 seconds
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=410, ip=192.168.50.152)[0m INFO 11-04 15:13:14 [gpu_model_runner.py:6046] Graph capturing finished in 15 secs, took 0.29 GiB
+(EngineCore pid=2501) [36m(RayWorkerWrapper pid=410, ip=192.168.50.152)[0m INFO 11-04 15:13:14 [gpu_worker.py:597] CUDA graph pool memory: 0.29 GiB (actual), 0.2 GiB (estimated), difference: 0.08 GiB (28.8%).
+(EngineCore pid=2501) INFO 11-04 15:13:15 [vllm.py:790] Asynchronous scheduling is disabled.
+(APIServer pid=1) INFO 11-04 15:13:15 [api_server.py:592] Supported tasks: ['generate']
+(APIServer pid=1) INFO 11-04 15:13:15 [parser_manager.py:202] "auto" tool choice has been enabled.
+(APIServer pid=1) INFO 11-04 15:13:16 [hf.py:314] Detected the chat template content format to be 'string'. You can set `--chat-template-content-format` to override this.
+(APIServer pid=1) INFO 11-04 15:13:16 [api_server.py:596] Starting vLLM server on http://0.0.0.0:8000
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:37] Available routes are:
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /openapi.json, Methods: GET, HEAD
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /docs, Methods: GET, HEAD
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /docs/oauth2-redirect, Methods: GET, HEAD
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /redoc, Methods: GET, HEAD
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /tokenize, Methods: POST
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /detokenize, Methods: POST
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /load, Methods: GET
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /version, Methods: GET
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /health, Methods: GET
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /metrics, Methods: GET
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /v1/models, Methods: GET
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /ping, Methods: GET
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /ping, Methods: POST
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /invocations, Methods: POST
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /v1/chat/completions, Methods: POST
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /v1/chat/completions/batch, Methods: POST
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /v1/responses, Methods: POST
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /v1/responses/{response_id}, Methods: GET
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /v1/responses/{response_id}/cancel, Methods: POST
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /v1/completions, Methods: POST
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /v1/messages, Methods: POST
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /v1/messages/count_tokens, Methods: POST
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /inference/v1/generate, Methods: POST
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /scale_elastic_ep, Methods: POST
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /is_scaling_elastic_ep, Methods: POST
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /v1/chat/completions/render, Methods: POST
+(APIServer pid=1) INFO 11-04 15:13:16 [launcher.py:46] Route: /v1/completions/render, Methods: POST
+(APIServer pid=1) INFO:     Started server process [1]
+(APIServer pid=1) INFO:     Waiting for application startup.
+(APIServer pid=1) INFO:     Application startup complete.
+(APIServer pid=1) INFO:     192.168.50.151:59592 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:55794 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:45438 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:55958 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:55962 - "GET /version HTTP/1.1" 200 OK
+(EngineCore pid=2501) INFO 11-04 15:13:41 [ray_executor.py:561] RAY_CGRAPH_get_timeout is set to 300
+(EngineCore pid=2501) INFO 11-04 15:13:41 [ray_executor.py:565] VLLM_USE_RAY_COMPILED_DAG_CHANNEL_TYPE = auto
+(EngineCore pid=2501) INFO 11-04 15:13:41 [ray_executor.py:569] VLLM_USE_RAY_COMPILED_DAG_OVERLAP_COMM = False
+(EngineCore pid=2501) INFO 11-04 15:13:41 [ray_executor.py:628] Using RayPPCommunicator (which wraps vLLM _PP GroupCoordinator) for Ray Compiled Graph communication.
+(EngineCore pid=2501) 2026-11-04 15:13:42,011	INFO torch_tensor_accelerator_channel.py:807 -- Creating communicator group 191a555a-5e98-457c-b53a-0bf90083860b on actors: [Actor(RayWorkerWrapper, 37e7470256c2fff2fcfc490103000000), Actor(RayWorkerWrapper, 76ecb53670e3e7d0619208e603000000)]
+(EngineCore pid=2501) 2026-11-04 15:13:42,315	INFO torch_tensor_accelerator_channel.py:833 -- Communicator group initialized.
+(APIServer pid=1) INFO:     192.168.50.151:44800 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:13:56 [loggers.py:259] Engine 000: Avg prompt throughput: 136.1 tokens/s, Avg generation throughput: 32.6 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO:     192.168.50.151:55624 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:55964 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:34698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:14:06 [loggers.py:259] Engine 000: Avg prompt throughput: 22.8 tokens/s, Avg generation throughput: 36.2 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 62.8%
+(APIServer pid=1) INFO:     192.168.50.151:44512 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:14:16 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 36.8 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 62.8%
+(APIServer pid=1) INFO:     192.168.50.151:43120 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:34710 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:60560 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:14:26 [loggers.py:259] Engine 000: Avg prompt throughput: 25.5 tokens/s, Avg generation throughput: 36.0 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 74.4%
+(APIServer pid=1) INFO:     192.168.50.151:50436 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:14:36 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 36.1 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 74.4%
+(APIServer pid=1) INFO:     127.0.0.1:46814 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:38966 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:34218 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:14:46 [loggers.py:259] Engine 000: Avg prompt throughput: 26.0 tokens/s, Avg generation throughput: 36.6 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 79.3%
+(APIServer pid=1) INFO:     192.168.50.151:53670 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:45090 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:14:56 [loggers.py:259] Engine 000: Avg prompt throughput: 21.3 tokens/s, Avg generation throughput: 36.5 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 80.2%
+(APIServer pid=1) INFO:     192.168.50.151:37234 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:58978 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:15:06 [loggers.py:259] Engine 000: Avg prompt throughput: 5.0 tokens/s, Avg generation throughput: 36.7 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 81.9%
+(APIServer pid=1) INFO:     192.168.50.151:44304 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:58988 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:49534 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:49550 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:15:16 [loggers.py:259] Engine 000: Avg prompt throughput: 46.7 tokens/s, Avg generation throughput: 34.9 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 83.9%
+(APIServer pid=1) INFO:     127.0.0.1:49552 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:55264 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:49556 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:49558 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:40182 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:40190 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:15:26 [loggers.py:259] Engine 000: Avg prompt throughput: 55.4 tokens/s, Avg generation throughput: 33.3 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 86.3%
+(APIServer pid=1) INFO:     192.168.50.151:55066 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:40194 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:40198 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:40204 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:48168 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:15:36 [loggers.py:259] Engine 000: Avg prompt throughput: 49.0 tokens/s, Avg generation throughput: 35.6 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 87.3%
+(APIServer pid=1) INFO:     127.0.0.1:48184 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:34610 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:48194 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:48202 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:48208 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:48222 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:58930 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:58940 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:58948 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:15:46 [loggers.py:259] Engine 000: Avg prompt throughput: 98.7 tokens/s, Avg generation throughput: 34.9 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 88.5%
+(APIServer pid=1) INFO:     192.168.50.151:50372 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:58964 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:58966 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:15:56 [loggers.py:259] Engine 000: Avg prompt throughput: 24.6 tokens/s, Avg generation throughput: 36.9 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 88.7%
+(APIServer pid=1) INFO:     192.168.50.151:35988 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:58972 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:32872 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:16:06 [loggers.py:259] Engine 000: Avg prompt throughput: 25.4 tokens/s, Avg generation throughput: 36.3 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 88.9%
+(APIServer pid=1) INFO:     192.168.50.151:51504 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:32874 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:32884 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:32892 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:34118 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:16:16 [loggers.py:259] Engine 000: Avg prompt throughput: 51.3 tokens/s, Avg generation throughput: 35.8 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 89.1%
+(APIServer pid=1) INFO:     192.168.50.151:33012 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:16:26 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 37.1 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 89.1%
+(APIServer pid=1) INFO:     192.168.50.151:37074 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:34124 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:56512 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:16:36 [loggers.py:259] Engine 000: Avg prompt throughput: 26.7 tokens/s, Avg generation throughput: 36.1 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 89.2%
+(APIServer pid=1) INFO:     192.168.50.151:60382 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:57718 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:57728 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:57736 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:43020 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:16:46 [loggers.py:259] Engine 000: Avg prompt throughput: 53.4 tokens/s, Avg generation throughput: 35.3 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 89.4%
+(APIServer pid=1) INFO:     192.168.50.151:41154 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:43022 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:38748 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:16:56 [loggers.py:259] Engine 000: Avg prompt throughput: 27.6 tokens/s, Avg generation throughput: 36.6 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 89.4%
+(APIServer pid=1) INFO:     192.168.50.151:60796 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:38762 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:17:06 [loggers.py:259] Engine 000: Avg prompt throughput: 23.5 tokens/s, Avg generation throughput: 36.9 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 89.3%
+(APIServer pid=1) INFO:     192.168.50.151:55988 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:53730 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:53746 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:55052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:17:16 [loggers.py:259] Engine 000: Avg prompt throughput: 31.5 tokens/s, Avg generation throughput: 36.9 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 89.6%
+(APIServer pid=1) INFO:     192.168.50.151:43572 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:17:26 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 35.7 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 89.6%
+(APIServer pid=1) INFO:     192.168.50.151:57888 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:55068 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:56908 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:17:36 [loggers.py:259] Engine 000: Avg prompt throughput: 28.5 tokens/s, Avg generation throughput: 35.5 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 89.6%
+(APIServer pid=1) INFO:     192.168.50.151:49924 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:56922 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:53718 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:17:46 [loggers.py:259] Engine 000: Avg prompt throughput: 27.3 tokens/s, Avg generation throughput: 35.3 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 89.6%
+(APIServer pid=1) INFO:     192.168.50.151:53652 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:17:56 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 36.8 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 89.6%
+(APIServer pid=1) INFO:     192.168.50.151:38326 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:53734 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:48354 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:18:06 [loggers.py:259] Engine 000: Avg prompt throughput: 32.4 tokens/s, Avg generation throughput: 36.7 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 89.6%
+(APIServer pid=1) INFO:     192.168.50.151:46914 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:54624 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:54626 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:18:16 [loggers.py:259] Engine 000: Avg prompt throughput: 33.4 tokens/s, Avg generation throughput: 36.5 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 89.6%
+(APIServer pid=1) INFO:     192.168.50.151:53220 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:42604 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:34892 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:18:26 [loggers.py:259] Engine 000: Avg prompt throughput: 31.8 tokens/s, Avg generation throughput: 36.5 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 89.6%
+(APIServer pid=1) INFO:     192.168.50.151:37392 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:34896 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:34908 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:18:36 [loggers.py:259] Engine 000: Avg prompt throughput: 37.1 tokens/s, Avg generation throughput: 36.4 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 89.5%
+(APIServer pid=1) INFO:     192.168.50.151:38006 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:43642 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:18:46 [loggers.py:259] Engine 000: Avg prompt throughput: 30.9 tokens/s, Avg generation throughput: 36.9 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 89.4%
+(APIServer pid=1) INFO:     192.168.50.151:53374 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:36826 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:36838 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:36840 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:18:56 [loggers.py:259] Engine 000: Avg prompt throughput: 45.3 tokens/s, Avg generation throughput: 36.1 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 89.4%
+(APIServer pid=1) INFO:     127.0.0.1:56180 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:55180 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:56188 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:56192 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:19:06 [loggers.py:259] Engine 000: Avg prompt throughput: 86.8 tokens/s, Avg generation throughput: 34.8 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 89.0%
+(APIServer pid=1) INFO:     192.168.50.151:52938 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:33472 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:33488 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:36244 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:36252 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:19:16 [loggers.py:259] Engine 000: Avg prompt throughput: 92.9 tokens/s, Avg generation throughput: 33.7 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 88.8%
+(APIServer pid=1) INFO:     192.168.50.151:56830 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:36254 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:19:26 [loggers.py:259] Engine 000: Avg prompt throughput: 3.5 tokens/s, Avg generation throughput: 37.1 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 88.9%
+(APIServer pid=1) INFO:     192.168.50.151:35418 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:36346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:19:36 [loggers.py:259] Engine 000: Avg prompt throughput: 47.2 tokens/s, Avg generation throughput: 36.0 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 88.7%
+(APIServer pid=1) INFO:     192.168.50.151:57936 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:35090 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:35096 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:19:46 [loggers.py:259] Engine 000: Avg prompt throughput: 48.9 tokens/s, Avg generation throughput: 36.5 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.3%, Prefix cache hit rate: 88.6%
+(APIServer pid=1) INFO:     192.168.50.151:45076 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:19:56 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 36.2 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.3%, Prefix cache hit rate: 88.6%
+(APIServer pid=1) INFO:     192.168.50.151:55792 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:60414 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:35140 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:20:06 [loggers.py:259] Engine 000: Avg prompt throughput: 49.5 tokens/s, Avg generation throughput: 35.3 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 88.5%
+(APIServer pid=1) INFO:     192.168.50.151:37548 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:35142 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:20:16 [loggers.py:259] Engine 000: Avg prompt throughput: 3.5 tokens/s, Avg generation throughput: 37.0 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 88.6%
+(APIServer pid=1) INFO:     192.168.50.151:46084 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:35156 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:20:26 [loggers.py:259] Engine 000: Avg prompt throughput: 27.2 tokens/s, Avg generation throughput: 35.8 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 88.5%
+(APIServer pid=1) INFO:     192.168.50.151:34920 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:44276 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:44292 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:52952 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:20:36 [loggers.py:259] Engine 000: Avg prompt throughput: 40.8 tokens/s, Avg generation throughput: 35.1 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 88.6%
+(APIServer pid=1) INFO:     192.168.50.151:49948 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:52962 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:52964 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:20:46 [loggers.py:259] Engine 000: Avg prompt throughput: 55.3 tokens/s, Avg generation throughput: 36.1 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 88.4%
+(APIServer pid=1) INFO:     192.168.50.151:56194 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:52972 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:60028 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:20:56 [loggers.py:259] Engine 000: Avg prompt throughput: 28.4 tokens/s, Avg generation throughput: 35.6 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 88.5%
+(APIServer pid=1) INFO:     192.168.50.151:46582 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:21:06 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 37.4 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 88.5%
+(APIServer pid=1) INFO:     192.168.50.151:59956 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:60030 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:55300 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:21:16 [loggers.py:259] Engine 000: Avg prompt throughput: 37.4 tokens/s, Avg generation throughput: 36.6 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 88.4%
+(APIServer pid=1) INFO:     192.168.50.151:51212 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:54024 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:21:26 [loggers.py:259] Engine 000: Avg prompt throughput: 27.7 tokens/s, Avg generation throughput: 35.6 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 88.4%
+(APIServer pid=1) INFO:     192.168.50.151:50752 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:39106 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:55870 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:55874 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:21:36 [loggers.py:259] Engine 000: Avg prompt throughput: 24.1 tokens/s, Avg generation throughput: 36.8 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 88.6%
+(APIServer pid=1) INFO:     192.168.50.151:59940 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:21:46 [loggers.py:259] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 36.0 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 88.6%
+(APIServer pid=1) INFO:     192.168.50.151:51714 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:55890 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:54896 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:54908 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:56910 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:21:56 [loggers.py:259] Engine 000: Avg prompt throughput: 71.0 tokens/s, Avg generation throughput: 35.0 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 88.6%
+(APIServer pid=1) INFO:     192.168.50.151:56786 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:56912 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:36452 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-04 15:22:06 [loggers.py:259] Engine 000: Avg prompt throughput: 44.2 tokens/s, Avg generation throughput: 35.8 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.2%, Prefix cache hit rate: 88.5%
+(APIServer pid=1) INFO:     192.168.50.151:54596 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:36462 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:35718 - "POST /v1/chat/completions HTTP/1.1" 200 OK
