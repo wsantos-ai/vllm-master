@@ -156,6 +156,13 @@ kubectl describe nodes sabdiia01 sabdiia02 | grep -E '^Name:|^  nvidia\.com/gpu 
   pode mudar** em mais de 1-2 perguntas. Se mudar, o Ray altera a qualidade, e isso contraria a
   premissa de comparar arranjos só pela velocidade.
 
+## Resultado da 1ª rodada (2026-11-04)
+
+Contra a expectativa acima: o controle falhou. **Pelo Ray, 0 de 49 *tool calls*** no 7B e no 14B
+(AC-27, PD-33). Em 1 GPU, a expectativa se confirmou: formato de 92-98 %, e as duas etapas certas em
+92 % no 30B-A3B, 90 % no 14B Int8 e 67 % no 7B (AC-28). Repita só depois de mudar o gabarito, o
+*prompt* ou o modelo; para repontuar sem GPU, veja abaixo.
+
 ## Trazer os resultados (estação, PowerShell)
 
 ```powershell

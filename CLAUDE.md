@@ -279,7 +279,8 @@ A lista viva e priorizada está em §7 do estudo; esta é só a ordem de ataque:
    `Qwen/Qwen2.5-7B-Instruct` FP16, `vllm bench serve` dentro do *pod*, concorrência 1 a 64.
 5. **As GPUs.** 3 réplicas independentes (1 por nó) atrás de um `Service` (D-04). Dividir entre nós pelo
    Ray foi medido em 2026-10-29: o 7B em 2 GPUs (*pipeline parallel* 2) rende 22-25 % **menos** que em 1
-   (AC-23). Multinó só para um modelo necessário que não caiba em 1 GPU, aceitando essa perda.
+   (AC-23). Multinó só para um modelo necessário que não caiba em 1 GPU, aceitando essa perda. **E o
+   arranjo responde sem sentido a *prompts* de ~1.400 *tokens* (AC-27, 2026-11-04): fora até a PD-33.**
 6. **Maior modelo útil.** Quais *quantizations* têm *kernel* em `sm_70`.
 7. **Contexto × concorrência.** `--max-model-len`, `--max-num-seqs`, `--gpu-memory-utilization` medidos.
 8. **Operação.** *Probes*, reinício, arranque a frio, atualização sem queda.
