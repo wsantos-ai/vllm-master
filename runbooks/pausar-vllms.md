@@ -13,8 +13,11 @@ ar. Nada é apagado:
 
 ## Bloco P — Pausar (servidor `sabdiia01` ou `sabdiia02`, bash)
 
-**Expectativa (escrita antes):** `vllm-server`, `vllm-llama31` e `ray-head` vão de 1 para 0; os
-`ray-worker-*` saem dos 3 nós; `nvidia.com/gpu 0 0` em 01 e 02 em até ~2 min.
+**Expectativa (escrita antes; estado de 2026-11-03, §2):** `vllm-server` vai de 3 para 0 (não há
+como pausar só a réplica de um nó: a pausa derruba as 3); o *DaemonSet* `ray-worker` sai dos 3 nós;
+`nvidia.com/gpu 0 0` em 01 e 02 em até ~2 min. Se a lista do passo 1 trouxer outros recursos, eles
+também vão a 0 e voltam no Bloco R. (Na 1ª pausa, P-05 em 2026-11-03, eram `vllm-server`,
+`vllm-llama31` e `ray-head` com 1 réplica cada, mais os `ray-worker-*`.)
 
 ```bash
 mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
@@ -63,7 +66,8 @@ dois). O `nvidia-smi` acima só vê a GPU do nó onde o bloco rodou.
 
 ## Bloco R — Restaurar (servidor, bash, **no mesmo nó do Bloco P**: os arquivos ficaram nele)
 
-Rode depois do fim do teste (o Bloco B do P-05 apaga os *pods* do estudo e libera as GPUs).
+Rode depois do fim do teste. O teste é que libera as GPUs: o `qualidade.sh` apaga os próprios *pods*
+no fim de cada candidato, e no P-05 isso cabia ao Bloco B. O aviso do bloco mostra se sobrou algum.
 
 ```bash
 mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
