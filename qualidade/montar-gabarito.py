@@ -47,12 +47,14 @@ M[27] = dict(dados=linhas(("2020-01-01", IN_MIC, 10.0), ("2020-01-01", IN_PEQ, 5
 M[28] = dict(dados=linhas(("2022-10-01", REG("pequeno porte", "Nordeste"), 45748.1),
                           ("2022-10-01", REG("pequeno porte", "Centro-Oeste"), 40745.6)), termos=["nordeste"])
 M[29] = dict(dados=linhas(("2023-04-01", REG("microempresa", "Sudeste"), 32471.5),
-                          ("2023-04-01", REG("microempresa", "Sul"), 17834.4)), termos=["sudeste"])
+                          ("2023-04-01", REG("microempresa", "Sul"), 17834.4)), termos=["sudeste"],
+             so=esp(("Sudeste", 32471.5)))  # "qual tinha maior": basta a vencedora
 M[30] = dict(dados=linhas(("2022-10-01", PRZ("maior que 2 a 5 anos"), 202112.6),
                           ("2022-10-01", PRZ("acima de 5 anos"), 81602.5)))
 M[31] = dict(dados=linhas(("2023-04-01", RL_PEQ, 313650.4), ("2023-04-01", RL_MIC, 60553.5)))
 M[32] = dict(dados=linhas(("2020-07-01", FX("De 10 mil a 50 mil"), 40272.7),
-                          ("2020-07-01", FX("De 50 mil a 100 mil"), 38355.4)))
+                          ("2020-07-01", FX("De 50 mil a 100 mil"), 38355.4)),
+             so=esp(("De 10 mil a 50 mil", 40272.7)))  # "qual tinha maior": basta a vencedora
 M[33] = dict(dados=serie(2021, IN_PEQ, [3.5, 3.8, 3.8, 4.1]), ano=2021)
 M[34] = dict(dados=serie(2022, JU_MIC, [39.9, 37.8, 37.6, 37.0]), ano=2022)
 M[35] = dict(dados=serie(2020, REG("microempresa", "Sudeste"), [25881.5, 26739.4, 24032.6, 34145.0]), ano=2020)

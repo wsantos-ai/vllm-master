@@ -1088,12 +1088,8 @@
    "sql_dados": "SELECT [DT_REGISTRO], [NM_INDICADOR], [VL_INDICADOR]\nFROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]\nWHERE [NM_INDICADOR] IN ('Saldo de crédito pessoa jurídica por região - microempresa - Sudeste', 'Saldo de crédito pessoa jurídica por região - microempresa - Sul')\n  AND [DT_REGISTRO] IN ('2023-04-01')\nORDER BY [DT_REGISTRO], [NM_INDICADOR];",
    "esperados": [
     {
-     "rotulo": "2023-04-01 Saldo de crédito pessoa jurídica por região - microempresa - Sudeste",
+     "rotulo": "Sudeste",
      "valor": 32471.5
-    },
-    {
-     "rotulo": "2023-04-01 Saldo de crédito pessoa jurídica por região - microempresa - Sul",
-     "valor": 17834.4
     }
    ],
    "termos": [
@@ -1228,12 +1224,8 @@
    "sql_dados": "SELECT [DT_REGISTRO], [NM_INDICADOR], [VL_INDICADOR]\nFROM [dataabdichico].[dbo].[ACESSO_AO_CREDITO_BACEN_F]\nWHERE [NM_INDICADOR] IN ('Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 10 mil a 50 mil', 'Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 50 mil a 100 mil')\n  AND [DT_REGISTRO] IN ('2020-07-01')\nORDER BY [DT_REGISTRO], [NM_INDICADOR];",
    "esperados": [
     {
-     "rotulo": "2020-07-01 Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 10 mil a 50 mil",
+     "rotulo": "De 10 mil a 50 mil",
      "valor": 40272.7
-    },
-    {
-     "rotulo": "2020-07-01 Saldo de crédito de pessoa jurídica por faixa de valor - pequeno porte - De 50 mil a 100 mil",
-     "valor": 38355.4
     }
    ],
    "termos": [],

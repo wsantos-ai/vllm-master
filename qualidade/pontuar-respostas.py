@@ -6,7 +6,7 @@
 # Etapa 1 (a consulta), sem banco: a nota é aproximada. Conta como certa se
 #   formato:     veio tool_calls com nome consultar_sql e "sql" em JSON válido;
 #   indicadores: cada NM_INDICADOR do alvo aparece entre aspas no SQL (maiúsculas/minúsculas iguais;
-#                espaços NÃO normalizados, como no banco), ou um LIKE do SQL cobre todos;
+#                espaços NÃO normalizados, salvo em volta do hífen; ver hifen()), ou um LIKE cobre todos;
 #   datas:       cada data do alvo aparece ('AAAA-MM-DD' ou 'AAAAMMDD'); para "ano", as 4 datas
 #                trimestrais ou YEAR(...) = ano ou um intervalo que comece no ano; para "anos_jan",
 #                o dia 1/1 de cada ano ou MONTH(...) = 1 com os dois anos-limite.
@@ -67,11 +67,17 @@ def like_para_regex(padrao):
         r += ".*" if ch == "%" else "." if ch == "_" else re.escape(ch)
     return re.compile("^" + r + "$", re.I | re.S)
 
+def hifen(s):
+    # O CSV grafa o mesmo indicador como "faixa de valor - pequeno" e "faixa de valor- pequeno" (IDs 21-26);
+    # o nome certo no banco não foi conferido. Aceita as duas: normaliza só os espaços em volta do hífen.
+    # O espaço duplo de "jurídica  micro empresa" não tem hífen e continua exigido.
+    return re.sub(r" ?- ?", " - ", s)
+
 def nota_indicadores(sql, alvo):
-    literais = [s.lower() for s in re.findall(r"N?'((?:[^']|'')*)'", sql)]
-    likes = [like_para_regex(s.replace("''", "'")) for s in re.findall(r"LIKE\s+N?'((?:[^']|'')*)'", sql, re.I)]
+    literais = [hifen(s.lower()) for s in re.findall(r"N?'((?:[^']|'')*)'", sql)]
+    likes = [like_para_regex(hifen(s.replace("''", "'"))) for s in re.findall(r"LIKE\s+N?'((?:[^']|'')*)'", sql, re.I)]
     def coberto(nome):
-        return nome.lower() in literais or any(rx.match(nome) for rx in likes)
+        return hifen(nome.lower()) in literais or any(rx.match(hifen(nome)) for rx in likes)
     nomes = alvo["indicadores"] + alvo["grupo"]
     faltam = [n for n in nomes if not coberto(n)]
     return not faltam, ("faltam indicadores: " + "; ".join(faltam)) if faltam else ""
@@ -148,8 +154,12 @@ def numeros(texto):
             out.append((v / 1e6, 0.5 + 1e-9))
     return out
 
-def bate(valor, nums):
-    return any(abs(abs(x) - abs(valor)) <= tol for x, tol in nums)
+def bate(valor, nums, entradas=()):
+    # Um número copiado dos dados não vale como outro valor esperado: na ID 48, "5,6" (um dos trimestres,
+    # tolerância 0,05) batia com a média 5,65 e aprovava a resposta errada "5,75".
+    def copia(x):
+        return any(abs(x - d) < 1e-9 for d in entradas) and abs(abs(x) - abs(valor)) > 1e-9
+    return any(abs(abs(x) - abs(valor)) <= tol and not copia(x) for x, tol in nums)
 
 def etapa2(p, r):
     e = r.get("etapa2") or {}
@@ -164,7 +174,8 @@ def etapa2(p, r):
     else:
         motivo_len = ""
     nums = numeros(texto)
-    faltam = [x["rotulo"] + f" = {x['valor']:g}" for x in p["esperados"] if not bate(x["valor"], nums)]
+    entradas = [v for d in p["dados"] for v in d.values() if isinstance(v, (int, float))]
+    faltam = [x["rotulo"] + f" = {x['valor']:g}" for x in p["esperados"] if not bate(x["valor"], nums, entradas)]
     tn = sem_acento(texto)
     faltam += [f'termo "{t}"' for t in p["termos"] if sem_acento(t) not in tn]
     conhecidos = [x["valor"] for x in p["esperados"]]
