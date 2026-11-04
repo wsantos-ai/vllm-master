@@ -64,18 +64,31 @@ Se precisar pausar `vllms`, é só com o acordo dele: [pausar-vllms.md](pausar-v
 
 ## Copiar os arquivos para `sabdiia01` (estação, PowerShell)
 
+O login é com o seu usuário (o mesmo do MobaXterm), não com `root`: o `root` recusa a senha por
+`ssh` (`Permission denied`, 2026-11-04). Por isso a cópia vai para `/tmp/qualidade-copia`, que qualquer
+usuário grava, e o Bloco 1 (como `root`) a move para o lugar. O bloco pergunta o usuário.
+
 ```powershell
-ssh root@192.168.50.151 "mkdir -p /home/utec/vllm-estudo/qualidade"
-scp C:\www\vllm-master\qualidade\qualidade.sh C:\www\vllm-master\qualidade\coletar-respostas.py C:\www\vllm-master\qualidade\pontuar-respostas.py C:\www\vllm-master\qualidade\gabarito-qualidade.json "root@192.168.50.151:/home/utec/vllm-estudo/qualidade/"
+$u = Read-Host "Usuário com que você entra no sabdiia01"
+ssh "${u}@192.168.50.151" "mkdir -p /tmp/qualidade-copia"
+scp C:\www\vllm-master\qualidade\qualidade.sh C:\www\vllm-master\qualidade\coletar-respostas.py C:\www\vllm-master\qualidade\pontuar-respostas.py C:\www\vllm-master\qualidade\gabarito-qualidade.json "${u}@192.168.50.151:/tmp/qualidade-copia/"
 ```
 
-## Bloco 1 — Confere os arquivos (servidor `sabdiia01`, bash; aborta em outro nó)
+Sem `scp`, o painel SFTP do MobaXterm serve: arraste os 4 arquivos para `/tmp/qualidade-copia`.
+
+## Bloco 1 — Confere os arquivos (servidor `sabdiia01`, bash como `root`; aborta em outro nó)
+
+Entre como de costume e vire `root` (`sudo -i`) antes de colar.
 
 ```bash
 mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
 {
   echo "== $(hostname -s)  $(date -Is)  preparo do teste de qualidade"
   [ "$(hostname -s)" = sabdiia01 ] || { echo "ABORTA: este bloco é para sabdiia01"; exit 1; }
+  [ "$(id -u)" = 0 ] || { echo "ABORTA: rode como root (sudo -i)"; exit 1; }
+  if [ -d /tmp/qualidade-copia ]; then
+    mkdir -p qualidade && cp -v /tmp/qualidade-copia/* qualidade/ && rm -rf /tmp/qualidade-copia
+  fi
   cd qualidade || { echo "ABORTA: falta /home/utec/vllm-estudo/qualidade (passo de cópia acima)"; exit 1; }
   sed -i 's/\r$//' qualidade.sh coletar-respostas.py pontuar-respostas.py gabarito-qualidade.json
   ls -l qualidade.sh coletar-respostas.py pontuar-respostas.py gabarito-qualidade.json
@@ -146,10 +159,15 @@ kubectl describe nodes sabdiia01 sabdiia02 | grep -E '^Name:|^  nvidia\.com/gpu 
 ## Trazer os resultados (estação, PowerShell)
 
 ```powershell
-scp "root@192.168.50.151:/home/utec/vllm-estudo/qualidade-*.log" "C:\www\vllm-master\logs-analysis\"
+$u = Read-Host "Usuário com que você entra no sabdiia01"
+scp "${u}@192.168.50.151:/home/utec/vllm-estudo/qualidade-*.log" "C:\www\vllm-master\logs-analysis\"
 New-Item -ItemType Directory -Force "C:\www\vllm-master\logs-analysis\qualidade" | Out-Null
-scp -r "root@192.168.50.151:/home/utec/vllm-estudo/qualidade/resultados" "C:\www\vllm-master\logs-analysis\qualidade\"
+scp -r "${u}@192.168.50.151:/home/utec/vllm-estudo/qualidade/resultados" "C:\www\vllm-master\logs-analysis\qualidade\"
 ```
+
+Ler basta para trazer: os arquivos que o `root` grava saem legíveis para todos (`umask` 022
+`[hipótese]`). Se der `Permission denied` aqui, rode no 01, como `root`:
+`chmod -R a+rX /home/utec/vllm-estudo/qualidade /home/utec/vllm-estudo/qualidade-*.log`.
 
 Cada pasta `resultados/<data>-<candidato>/` traz `manifesto.yaml`, `respostas.jsonl` (bruto),
 `resultado.md` (nota), os logs dos *pods* e, no `7b-ray`, `controle.md`. Para repontuar todas na

@@ -467,6 +467,15 @@ A *tag* da imagem (caso 3) é só um rótulo; como evidência vale o que o vLLM 
 Procedimento completo: [runbooks/teste-qualidade-modelos.md](runbooks/teste-qualidade-modelos.md).
 Os arquivos ficam em [`qualidade/`](qualidade/).
 
+```powershell
+# com que métodos o servidor aceita login, e se a minha chave é aceita (estação; não pede senha)  [executado 2026-11-04]
+ssh -v -o BatchMode=yes root@192.168.50.151 exit 2>&1 | Select-String "Authentications that can continue|Offering|Permission denied"
+
+# copiar com o seu usuário, não root (root recusa a senha por ssh)  [não executado]
+$u = Read-Host "Usuário com que você entra no sabdiia01"
+scp C:\www\vllm-master\qualidade\qualidade.sh "${u}@192.168.50.151:/tmp/qualidade-copia/"
+```
+
 ```bash
 # o servidor subiu com tool calling? (procure --enable-auto-tool-choice --tool-call-parser hermes) [não executado]
 kubectl exec -n vllm-estudo vllm-qual -- sh -c 'for p in /proc/[0-9]*/cmdline; do tr "\0" " " < $p 2>/dev/null | grep -E "vllm serve"; done | sort -u'
