@@ -1,0 +1,5 @@
+== sabdiia03 2026-11-07T22:29:04-03:00 refs/main do Nemo
+/var/lib/vllm-estudo/hf-cache/hub/models--mistralai--Mistral-Nemo-Instruct-2407/snapshots/04d8a90549d23fc6bd7f642064003592df51e9b3
+total 4
+-rw-r--r-- 1 root root 40 Nov  7 22:29 main
+refs/main = 04d8a90549d23fc6bd7f642064003592df51e9b3

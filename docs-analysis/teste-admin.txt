@@ -1,0 +1,27 @@
+Nesses clusters do ray, esses 2 modelos aqui, apresentaram instabilidade de hardware:
+ 
+Qwen2.5-14B GPTQ-Int8 (Teste T-010)
+Qwen3-30B-A3B GPTQ-Int4 MoE (Teste T-011)
+ 
+O Qwen2.5 apresentou um pico de energia bem próximo ao limite, o mesmo problema que ocorreu nos testes que o Welington fez que é o T-004 da documentação de teste..
+Os Zeros (Falha de Conexão): A vazão e o tempo de resposta em 0.0 significam que o script Python não conseguiu obter resposta do vLLM. O pico de 222.48 W (extremamente próximo ao limite de 250 W da placa) indica que a GPU foi levada ao limite absoluto de stress tentando processar as requisições de $c=16$. O driver CUDA provavelmente travou momentaneamente por proteção térmica/energética, derrubando as conexões do servidor.
+A Decepção do Qwen no $c=32$ (O Gargalo do Hardware): O teste $c=32$ conseguiu rodar depois de o hardware estabilizar, mas entregou apenas 191.5 tok/s e pífios 6 tok/s por utilizador.
+A Prova Definitiva: O Wellington testou este mesmo modelo em 1 GPU e conseguiu 194.6 tok/s. Você usou 3 GPUs e conseguiu 191.5 tok/s. Porquê? Porque a arquitetura Volta da V100S (sm_70) não tem hardware nativo para rodar o kernel de descompressão do GPTQ 8-bits de forma paralela em grandes lotes. A CPU/GPU forma um gargalo tão grande a tentar "descompactar" o modelo que não importa se tem 1 ou 100 GPUs: a velocidade individual da placa está estrangulada pelo formato GPTQ.
+Eu fiz uma tabelinha comparando os 3 modelos nessa arquitetura..
+ 
+❌ Candidato 1: Qwen2.5-14B GPTQ-Int8 (Teste T-010)
+Vazão Geral: 191.5 tok/s
+Velocidade por Utilizador: 6 tok/s (Abaixo do piso de 10 tok/s)
+TTFT p99: ~12 segundos
+Veredicto: Reprovado. Apesar de ter excelente qualidade de raciocínio lógico, a quantização Int8 estrangula o cluster. O sistema registou picos de energia de 222W (perto do limite da placa), causando falhas de ligação nos testes intermédios. Não escala.
+❌ Candidato 2: Qwen3-30B-A3B GPTQ-Int4 MoE (Teste T-011)
+Vazão Geral: 156.1 tok/s
+Velocidade por Utilizador: 9 tok/s (Abaixo do piso de 10 tok/s)
+TTFT p99: ~25.7 segundos (no c=32) e impressionantes 66.6 segundos (no c=16).
+Veredicto: Reprovado. O formato Int4 cria uma contenção tão severa no hardware que o utilizador chega a esperar mais de um minuto para ver a primeira palavra no ecrã. Totalmente inviável para uma aplicação interativa.
+🏆 Candidato 3: Mistral-Nemo-Instruct-2407 12B FP16 (Teste T-009)
+Vazão Geral: 467.7 tok/s
+Velocidade por Utilizador: 19 tok/s (Quase o dobro do piso exigido!)
+TTFT p99: ~3.2 segundos
+Veredicto: Aprovado. Roda nativamente em formato FP16, evitando totalmente os gargalos do kernel de quantização. Com 12 mil milhões de parâmetros, oferece uma inteligência corporativa formidável (próxima à do Qwen 14B), mas com estabilidade absoluta. Não gerou qualquer falha ou estrangulamento térmico durante os testes.
+Fiquem a vontade para testar e trazer outras métricas que eu não medi, a gente pode testar também usando o próprio ray como pipeline parallelism mas não sei se vai dar tempo..

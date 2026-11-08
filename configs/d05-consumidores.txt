@@ -1,0 +1,20 @@
+# Consumidores do vLLM pelo Kong (D-05). Lido pelo Bloco C de runbooks/acesso-aplicacoes-d05.md.
+#
+# Uma linha por ator:  nome  IP-ou-CIDR  [IP-ou-CIDR ...]
+#   nome: minúsculas, dígitos e hífen, até 32 caracteres (vira o nome do KongConsumer e do Secret).
+#   IP:   o da máquina que chama o modelo (PC do dev, servidor ou máquinas da equipe), não o do navegador
+#         de usuário. CIDR de /8 a /32 (ex.: uma faixa de DHCP). Ainda sem IP: "pendente" (a chave é
+#         criada, mas o Kong recusa o ator até o IP entrar aqui).
+#
+# Ao mudar: copie para sabdiia01 (Bloco E0, seção 5) e rode o Bloco C. Chaves já criadas não mudam.
+# Linha apagada = consumidor e chave apagados no próximo Bloco C (revogação).
+# IPs não são segredo; chaves nunca entram neste arquivo.
+
+estacao        172.16.30.6
+# wsantos: notebook do usuário: sem IP fixo; a VPN dá um endereço por DHCP em 172.16.254.0/24 (2026-11-07, adaptador
+# "Ethernet 2"). A faixa inteira libera qualquer máquina da VPN que tenha esta chave. Troque por /32 se a
+# infraestrutura reservar um IP fixo na VPN.
+wsantos       172.16.254.0/24
+dev-1          pendente
+dev-2          pendente
+crp            pendente

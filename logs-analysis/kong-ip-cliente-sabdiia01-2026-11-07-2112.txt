@@ -1,0 +1,7 @@
+# Saída colada pelo usuário (não gravada com tee), sabdiia01, 2026-11-07 ~21:13 -03:
+# kubectl logs -n kong deploy/kong-gateway -c proxy --since=30m | grep 'vllm/v1/chat' | tail -3
+# 23:52 UTC = E0 de 20:52 (antes do K2); 00:06 UTC = E0 de 21:06 (depois do K2); 00:12 UTC = nova chamada do notebook.
+Defaulted container "proxy" out of: proxy, clear-stale-pid (init)
+10.244.179.64 - - [07/Nov/2026:23:52:58 +0000] "GET /vllm/v1/chat/completions HTTP/1.1" 404 103 "-" "curl/8.18.0" kong_request_id: "9404c66d9c55ad32a3bb80580628db60"
+172.16.254.143 - - [08/Nov/2026:00:06:51 +0000] "GET /vllm/v1/chat/completions HTTP/1.1" 404 103 "-" "curl/8.18.0" kong_request_id: "c54b52642e96ff28e0b27978174d2715"
+172.16.254.143 - - [08/Nov/2026:00:12:49 +0000] "GET /vllm/v1/chat/completions HTTP/1.1" 404 103 "-" "curl/8.18.0" kong_request_id: "258bcf1db97f6e66e4909d71b98f950b"

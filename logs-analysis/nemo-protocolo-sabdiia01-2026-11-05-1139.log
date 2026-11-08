@@ -1,0 +1,285 @@
+== sabdiia01  2026-11-05T11:39:27-03:00  Mistral-Nemo 12B FP16, 1 GPU: protocolo + fase c=11
+### 1. pré-condições
+Name:               sabdiia01
+  nvidia.com/gpu     0           0
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/ol-root  631G  184G  448G  30% /
+        SW Power Cap                                   : Not Active
+        HW Slowdown                                    : Not Active
+            HW Thermal Slowdown                        : Not Active
+            HW Power Brake Slowdown                    : Not Active
+        SW Thermal Slowdown                            : Not Active
+        SW Power Capping                               : 14859904845653190 us
+        SW Thermal Slowdown                            : 0 us
+        HW Thermal Slowdown                            : 0 us
+### 2. manifesto e criação   11:39:27
+namespace/vllm-estudo unchanged
+pod/vllm-conc created
+### 3. aguardando o servidor (até 45 min; baixa ~24,5 GB na 1ª vez)   11:39:27
+11:39:27 Pending/false |  | 
+11:39:58 Running/false | 1.1G | Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to en
+11:40:28 Running/false | 4.1G | Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to en
+11:40:58 Running/false | 8.1G | Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to en
+11:41:28 Running/false | 8.1G | Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to en
+11:41:58 Running/false | 13G | Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to en
+11:42:29 Running/false | 13G | Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to en
+11:42:59 Running/false | 21G | Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to en
+11:43:29 Running/false | 21G | Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to en
+11:43:59 Running/false | 21G | Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to en
+11:44:29 Running/false | 21G | Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to en
+11:44:59 Running/false | 23G | -rw-r--r-- 1 root root     2472536 Nov  5 14:39 vocab.json
+11:45:30 Running/false | 23G | (APIServer pid=1) INFO 11-05 14:45:27 [vllm.py:790] Asynchronous scheduling is enabled.
+11:46:00 Running/false | 23G | (EngineCore pid=253) INFO 11-05 14:45:50 [gpu_model_runner.py:4820] Model loading took 22.84 GiB memory and 10.545258 seconds
+11:46:30 Running/false | 23G | (EngineCore pid=253) INFO 11-05 14:46:26 [gpu_model_runner.py:5876] Profiling CUDA graph memory: PIECEWISE=51 (largest=512), FULL=35 (largest=256)
+pronto=1 depois de 7 min
+### 4. arranque: formato, tokenizer, pesos, KV cache
+Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+pesos em /hf-cache/hub/models--mistralai--Mistral-Nemo-Instruct-2407/snapshots/04d8a90549d23fc6bd7f642064003592df51e9b3
+-rw-r--r-- 1 root root 24495604224 Nov  5 14:44 consolidated.safetensors
+(APIServer pid=1) INFO 11-05 14:45:17 [utils.py:233] non-default args: {'model_tag': '/hf-cache/hub/models--mistralai--Mistral-Nemo-Instruct-2407/snapshots/04d8a90549d23fc6bd7f642064003592df51e9b3', 'enable_auto_tool_choice': True, 'tool_call_parser'
+(APIServer pid=1) INFO 11-05 14:45:17 [config.py:288] Inferred from consolidated*.safetensors files torch.bfloat16 dtype.
+(APIServer pid=1) WARNING 11-05 14:45:27 [model.py:2016] Casting torch.bfloat16 to torch.float16.
+(EngineCore pid=253) INFO 11-05 14:45:38 [core.py:105] Initializing a V1 LLM engine (v0.19.1) with config: model='/hf-cache/hub/models--mistralai--Mistral-Nemo-Instruct-2407/snapshots/04d8a90549d23fc6bd7f642064003592df51e9b3', speculative_config=None
+(EngineCore pid=253) ERROR 11-05 14:45:39 [fa_utils.py:145] Cannot use FA version 2 is not supported due to FA2 is only supported on devices with compute capability >= 8
+(EngineCore pid=253) <frozen importlib._bootstrap_external>:1301: FutureWarning: The cuda.cudart module is deprecated and will be removed in a future release, please switch to use the cuda.bindings.runtime module instead.
+(EngineCore pid=253) <frozen importlib._bootstrap_external>:1301: FutureWarning: The cuda.nvrtc module is deprecated and will be removed in a future release, please switch to use the cuda.bindings.nvrtc module instead.
+(EngineCore pid=253) INFO 11-05 14:45:50 [gpu_model_runner.py:4820] Model loading took 22.84 GiB memory and 10.545258 seconds
+(EngineCore pid=253) INFO 11-05 14:46:31 [gpu_worker.py:436] Available KV cache memory: 4.32 GiB
+(EngineCore pid=253) INFO 11-05 14:46:31 [kv_cache_utils.py:1319] GPU KV cache size: 28,288 tokens
+(EngineCore pid=253) INFO 11-05 14:46:31 [kv_cache_utils.py:1324] Maximum concurrency for 8,192 tokens per request: 3.45x
+(EngineCore pid=253) INFO 11-05 14:46:46 [config.py:288] Inferred from consolidated*.safetensors files torch.bfloat16 dtype.
+(APIServer pid=1) INFO 11-05 14:46:49 [parser_manager.py:202] "auto" tool choice has been enabled.
+### 5. protocolo comum (c=1/16/32)   11:47:00
+== sabdiia01  2026-11-05T11:47:00-03:00  alvo: vllm-estudo/pod/vllm-conc  GPUs: pod/vllm-conc 
+### 1. servidor: versão, comando, modelo
+vllm: 0.19.1
+/usr/bin/python3 /usr/local/bin/vllm serve /hf-cache/hub/models--mistralai--Mistral-Nemo-Instruct-2407/snapshots/04d8a90549d23fc6bd7f642064003592df51e9b3 --served-model-name mistralai/Mistral-Nemo-Instruct-2407 --dtype float16 --max-model-len 8192 --gpu-memory-utilization 0.90 --generation-config vllm --tokenizer_mode mistral --config_format mistral --load_format mistral --enable-auto-tool-choice --tool-call-parser mistral --host 0.0.0.0 --port 8000 
+sh -c for p in /proc/[0-9]*/cmdline; do tr "\0" " " < $p 2>/dev/null | grep -E "vllm serve|api_server" ; done | sort -u | cut -c1-600 
+modelo servido: mistralai/Mistral-Nemo-Instruct-2407   tokenizer (root): /hf-cache/hub/models--mistralai--Mistral-Nemo-Instruct-2407/snapshots/04d8a90549d23fc6bd7f642064003592df51e9b3
+resultados em /home/utec/vllm-estudo/testes/2026-11-05-1147-mistralai_Mistral-Nemo-Instruct-2407
+### 2. linhas do arranque (pesos, KV cache, concorrência máxima)
+## pod/vllm-conc
+(EngineCore pid=253) INFO 11-05 14:45:38 [core.py:105] Initializing a V1 LLM engine (v0.19.1) with config: model='/hf-cache/hub/models--mistralai--Mistral-Nemo-Instruct-2407/snapshots/04d8a90549d23fc6bd7f642064003592df51e9b3', speculative_config=None
+(EngineCore pid=253) ERROR 11-05 14:45:39 [fa_utils.py:145] Cannot use FA version 2 is not supported due to FA2 is only supported on devices with compute capability >= 8
+(EngineCore pid=253) INFO 11-05 14:45:50 [gpu_model_runner.py:4820] Model loading took 22.84 GiB memory and 10.545258 seconds
+(EngineCore pid=253) INFO 11-05 14:46:31 [gpu_worker.py:436] Available KV cache memory: 4.32 GiB
+(EngineCore pid=253) INFO 11-05 14:46:31 [kv_cache_utils.py:1319] GPU KV cache size: 28,288 tokens
+(EngineCore pid=253) INFO 11-05 14:46:31 [kv_cache_utils.py:1324] Maximum concurrency for 8,192 tokens per request: 3.45x
+### 3. GPUs antes (uso deve estar perto de 0 %)
+pod/vllm-conc: 29462 MiB, 0 %, 35, 1245 MHz, 39.10 W
+3646164, [Not Found], 29458 MiB
+### 4. sanidade: uma pergunta simples, temperature 0
+RESPOSTA: A capital do Brasil é Brasília.
+preempções antes: 0.0
+### 5. amostras de GPU a cada ~5 s -> /home/utec/vllm-estudo/testes/2026-11-05-1147-mistralai_Mistral-Nemo-Instruct-2407/gpu-amostras.csv
+### 6. warmup: c=4, 16 requisições, semente 999 (descartado)   11:47:07
+Successful requests:                     16        
+Failed requests:                         0         
+### fase c=1, 12 requisições, semente 101   início 11:48:05
+============ Serving Benchmark Result ============
+Successful requests:                     12        
+Failed requests:                         0         
+Maximum request concurrency:             1         
+Benchmark duration (s):                  109.81    
+Total input tokens:                      6132      
+Total generated tokens:                  3072      
+Request throughput (req/s):              0.11      
+Output token throughput (tok/s):         27.97     
+Peak output token throughput (tok/s):    29.00     
+Peak concurrent requests:                2.00      
+Total token throughput (tok/s):          83.81     
+---------------Time to First Token----------------
+Mean TTFT (ms):                          191.69    
+Median TTFT (ms):                        190.94    
+P50 TTFT (ms):                           190.94    
+P95 TTFT (ms):                           196.48    
+P99 TTFT (ms):                           199.61    
+-----Time per Output Token (excl. 1st token)------
+Mean TPOT (ms):                          35.13     
+Median TPOT (ms):                        35.13     
+P50 TPOT (ms):                           35.13     
+P95 TPOT (ms):                           35.15     
+P99 TPOT (ms):                           35.15     
+---------------Inter-token Latency----------------
+Mean ITL (ms):                           35.13     
+Median ITL (ms):                         35.10     
+P50 ITL (ms):                            35.10     
+P95 ITL (ms):                            35.74     
+P99 ITL (ms):                            36.40     
+----------------End-to-end Latency----------------
+Mean E2EL (ms):                          9150.79   
+Median E2EL (ms):                        9150.57   
+P50 E2EL (ms):                           9150.57   
+P95 E2EL (ms):                           9155.28   
+P99 E2EL (ms):                           9156.41   
+==================================================
+### fase c=16, 256 requisições, semente 116   início 11:50:06
+============ Serving Benchmark Result ============
+Successful requests:                     256       
+Failed requests:                         0         
+Maximum request concurrency:             16        
+Benchmark duration (s):                  254.96    
+Total input tokens:                      130816    
+Total generated tokens:                  65536     
+Request throughput (req/s):              1.00      
+Output token throughput (tok/s):         257.04    
+Peak output token throughput (tok/s):    336.00    
+Peak concurrent requests:                29.00     
+Total token throughput (tok/s):          770.13    
+---------------Time to First Token----------------
+Mean TTFT (ms):                          1464.78   
+Median TTFT (ms):                        1722.17   
+P50 TTFT (ms):                           1722.17   
+P95 TTFT (ms):                           2191.97   
+P99 TTFT (ms):                           2888.64   
+-----Time per Output Token (excl. 1st token)------
+Mean TPOT (ms):                          56.72     
+Median TPOT (ms):                        55.81     
+P50 TPOT (ms):                           55.81     
+P95 TPOT (ms):                           60.95     
+P99 TPOT (ms):                           61.34     
+---------------Inter-token Latency----------------
+Mean ITL (ms):                           56.72     
+Median ITL (ms):                         51.01     
+P50 ITL (ms):                            51.01     
+P95 ITL (ms):                            52.86     
+P99 ITL (ms):                            227.21    
+----------------End-to-end Latency----------------
+Mean E2EL (ms):                          15928.28  
+Median E2EL (ms):                        15951.07  
+P50 E2EL (ms):                           15951.07  
+P95 E2EL (ms):                           16007.10  
+P99 E2EL (ms):                           16574.08  
+==================================================
+### fase c=32, 512 requisições, semente 102   início 11:54:34
+============ Serving Benchmark Result ============
+Successful requests:                     512       
+Failed requests:                         0         
+Maximum request concurrency:             32        
+Benchmark duration (s):                  361.05    
+Total input tokens:                      261632    
+Total generated tokens:                  131072    
+Request throughput (req/s):              1.42      
+Output token throughput (tok/s):         363.03    
+Peak output token throughput (tok/s):    512.00    
+Peak concurrent requests:                44.00     
+Total token throughput (tok/s):          1087.68   
+---------------Time to First Token----------------
+Mean TTFT (ms):                          1822.81   
+Median TTFT (ms):                        1772.98   
+P50 TTFT (ms):                           1772.98   
+P95 TTFT (ms):                           2869.84   
+P99 TTFT (ms):                           5240.59   
+-----Time per Output Token (excl. 1st token)------
+Mean TPOT (ms):                          81.27     
+Median TPOT (ms):                        81.75     
+P50 TPOT (ms):                           81.75     
+P95 TPOT (ms):                           85.27     
+P99 TPOT (ms):                           87.30     
+---------------Inter-token Latency----------------
+Mean ITL (ms):                           81.27     
+Median ITL (ms):                         66.16     
+P50 ITL (ms):                            66.16     
+P95 ITL (ms):                            70.76     
+P99 ITL (ms):                            593.48    
+----------------End-to-end Latency----------------
+Mean E2EL (ms):                          22547.87  
+Median E2EL (ms):                        22613.63  
+P50 E2EL (ms):                           22613.63  
+P95 E2EL (ms):                           23102.11  
+P99 E2EL (ms):                           25216.10  
+==================================================
+preempções depois: 0.0 (diferença = preempções do teste, warmup incluído)
+### 7. estrangulamento depois da carga
+## pod/vllm-conc
+        SW Power Cap                                   : Not Active
+        HW Slowdown                                    : Not Active
+            HW Thermal Slowdown                        : Not Active
+            HW Power Brake Slowdown                    : Not Active
+        SW Thermal Slowdown                            : Not Active
+        SW Power Capping                               : 446649295038 us
+        SW Thermal Slowdown                            : 0 us
+        HW Thermal Slowdown                            : 0 us
+### 8. GPU sob carga (amostras com uso >= 50 %): temp. máx., clock mín.
+pod/vllm-conc: temp máx 74 C, clock mín 1215 MHz, amostras 149
+### 9. LINHAS PARA O REGISTRO (Tabela 3), conferidas com os totais esperados
+| T-xxx | 1 | 12 | 0 | 28.0 | 28 | 191 / 200 | 35.1 / 35.1 | 9.2 / 9.2 | ver nota | ver seção 8 | AVISO: totais fora do protocolo: entrada 6132, saída 3072; a fase NÃO vale |
+| T-xxx | 16 | 256 | 0 | 257.0 | 18 | 1722 / 2889 | 55.8 / 61.3 | 16.0 / 16.6 | ver nota | ver seção 8 | AVISO: totais fora do protocolo: entrada 130816, saída 65536; a fase NÃO vale |
+| T-xxx | 32 | 512 | 0 | 363.0 | 12 | 1773 / 5241 | 81.8 / 87.3 | 22.6 / 25.2 | ver nota | ver seção 8 | AVISO: totais fora do protocolo: entrada 261632, saída 131072; a fase NÃO vale |
+== fim 2026-11-05T12:00:48-03:00   resultados em /home/utec/vllm-estudo/testes/2026-11-05-1147-mistralai_Mistral-Nemo-Instruct-2407
+### 6. fase extra c=11, 176 requisições, semente 111 (a carga de 1 réplica no T-009, se dividida por 3)   12:00:48
+pasta: /home/utec/vllm-estudo/testes/2026-11-05-1147-mistralai_Mistral-Nemo-Instruct-2407
+tokenizer (root): /hf-cache/hub/models--mistralai--Mistral-Nemo-Instruct-2407/snapshots/04d8a90549d23fc6bd7f642064003592df51e9b3
+============ Serving Benchmark Result ============
+Successful requests:                     176       
+Failed requests:                         0         
+Maximum request concurrency:             11        
+Benchmark duration (s):                  228.22    
+Total input tokens:                      89937     
+Total generated tokens:                  45056     
+Request throughput (req/s):              0.77      
+Output token throughput (tok/s):         197.42    
+Peak output token throughput (tok/s):    242.00    
+Peak concurrent requests:                22.00     
+Total token throughput (tok/s):          591.49    
+---------------Time to First Token----------------
+Mean TTFT (ms):                          1241.99   
+Median TTFT (ms):                        1349.05   
+P50 TTFT (ms):                           1349.05   
+P95 TTFT (ms):                           1844.95   
+P99 TTFT (ms):                           2015.40   
+-----Time per Output Token (excl. 1st token)------
+Mean TPOT (ms):                          51.05     
+Median TPOT (ms):                        50.67     
+P50 TPOT (ms):                           50.67     
+P95 TPOT (ms):                           54.75     
+P99 TPOT (ms):                           54.77     
+---------------Inter-token Latency----------------
+Mean ITL (ms):                           51.05     
+Median ITL (ms):                         47.90     
+P50 ITL (ms):                            47.90     
+P95 ITL (ms):                            49.16     
+P99 ITL (ms):                            55.38     
+----------------End-to-end Latency----------------
+Mean E2EL (ms):                          14258.58  
+Median E2EL (ms):                        14270.01  
+P50 E2EL (ms):                           14270.01  
+P95 E2EL (ms):                           14276.55  
+P99 E2EL (ms):                           14397.73  
+==================================================
+c=11 sob carga: temp máx 74 C, clock mín 1215 MHz, potência máx 284.16 W, amostras 113
+        SW Power Cap                                   : Not Active
+        HW Slowdown                                    : Not Active
+            HW Thermal Slowdown                        : Not Active
+            HW Power Brake Slowdown                    : Not Active
+        SW Thermal Slowdown                            : Not Active
+        SW Power Capping                               : 446651165987 us
+        SW Thermal Slowdown                            : 0 us
+        HW Thermal Slowdown                            : 0 us
+### 7. log do pod e limpeza   12:04:49
+log do pod: nemo-vllm-conc-pod-2026-11-05-1204.log (1299 linhas); fim:
+(APIServer pid=1) INFO:     127.0.0.1:58356 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:58372 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:58342 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:48784 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-05 15:04:29 [loggers.py:259] Engine 000: Avg prompt throughput: 563.1 tokens/s, Avg generation throughput: 184.8 tokens/s, Running: 11 reqs, Waiting: 0 reqs, GPU KV cache usage: 26.4%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO:     127.0.0.1:58284 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:58300 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:58320 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:58316 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:58326 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:58336 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:58324 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:58376 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:58356 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:58372 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:58342 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:53170 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-05 15:04:39 [loggers.py:259] Engine 000: Avg prompt throughput: 563.3 tokens/s, Avg generation throughput: 183.7 tokens/s, Running: 11 reqs, Waiting: 0 reqs, GPU KV cache usage: 23.0%, Prefix cache hit rate: 0.0%
+(APIServer pid=1) INFO:     192.168.50.151:49722 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:58284 - "GET /metrics HTTP/1.1" 200 OK
+pod "vllm-conc" deleted from vllm-estudo namespace
+Name:               sabdiia01
+  nvidia.com/gpu     0           0
+23G	/var/lib/vllm-estudo/hf-cache/hub/models--mistralai--Mistral-Nemo-Instruct-2407
+== fim 2026-11-05T12:04:50-03:00

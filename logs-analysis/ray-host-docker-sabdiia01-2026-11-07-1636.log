@@ -1,0 +1,5 @@
+== sabdiia01 2026-11-07T16:36:53-03:00 D-07 H0b: Docker e Podman
+## docker: serviço inactive
+Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?
+## podman: serviço inactive
+## podman do usuário utec

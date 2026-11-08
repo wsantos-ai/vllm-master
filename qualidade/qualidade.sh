@@ -1,30 +1,40 @@
 #!/bin/bash
 # Teste de qualidade de um candidato: sobe o servidor em vllm-estudo, coleta as 50 perguntas, pontua e apaga.
 # Roda em sabdiia01, em /home/utec/vllm-estudo/qualidade (arquivos copiados da pasta qualidade/ do estudo).
-# Uso: bash qualidade.sh <candidato>
+# Uso: bash qualidade.sh <candidato> ["<variantes>"]
+#   variantes: sql (padrão, a de AC-28), enum, enum-required; várias entre aspas rodam em sequência no
+#   mesmo servidor, cada uma com respostas-<v>.jsonl e resultado-<v>.md (a sql mantém os nomes antigos).
+#   carga: teste de carga com a variante enum-required (carga-respostas.py), 1, 8, 16 e 32 usuários
+#   simultâneos; grava carga.jsonl, carga.md e gpu-carga.csv (nvidia-smi a cada 2 s durante a carga).
 #   7b            Qwen/Qwen2.5-7B-Instruct FP16, 1 GPU (01)
 #   14b-int8      Qwen/Qwen2.5-14B-Instruct-GPTQ-Int8, 1 GPU (01)
 #   30b-a3b       Qwen/Qwen3-30B-A3B-GPTQ-Int4, 1 GPU (01)
 #   14b-fp16-ray  Qwen/Qwen2.5-14B-Instruct FP16, Ray PP 2 (01 + 02), mesmo desenho do P-05
 #   7b-ray        Qwen/Qwen2.5-7B-Instruct FP16, Ray PP 2 (01 + 02): controle contra o "7b"
+#   nemo          mistralai/Mistral-Nemo-Instruct-2407 FP16 (publicado em BF16), 1 GPU (01). Formato oficial
+#                 da Mistral (mistral_common), parser "mistral", cache em / e servido pelo caminho local.
+#                 Os pesos têm de estar no cache antes (o pod sem hostNetwork de 01 não resolve nomes, PD-28).
 # Servidor: v0.19.1, --dtype float16 --max-model-len 8192 --gpu-memory-utilization 0.90 --generation-config vllm
-#           --enable-auto-tool-choice --tool-call-parser hermes ([F-042]).
-C=$1
+#           --enable-auto-tool-choice --tool-call-parser hermes ([F-042]); no nemo, parser mistral (abaixo).
+C=$1; VARS=${2:-sql}
+for V in $VARS; do case "$V" in sql|enum|enum-required|carga) ;; *) echo "variante inválida: $V (sql|enum|enum-required|carga)"; exit 1;; esac; done
 case "$C" in
   7b)           MODELO=Qwen/Qwen2.5-7B-Instruct;             RAY=0 ;;
   14b-int8)     MODELO=Qwen/Qwen2.5-14B-Instruct-GPTQ-Int8;  RAY=0 ;;
   30b-a3b)      MODELO=Qwen/Qwen3-30B-A3B-GPTQ-Int4;         RAY=0 ;;
   14b-fp16-ray) MODELO=Qwen/Qwen2.5-14B-Instruct;            RAY=1 ;;
   7b-ray)       MODELO=Qwen/Qwen2.5-7B-Instruct;             RAY=1 ;;
-  *) echo "uso: bash qualidade.sh 7b|14b-int8|30b-a3b|14b-fp16-ray|7b-ray"; exit 1 ;;
+  nemo)         MODELO=mistralai/Mistral-Nemo-Instruct-2407; RAY=0 ;;
+  *) echo "uso: bash qualidade.sh 7b|14b-int8|30b-a3b|14b-fp16-ray|7b-ray|nemo"; exit 1 ;;
 esac
 NS=vllm-estudo
 Q=/home/utec/vllm-estudo/qualidade
-D=$Q/resultados/$(date +%F-%H%M)-$C
-echo "== $(hostname -s)  $(date -Is)  teste de qualidade: $C ($MODELO, Ray=$RAY)"
+D=$Q/resultados/$(date +%F-%H%M)-$C; [ "$VARS" = sql ] || D=$D-$(echo $VARS | tr ' ' '+')
+echo "== $(hostname -s)  $(date -Is)  teste de qualidade: $C ($MODELO, Ray=$RAY), variantes: $VARS"
 [ "$(hostname -s)" = sabdiia01 ] || { echo "ABORTA: este script é para sabdiia01"; exit 1; }
 cd $Q || exit 1
-for f in gabarito-qualidade.json coletar-respostas.py pontuar-respostas.py; do
+ARQS="gabarito-qualidade.json coletar-respostas.py pontuar-respostas.py"; case " $VARS " in *" carga "*) ARQS="$ARQS carga-respostas.py";; esac
+for f in $ARQS; do
   [ -s $f ] || { echo "ABORTA: falta $Q/$f (Bloco 1 do runbook teste-qualidade-modelos.md)"; exit 1; }
 done
 mkdir -p "$D"; echo "resultados em $D"
@@ -45,12 +55,26 @@ if [ $RAY = 1 ]; then
   [ "$CP" = 200 ] || { echo "ABORTA: 01 não alcança o PyPI (o Ray é instalado ao iniciar)"; exit 1; }
 fi
 df -h / /home
+if [ "$C" = nemo ]; then
+  ls /var/lib/vllm-estudo/hf-cache/hub/models--mistralai--Mistral-Nemo-Instruct-2407/snapshots/*/consolidated.safetensors 2>/dev/null     || { echo "ABORTA: pesos do Nemo fora do cache /var/lib/vllm-estudo/hf-cache (rode antes o Bloco N1 de runbooks/teste-mistral-nemo.md)"; exit 1; }
+fi
 
 echo "### 2. manifesto e criação   $(date +%T)"
 kubectl create namespace $NS --dry-run=client -o yaml | kubectl apply -f -
 # Pesos: usa o cache; só baixa se faltar (HF_HUB_OFFLINE=1 no resto do pod).
 BAIXA="python3 -c \"from huggingface_hub import snapshot_download as s; print('pesos em', s('__MODELO__', local_files_only=True))\" || HF_HUB_OFFLINE=0 python3 -c \"from huggingface_hub import snapshot_download as s; print('pesos em', s('__MODELO__', allow_patterns=['*.safetensors','*.json','*.model','*.txt','*.tiktoken','*.py']))\""
 FLAGS="--dtype float16 --max-model-len 8192 --gpu-memory-utilization 0.90 --generation-config vllm --enable-auto-tool-choice --tool-call-parser hermes --host 0.0.0.0 --port 8000"
+ALVO=__MODELO__; CACHE=/home/utec/vllm-estudo/hf-cache
+if [ "$C" = nemo ]; then
+  # Formato oficial da Mistral, fixado: com HF_HUB_OFFLINE=1, o "auto" não consegue listar o repositório
+  # e cai no formato HF. Servido pelo caminho local (o vLLM lista os arquivos do disco), com o nome do repo na API.
+  # Só consolidated.safetensors: o repo traz os pesos também em 5 partes HF (49 GB os dois).
+  read -r -d '' BAIXA <<'EOF' || true
+P=$(python3 -c "from huggingface_hub import snapshot_download as s; print(s('__MODELO__', local_files_only=True))" 2>/dev/null || HF_HUB_OFFLINE=0 python3 -c "from huggingface_hub import snapshot_download as s; print(s('__MODELO__', allow_patterns=['consolidated.safetensors','*.json','*.txt']))"); echo "pesos em $P"
+EOF
+  FLAGS="--dtype float16 --max-model-len 8192 --gpu-memory-utilization 0.90 --generation-config vllm --tokenizer_mode mistral --config_format mistral --load_format mistral --enable-auto-tool-choice --tool-call-parser mistral --host 0.0.0.0 --port 8000"
+  ALVO='"$P" --served-model-name __MODELO__'; CACHE=/var/lib/vllm-estudo/hf-cache
+fi
 if [ $RAY = 0 ]; then
   SRV=vllm-qual; GPODS=$SRV
   cat > $D/manifesto.yaml <<'EOF'
@@ -70,7 +94,7 @@ spec:
     - |
       set -e
       __BAIXA__
-      exec vllm serve __MODELO__ __FLAGS__
+      exec vllm serve __ALVO__ __FLAGS__
     env:
     - {name: HF_HOME, value: /hf-cache}
     - {name: HF_HUB_OFFLINE, value: "1"}
@@ -85,7 +109,7 @@ spec:
     - {name: shm, mountPath: /dev/shm}
   volumes:
   - name: hf-cache
-    hostPath: {path: /home/utec/vllm-estudo/hf-cache, type: DirectoryOrCreate}
+    hostPath: {path: __CACHE__, type: DirectoryOrCreate}
   - name: shm
     emptyDir: {medium: Memory, sizeLimit: 8Gi}
 EOF
@@ -174,7 +198,7 @@ spec:
 EOF
 fi
 # Troca as marcas internas do modelo (não é para editar à mão). Substituição do bash: o texto de BAIXA tem "||".
-MF=$(cat "$D/manifesto.yaml"); MF=${MF//__BAIXA__/"$BAIXA"}; MF=${MF//__FLAGS__/"$FLAGS"}; MF=${MF//__MODELO__/"$MODELO"}
+MF=$(cat "$D/manifesto.yaml"); MF=${MF//__BAIXA__/"$BAIXA"}; MF=${MF//__ALVO__/"$ALVO"}; MF=${MF//__CACHE__/"$CACHE"}; MF=${MF//__FLAGS__/"$FLAGS"}; MF=${MF//__MODELO__/"$MODELO"}
 printf '%s\n' "$MF" > "$D/manifesto.yaml"
 grep -q '__' "$D/manifesto.yaml" && { echo "ABORTA: marca não substituída no manifesto"; grep -n '__' "$D/manifesto.yaml"; exit 1; }
 grep -nE 'vllm serve|snapshot_download' "$D/manifesto.yaml" | cut -c1-260
@@ -199,14 +223,34 @@ if [ $PRONTO = 1 ]; then
   X python3 -c 'import vllm;print("vllm", vllm.__version__)'
   X sh -c 'for p in /proc/[0-9]*/cmdline; do tr "\0" " " < $p 2>/dev/null | grep -E "vllm serve" ; done | sort -u | cut -c1-600'
   kubectl logs -n $NS $SRV --tail=-1 | grep -iE 'tool|Model loading took|GPU KV cache size|Maximum concurrency' | grep -vE 'POST /v1|GET /' | cut -c1-250 | head -20
-  echo "### 5. coleta: 50 perguntas x 2 chamadas, 1 de cada vez   $(date +%T)"
   X sh -c 'cat > /tmp/gabarito-qualidade.json' < gabarito-qualidade.json
-  X python3 - /tmp/gabarito-qualidade.json < coletar-respostas.py > "$D/respostas.jsonl"
-  echo "linhas gravadas: $(wc -l < "$D/respostas.jsonl") (esperado 51)   $(date +%T)"
-  echo "### 6. nota"
-  X sh -c 'cat > /tmp/respostas.jsonl' < "$D/respostas.jsonl"
-  X python3 - /tmp/gabarito-qualidade.json /tmp/respostas.jsonl < pontuar-respostas.py > "$D/resultado.md"
-  cat "$D/resultado.md"
+  for V in $VARS; do
+    if [ "$V" = carga ]; then
+      echo "### 5-carga. teste de carga: enum-required, 1/8/16/32 usuários   $(date +%T)"
+      for f in coletar-respostas.py pontuar-respostas.py carga-respostas.py; do X sh -c "cat > /tmp/$(echo $f | tr - _)" < $f; done
+      nvidia-smi -q -d PERFORMANCE | grep -iE 'thermal|slowdown|power cap'
+      nvidia-smi --query-gpu=timestamp,temperature.gpu,power.draw,clocks.sm,clocks.max.sm,utilization.gpu,memory.used --format=csv -l 2 > "$D/gpu-carga.csv" & NV=$!
+      X python3 /tmp/carga_respostas.py /tmp/gabarito-qualidade.json --variante enum-required --niveis "1 8 16 32" > "$D/carga.jsonl"
+      kill $NV
+      echo "linhas gravadas: $(wc -l < "$D/carga.jsonl")   $(date +%T)"
+      echo "### 6-carga. resumo"
+      X sh -c 'cat > /tmp/carga.jsonl' < "$D/carga.jsonl"
+      X python3 /tmp/carga_respostas.py /tmp/gabarito-qualidade.json --resumo /tmp/carga.jsonl > "$D/carga.md"
+      cat "$D/carga.md"
+      echo "## GPU durante a carga ($(($(wc -l < "$D/gpu-carga.csv") - 1)) amostras de 2 s): temperatura máx, clock mín e máx, potência máx"
+      awk -F', ' 'NR>1{t=$2+0; c=$4+0; w=$3+0; if(t>T)T=t; if(w>W)W=w; if(m==""||c<m)m=c; if(c>M)M=c} END{print T" C, "m"-"M" MHz, "W" W"}' "$D/gpu-carga.csv"
+      nvidia-smi -q -d PERFORMANCE | grep -iE 'thermal|slowdown|power cap'
+      continue
+    fi
+    S=""; [ "$V" = sql ] || S="-$V"
+    echo "### 5$S. coleta, variante $V: 50 perguntas x 2 chamadas, 1 de cada vez   $(date +%T)"
+    X python3 - /tmp/gabarito-qualidade.json --variante $V < coletar-respostas.py > "$D/respostas$S.jsonl"
+    echo "linhas gravadas: $(wc -l < "$D/respostas$S.jsonl") (esperado 51)   $(date +%T)"
+    echo "### 6$S. nota, variante $V"
+    X sh -c 'cat > /tmp/respostas.jsonl' < "$D/respostas$S.jsonl"
+    X python3 - /tmp/gabarito-qualidade.json /tmp/respostas.jsonl < pontuar-respostas.py > "$D/resultado$S.md"
+    cat "$D/resultado$S.md"
+  done
   if [ "$C" = 7b-ray ]; then
     B=$(ls -d $Q/resultados/*-7b 2>/dev/null | tail -1)
     echo "### 6b. controle: 7b-ray x $B"

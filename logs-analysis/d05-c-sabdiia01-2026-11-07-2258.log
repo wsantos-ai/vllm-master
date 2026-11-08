@@ -1,0 +1,76 @@
+== sabdiia01  2026-11-07T22:58:12-03:00  D-05 C: consumidores do Kong a partir de d05-consumidores.txt
+79a796322c150284126e805cfa9a01208d9980dc7f9388e292d1ba3311479bea  d05-consumidores.txt
+proxy do Kong: kong-gateway-proxy  IP 192.168.50.161  externalTrafficPolicy Local
+### 1. a lista
+estacao: 172.16.30.6
+wsantos: 172.16.254.0/24
+dev-1: (sem IP: o Kong recusa até o IP entrar na lista)
+dev-2: (sem IP: o Kong recusa até o IP entrar na lista)
+crp: (sem IP: o Kong recusa até o IP entrar na lista)
+lista de IPs: uma por consumidor (a chave de um ator só vale dos IPs dele)
+### 2. chaves, listas de IPs e consumidores (chaves fora do log)   22:58:12
+estacao: chave já existe, mantida
+kongplugin.configuration.konghq.com/d05-ip-estacao created
+kongconsumer.configuration.konghq.com/estacao configured
+estacao: IPs liberados:  172.16.30.6
+wsantos: chave já existe, mantida
+kongplugin.configuration.konghq.com/d05-ip-wsantos created
+kongconsumer.configuration.konghq.com/wsantos configured
+wsantos: IPs liberados:  172.16.254.0/24
+dev-1: chave já existe, mantida
+kongplugin.configuration.konghq.com/d05-ip-dev-1 created
+kongconsumer.configuration.konghq.com/dev-1 configured
+dev-1: IPs liberados: 127.0.0.1
+dev-2: chave já existe, mantida
+kongplugin.configuration.konghq.com/d05-ip-dev-2 created
+kongconsumer.configuration.konghq.com/dev-2 configured
+dev-2: IPs liberados: 127.0.0.1
+crp: chave já existe, mantida
+kongplugin.configuration.konghq.com/d05-ip-crp created
+kongconsumer.configuration.konghq.com/crp configured
+crp: IPs liberados: 127.0.0.1
+### 3. a rota: chave e limite (a lista de IPs fica em cada consumidor)   22:58:16
+ingress.networking.k8s.io/vllm-server annotated
+kongplugin.configuration.konghq.com "d05-ip-restriction" deleted from vllms namespace
+### 4. o Kong aceitou?   22:58:17
+NAME                                            USERNAME   AGE   PROGRAMMED
+kongconsumer.configuration.konghq.com/crp       crp        10m   True
+kongconsumer.configuration.konghq.com/dev-1     dev-1      10m   True
+kongconsumer.configuration.konghq.com/dev-2     dev-2      10m   True
+kongconsumer.configuration.konghq.com/estacao   estacao    10m   True
+kongconsumer.configuration.konghq.com/wsantos   wsantos    10m   True
+
+NAME                                                 PLUGIN-TYPE      AGE   PROGRAMMED
+kongplugin.configuration.konghq.com/d05-ip-crp       ip-restriction   21s   
+kongplugin.configuration.konghq.com/d05-ip-dev-1     ip-restriction   23s   
+kongplugin.configuration.konghq.com/d05-ip-dev-2     ip-restriction   22s   
+kongplugin.configuration.konghq.com/d05-ip-estacao   ip-restriction   25s   
+kongplugin.configuration.konghq.com/d05-ip-wsantos   ip-restriction   24s   
+kongplugin.configuration.konghq.com/d05-key-auth     key-auth         87m   
+kongplugin.configuration.konghq.com/d05-rate-limit   rate-limiting    87m   
+
+NAME                                    CLASS   HOSTS   ADDRESS          PORTS   AGE
+ingress.networking.k8s.io/vllm-server   kong    *       192.168.50.161   80      87m
+plugins na rota: d05-key-auth,d05-rate-limit
+LAST SEEN   TYPE      REASON              OBJECT                              MESSAGE
+24m         Warning   FailedScheduling    pod/vllm-server-58699c67bf-w9bsm    0/3 nodes are available: 3 Insufficient nvidia.com/gpu. preemption: 0/3 nodes are available: 3 No preemption victims found for incoming pod.
+30m         Warning   BackOff             pod/vllm-server-78bbbb846f-kvjfh    Back-off restarting failed container vllm in pod vllm-server-78bbbb846f-kvjfh_vllms(b2b3473c-4223-4ce8-876c-52163638e61e)
+29m         Warning   BackOff             pod/vllm-server-58699c67bf-4sn8m    Back-off restarting failed container vllm in pod vllm-server-58699c67bf-4sn8m_vllms(6cf22fa2-7b80-4f55-ad44-cf99ade1b72b)
+24m         Normal    SuccessfulDelete    replicaset/vllm-server-78bbbb846f   Deleted pod: vllm-server-78bbbb846f-kvjfh
+24m         Normal    ScalingReplicaSet   deployment/vllm-server              Scaled down replica set vllm-server-78bbbb846f from 1 to 0
+24m         Normal    ScalingReplicaSet   deployment/vllm-server              Scaled up replica set vllm-server-58699c67bf from 2 to 3
+23m         Normal    AddedInterface      pod/vllm-server-58699c67bf-w9bsm    Add eth0 [10.244.50.168/32] from k8s-pod-network
+19m         Normal    AddedInterface      pod/d05-sonda                       Add eth0 [10.244.179.113/32] from k8s-pod-network
+### 5. de 01 com a chave de cada ator (01 fora da lista: 403 se a lista vale, 200 se não)   22:58:37
+estacao -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"9395222ecd513c4a34fa0f7f63723378" }
+wsantos -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"c81c3a2330c84a0377f99e43796f5619" }
+dev-1 -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"054dae2df44b6629880d1d7da2f37349" }
+dev-2 -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"56612e4fb2a2665604e68b49e50cf61d" }
+crp -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"bdea29287d25cb5e9a438d0a82b25b60" }
+### 6. arquivos de chave (entregar cada um só ao seu ator)
+-rw------- 1 utec root 242 Nov  7 22:58 d05-chave-crp.env
+-rw------- 1 utec root 244 Nov  7 22:58 d05-chave-dev-1.env
+-rw------- 1 utec root 244 Nov  7 22:58 d05-chave-dev-2.env
+-rw------- 1 utec root 246 Nov  7 22:58 d05-chave-estacao.env
+-rw------- 1 utec root 246 Nov  7 22:58 d05-chave-wsantos.env
+== fim 2026-11-07T22:58:37-03:00

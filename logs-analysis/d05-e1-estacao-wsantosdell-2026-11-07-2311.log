@@ -1,0 +1,26 @@
+== WSANTOSDELL  2026-11-07T23:11:17.4441718-03:00  D-05 E1: testes de fora, Kong em 192.168.50.161, consumidor wsantos
+### 1. chaves
+sem chave (401 do Kong)                          -> HTTP 401 | { "message":"No API key found in request", "request_id":"5db08b0333c7ab0b8b03b22af045ae31" }
+só a chave do Kong (401 do vLLM)                 -> HTTP 401 | {"error":"Unauthorized"}
+só a chave do vLLM (401 do Kong)                 -> HTTP 401 | { "message":"No API key found in request", "request_id":"f0c50c2dcbb1806d42a57812f512bb5a" }
+as duas (200, Brasília)                          -> HTTP 200 | {"id":"chatcmpl-921d8a12670a1e6a","object":"chat.completion","created":1794103877,"model":"mistralai/Mistral-Nemo-Instruct-2407","choices":[{"index":0,"message":{"role":"
+chave de dev-1, IP fora da lista (403)           -> HTTP 403 | { "message":"IP address not allowed: 172.16.254.143", "request_id":"7d55fc659becba6dfb6b0b043a40260e" }
+### 2. streaming (SSE): o primeiro byte chega antes do fim?
+primeiro byte 0.076746 s, total 5.762478 s, HTTP 200
+linhas 'data:': 167; primeira e últimas:
+data: {"id":"chatcmpl-a1ccf2b559ac8afb","object":"chat.completion.chunk","created":1794103878,"model":"mistralai/Mistral-Nemo-Instruct-2407","choices":[{"index":0,"delta":{"role":"assistant","content"
+data: {"id":"chatcmpl-a1ccf2b559ac8afb","object":"chat.completion.chunk","created":1794103878,"model":"mistralai/Mistral-Nemo-Instruct-2407","choices":[{"index":0,"delta":{"content":""},"logprobs":nul
+data: [DONE]
+### 3. caminhos e métodos fora da rota (404 do Kong)
+GET na rota                                      -> HTTP 404 | { "message":"no Route matched with those values", "request_id":"9eb9521158422b20b01ad168d641aa78" }
+/vllm/v1/models                                  -> HTTP 404 | { "message":"no Route matched with those values", "request_id":"529ebc539c10026a361a3327b04e4857" }
+/vllm/metrics                                    -> HTTP 404 | { "message":"no Route matched with those values", "request_id":"d0d7ad75c21de551a094f608d1f0954b" }
+POST /invocations                                -> HTTP 404 | { "message":"no Route matched with those values", "request_id":"811ba77bf44cd8329a26b84471e1b328" }
+### 4. HTTP sem TLS (não pode dar 200)
+http://, as duas chaves                          -> HTTP 426 | { "message":"Please use HTTPS protocol", "request_id":"bffe5820ddcb305766f46e037efc3f37" }
+### 5. certificado apresentado pelo Kong
+sujeito: CN=localhost, OU=IT Department, O=Kong, L=San Francisco, S=California, C=US | emissor: CN=localhost, OU=IT Department, O=Kong, L=San Francisco, S=California, C=US | válido até: 10/21/2046 17:27:01 | autoassinado: True
+### 6. limite: 125 requisições inválidas em seguida (o vLLM recusa '{}' com 400, sem usar a GPU)
+HTTP 400: 117
+HTTP 429: 8
+== fim 2026-11-07T23:11:36.2286278-03:00

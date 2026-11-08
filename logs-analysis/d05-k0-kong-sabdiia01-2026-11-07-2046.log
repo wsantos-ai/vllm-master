@@ -1,0 +1,57 @@
+== sabdiia01  2026-11-07T20:46:38-03:00  D-05 K0: o Kong está pronto?
+### 1. pods do Kong
+NAME                              READY   STATUS    RESTARTS       AGE   IP              NODE        NOMINATED NODE   READINESS GATES
+kong-controller-76f66d77f-jsplg   1/1     Running   20 (10d ago)   12d   10.244.50.156   sabdiia03   <none>           <none>
+kong-gateway-5f88dd7bcd-mpmk8     1/1     Running   1 (10d ago)    12d   10.244.50.179   sabdiia03   <none>           <none>
+kong-controller-76f66d77f-jsplg  hostNetwork=  imagens=kong/kubernetes-ingress-controller:3.5 
+kong-gateway-5f88dd7bcd-mpmk8  hostNetwork=  imagens=kong:3.9 
+### 2. Services do Kong: o proxy com IP do MetalLB
+NAME                                 TYPE           CLUSTER-IP       EXTERNAL-IP      PORT(S)                         AGE   SELECTOR
+kong-controller-metrics              ClusterIP      10.108.204.104   <none>           10255/TCP,10254/TCP             54d   app.kubernetes.io/component=app,app.kubernetes.io/instance=kong,app.kubernetes.io/managed-by=Helm,app.kubernetes.io/name=controller,app.kubernetes.io/version=3.9,helm.sh/chart=controller-3.2.0
+kong-controller-validation-webhook   ClusterIP      10.100.45.254    <none>           443/TCP                         54d   app.kubernetes.io/component=app,app.kubernetes.io/instance=kong,app.kubernetes.io/managed-by=Helm,app.kubernetes.io/name=controller,app.kubernetes.io/version=3.9,helm.sh/chart=controller-3.2.0
+kong-gateway-admin                   ClusterIP      None             <none>           8444/TCP                        54d   app.kubernetes.io/component=app,app.kubernetes.io/instance=kong,app.kubernetes.io/name=gateway
+kong-gateway-manager                 NodePort       10.99.6.196      <none>           8002:32492/TCP,8445:32616/TCP   54d   app.kubernetes.io/component=app,app.kubernetes.io/instance=kong,app.kubernetes.io/name=gateway
+kong-gateway-proxy                   LoadBalancer   10.98.30.231     192.168.50.161   80:30791/TCP,443:30659/TCP      54d   app.kubernetes.io/component=app,app.kubernetes.io/instance=kong,app.kubernetes.io/name=gateway
+kong-gateway-proxy  IP=192.168.50.161  externalTrafficPolicy=Cluster  portas=80 443  pool=pool-publico
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+endpoints de kong-gateway-proxy: 10.244.50.179
+### 3. IngressClass e CRDs do Kong
+NAME   CONTROLLER                            PARAMETERS   AGE
+kong   ingress-controllers.konghq.com/kong   <none>       54d
+ingressclassparameterses.configuration.konghq.com        Namespaced   v1alpha1(storage)          2026-09-14T17:27:08Z
+kongclusterplugins.configuration.konghq.com              Cluster      v1(storage)                2026-09-14T17:27:08Z
+kongconsumergroups.configuration.konghq.com              Namespaced   v1beta1(storage)           2026-09-14T17:27:08Z
+kongconsumers.configuration.konghq.com                   Namespaced   v1(storage)                2026-09-14T17:27:08Z
+kongcustomentities.configuration.konghq.com              Namespaced   v1alpha1(storage)          2026-09-14T17:27:08Z
+kongingresses.configuration.konghq.com                   Namespaced   v1(storage)                2026-09-14T17:27:08Z
+konglicenses.configuration.konghq.com                    Cluster      v1alpha1(storage)          2026-09-14T17:27:08Z
+kongplugins.configuration.konghq.com                     Namespaced   v1(storage)                2026-09-14T17:27:08Z
+kongupstreampolicies.configuration.konghq.com            Namespaced   v1beta1(storage)           2026-09-14T17:27:08Z
+kongvaults.configuration.konghq.com                      Cluster      v1alpha1(storage)          2026-09-14T17:27:08Z
+tcpingresses.configuration.konghq.com                    Namespaced   v1beta1(storage)           2026-09-14T17:27:08Z
+udpingresses.configuration.konghq.com                    Namespaced   v1beta1(storage)           2026-09-14T17:27:08Z
+### 4. o que já passa pelo Kong: rotas, plugins globais e de namespace, consumidores
+No resources found
+No resources found
+No resources found
+### 5. NetworkPolicy existentes e rótulos do namespace kong
+No resources found
+NAME   STATUS   AGE   LABELS
+kong   Active   54d   kubernetes.io/metadata.name=kong,name=kong
+### 6. o proxy responde? (de 01, sem chave; 404 'no Route matched' é resposta)
+https://192.168.50.161/  HTTP 404
+http://192.168.50.161/   HTTP 404
+### 7. últimas linhas de log dos pods do Kong
+-- pod/kong-controller-76f66d77f-jsplg
+2026-11-07T23:40:55Z	info	controller-runtime.cache	Warning: configuration.konghq.com/v1 KongIngress is deprecated	{"v": 0}
+2026-11-07T23:40:58Z	info	controller-runtime.cache	Warning: configuration.konghq.com/v1beta1 TCPIngress is deprecated	{"v": 0}
+2026/11/07 23:43:12 http: TLS handshake error from 10.244.182.128:34740: EOF
+2026/11/07 23:46:12 http: TLS handshake error from 10.244.182.128:22836: EOF
+2026-11-07T23:46:14Z	info	controller-runtime.cache	Warning: configuration.konghq.com/v1beta1 UDPIngress is deprecated	{"v": 0}
+-- pod/kong-gateway-5f88dd7bcd-mpmk8
+10.244.50.156 - - [07/Nov/2026:23:46:33 +0000] "GET /status HTTP/2.0" 200 1190 "-" "kong-ingress-controller/3.5.14"
+10.244.50.156 - - [07/Nov/2026:23:46:34 +0000] "GET /status HTTP/2.0" 200 1190 "-" "kong-ingress-controller/3.5.14"
+10.244.50.156 - - [07/Nov/2026:23:46:37 +0000] "GET /status HTTP/2.0" 200 1190 "-" "kong-ingress-controller/3.5.14"
+10.244.179.64 - - [07/Nov/2026:23:46:39 +0000] "GET /vllm/ HTTP/2.0" 404 103 "-" "curl/7.76.1" kong_request_id: "bdabd807fc29f07249d3fe68c5bbf602"
+10.244.179.64 - - [07/Nov/2026:23:46:39 +0000] "GET /vllm/ HTTP/1.1" 404 103 "-" "curl/7.76.1" kong_request_id: "5201d530f7f4cf74d9ccf46dcd43765c"
+== fim 2026-11-07T20:46:39-03:00

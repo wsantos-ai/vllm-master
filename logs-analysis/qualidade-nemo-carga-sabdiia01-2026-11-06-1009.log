@@ -1,0 +1,165 @@
+== sabdiia01  2026-11-06T10:09:11-03:00  teste de qualidade: nemo (mistralai/Mistral-Nemo-Instruct-2407, Ray=0), variantes: carga
+resultados em /home/utec/vllm-estudo/qualidade/resultados/2026-11-06-1009-nemo-carga
+### 1. pré-condições
+Name:               sabdiia01
+  nvidia.com/gpu     0           0
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/ol-root  631G  207G  425G  33% /
+/dev/mapper/ol-home  200G  168G   33G  84% /home
+/var/lib/vllm-estudo/hf-cache/hub/models--mistralai--Mistral-Nemo-Instruct-2407/snapshots/04d8a90549d23fc6bd7f642064003592df51e9b3/consolidated.safetensors
+### 2. manifesto e criação   10:09:11
+namespace/vllm-estudo unchanged
+16:      P=$(python3 -c "from huggingface_hub import snapshot_download as s; print(s('mistralai/Mistral-Nemo-Instruct-2407', local_files_only=True))" 2>/dev/null || HF_HUB_OFFLINE=0 python3 -c "from huggingface_hub import snapshot_download as s; print(s('mistr
+17:      exec vllm serve "$P" --served-model-name mistralai/Mistral-Nemo-Instruct-2407 --dtype float16 --max-model-len 8192 --gpu-memory-utilization 0.90 --generation-config vllm --tokenizer_mode mistral --config_format mistral --load_format mistral --enable-a
+pod/vllm-qual created
+### 3. aguardando o servidor (até 60 min)   10:09:12
+10:09:12 vllm-qual=Pending/false | 
+10:09:42 vllm-qual=Running/false | (APIServer pid=1) INFO 11-06 13:09:34 [config.py:288] Inferred from consolidated*.safetensors files torch.bfloat16 dtype.
+10:10:12 vllm-qual=Running/false | (EngineCore pid=199) INFO 11-06 13:10:06 [gpu_model_runner.py:4820] Model loading took 22.84 GiB memory and 10.591218 seconds
+10:10:43 vllm-qual=Running/false | (EngineCore pid=199) INFO 11-06 13:10:33 [monitor.py:76] Initial profiling/warmup run took 0.74 s
+pronto=1 depois de 2 min
+NAME        READY   STATUS    RESTARTS   AGE    IP              NODE        NOMINATED NODE   READINESS GATES
+vllm-qual   1/1     Running   0          2m1s   10.244.179.87   sabdiia01   <none>           <none>
+### 4. servidor: versão, comando, parser de tool call
+vllm 0.19.1
+/usr/bin/python3 /usr/local/bin/vllm serve /hf-cache/hub/models--mistralai--Mistral-Nemo-Instruct-2407/snapshots/04d8a90549d23fc6bd7f642064003592df51e9b3 --served-model-name mistralai/Mistral-Nemo-Instruct-2407 --dtype float16 --max-model-len 8192 --gpu-memory-utilization 0.90 --generation-config vllm --tokenizer_mode mistral --config_format mistral --load_format mistral --enable-auto-tool-choice --tool-call-parser mistral --host 0.0.0.0 --port 8000 
+sh -c for p in /proc/[0-9]*/cmdline; do tr "\0" " " < $p 2>/dev/null | grep -E "vllm serve" ; done | sort -u | cut -c1-600 
+(APIServer pid=1) INFO 11-06 13:09:34 [utils.py:233] non-default args: {'model_tag': '/hf-cache/hub/models--mistralai--Mistral-Nemo-Instruct-2407/snapshots/04d8a90549d23fc6bd7f642064003592df51e9b3', 'enable_auto_tool_choice': True, 'tool_call_parser'
+(EngineCore pid=199) INFO 11-06 13:10:06 [gpu_model_runner.py:4820] Model loading took 22.84 GiB memory and 10.591218 seconds
+(EngineCore pid=199) INFO 11-06 13:10:48 [kv_cache_utils.py:1319] GPU KV cache size: 28,288 tokens
+(EngineCore pid=199) INFO 11-06 13:10:48 [kv_cache_utils.py:1324] Maximum concurrency for 8,192 tokens per request: 3.45x
+(APIServer pid=1) INFO 11-06 13:11:06 [parser_manager.py:202] "auto" tool choice has been enabled.
+### 5-carga. teste de carga: enum-required, 1/8/16/32 usuários   10:11:17
+        SW Power Cap                                   : Not Active
+        HW Slowdown                                    : Not Active
+            HW Thermal Slowdown                        : Not Active
+            HW Power Brake Slowdown                    : Not Active
+        SW Thermal Slowdown                            : Not Active
+        SW Power Capping                               : 451161806127 us
+        SW Thermal Slowdown                            : 0 us
+        HW Thermal Slowdown                            : 0 us
+aquecimento: 4 perguntas, 4 usuários
+  nível aquecimento: 1/4 perguntas, 8 s
+  nível aquecimento: 2/4 perguntas, 8 s
+  nível aquecimento: 3/4 perguntas, 9 s
+  nível aquecimento: 4/4 perguntas, 9 s
+nível 1: 1 x 50 perguntas, 1 usuários   13:11:26
+  nível 1: 5/50 perguntas, 19 s
+  nível 1: 10/50 perguntas, 38 s
+  nível 1: 15/50 perguntas, 57 s
+  nível 1: 20/50 perguntas, 77 s
+  nível 1: 25/50 perguntas, 100 s
+  nível 1: 30/50 perguntas, 126 s
+  nível 1: 35/50 perguntas, 159 s
+  nível 1: 40/50 perguntas, 193 s
+  nível 1: 45/50 perguntas, 227 s
+  nível 1: 50/50 perguntas, 258 s
+nível 8: 1 x 50 perguntas, 8 usuários   13:15:44
+  nível 8: 5/50 perguntas, 6 s
+  nível 8: 10/50 perguntas, 11 s
+  nível 8: 15/50 perguntas, 12 s
+  nível 8: 20/50 perguntas, 19 s
+  nível 8: 25/50 perguntas, 25 s
+  nível 8: 30/50 perguntas, 28 s
+  nível 8: 35/50 perguntas, 36 s
+  nível 8: 40/50 perguntas, 40 s
+  nível 8: 45/50 perguntas, 47 s
+  nível 8: 50/50 perguntas, 54 s
+nível 16: 2 x 50 perguntas, 16 usuários   13:16:39
+  nível 16: 10/100 perguntas, 8 s
+  nível 16: 20/100 perguntas, 16 s
+  nível 16: 30/100 perguntas, 19 s
+  nível 16: 40/100 perguntas, 30 s
+  nível 16: 50/100 perguntas, 36 s
+  nível 16: 60/100 perguntas, 40 s
+  nível 16: 70/100 perguntas, 46 s
+  nível 16: 80/100 perguntas, 54 s
+  nível 16: 90/100 perguntas, 60 s
+  nível 16: 100/100 perguntas, 71 s
+nível 32: 4 x 50 perguntas, 32 usuários   13:17:50
+  nível 32: 20/200 perguntas, 14 s
+  nível 32: 40/200 perguntas, 28 s
+  nível 32: 60/200 perguntas, 36 s
+  nível 32: 80/200 perguntas, 48 s
+  nível 32: 100/200 perguntas, 57 s
+  nível 32: 120/200 perguntas, 69 s
+  nível 32: 140/200 perguntas, 81 s
+  nível 32: 160/200 perguntas, 88 s
+  nível 32: 180/200 perguntas, 101 s
+  nível 32: 200/200 perguntas, 112 s
+fim: 2026-11-06T13:19:42.247622+00:00
+linhas gravadas: 662   10:19:42
+### 6-carga. resumo
+# Teste de carga — mistralai/Mistral-Nemo-Instruct-2407
+
+vLLM `0.19.1`, gabarito `2026-11-06`, variante `enum-required`, início 2026-11-06T13:11:17.921457+00:00. Cada pergunta = etapa 1 (consulta) + etapa 2 (resposta), em sequência, sem *streaming*: a latência é até a resposta completa. Vazão na janela estável (todos os usuários ocupados).
+
+| Usuários | Perguntas | Janela estável | Perguntas/min | *Tokens* gerados/s | Latência por pergunta p50 / p95 / máx | Etapa 1 p50 / p95 | Etapa 2 p50 / p95 | Erros HTTP |
+|---|---|---|---|---|---|---|---|---|
+| 1 | 50 | 258 s (50 perguntas) | 11.6 | 25.5 | 4.50 / 9.17 / 9.83 s | 2.46 / 6.93 s | 2.00 / 3.77 s | 0 |
+| 8 | 50 | 46 s (43 perguntas) | 55.9 | 114.1 | 6.87 / 11.83 / 14.62 s | 3.83 / 9.66 s | 2.98 / 5.63 s | 0 |
+| 16 | 100 | 59 s (85 perguntas) | 86.3 | 179.4 | 8.88 / 14.94 / 19.55 s | 5.01 / 10.13 s | 3.86 / 6.85 s | 0 |
+| 32 | 200 | 95 s (169 perguntas) | 106.9 | 225.3 | 14.63 / 24.99 / 32.23 s | 8.29 / 16.79 s | 6.39 / 11.24 s | 0 |
+
+## Qualidade sob carga (mesma régua do teste de qualidade; ID 50 fora)
+
+| Usuários | Repetição | Consulta certa | Resposta certa | As duas | Idênticas às de 1 usuário(s) |
+|---|---|---|---|---|---|
+| 1 | 1 | 48/49 | 45/49 | 44/49 | — |
+| 8 | 1 | 48/49 | 45/49 | 44/49 | 49/49 |
+| 16 | 1 | 48/49 | 45/49 | 44/49 | 48/49 |
+| 16 | 2 | 48/49 | 45/49 | 44/49 | 49/49 |
+| 32 | 1 | 48/49 | 45/49 | 44/49 | 47/49 |
+| 32 | 2 | 48/49 | 45/49 | 44/49 | 49/49 |
+| 32 | 3 | 48/49 | 45/49 | 44/49 | 48/49 |
+| 32 | 4 | 48/49 | 45/49 | 44/49 | 49/49 |
+
+## Servidor (/metrics; nomes como o vLLM publica, somados por nome)
+
+| Usuários | Δ `vllm:external_prefix_cache_hits_total` | Δ `vllm:external_prefix_cache_queries_total` | Δ `vllm:num_preemptions_total` | Δ `vllm:prefix_cache_hits_total` | Δ `vllm:prefix_cache_queries_total` | máx `vllm:kv_cache_usage_perc` | máx `vllm:num_requests_running` | máx `vllm:num_requests_waiting` |
+|---|---|---|---|---|---|---|---|---|
+| 1 | 0 | 0 | 0 | 203744 | 215741 | 0.089983 | 1 | 0 |
+| 8 | 0 | 0 | 0 | 214784 | 215741 | 0.169213 | 8 | 0 |
+| 16 | 0 | 0 | 0 | 429568 | 431482 | 0.246746 | 16 | 0 |
+| 32 | 0 | 0 | 0 | 859136 | 862964 | 0.34352 | 32 | 0 |
+## GPU durante a carga (252 amostras de 2 s): temperatura máx, clock mín e máx, potência máx
+75 C, 1245-1597 MHz, 269.06 W
+        SW Power Cap                                   : Not Active
+        HW Slowdown                                    : Not Active
+            HW Thermal Slowdown                        : Not Active
+            HW Power Brake Slowdown                    : Not Active
+        SW Thermal Slowdown                            : Not Active
+        SW Power Capping                               : 451161806127 us
+        SW Thermal Slowdown                            : 0 us
+        HW Thermal Slowdown                            : 0 us
+### 7. estrangulamento de 01 depois da coleta (a nota não depende dele; a latência sim)
+        SW Power Cap                                   : Not Active
+        HW Slowdown                                    : Not Active
+            HW Thermal Slowdown                        : Not Active
+            HW Power Brake Slowdown                    : Not Active
+        SW Thermal Slowdown                            : Not Active
+        SW Power Capping                               : 451161806127 us
+        SW Thermal Slowdown                            : 0 us
+        HW Thermal Slowdown                            : 0 us
+### 8. logs dos pods em /home/utec/vllm-estudo/qualidade/resultados/2026-11-06-1009-nemo-carga
+## vllm-qual (1247 linhas): fim
+(APIServer pid=1) INFO 11-06 13:19:36 [loggers.py:259] Engine 000: Avg prompt throughput: 14.8 tokens/s, Avg generation throughput: 199.3 tokens/s, Running: 6 reqs, Waiting: 0 reqs, GPU KV cache usage: 13.1%, Prefix cache hit rate: 98.8%
+(APIServer pid=1) INFO:     127.0.0.1:60474 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:60470 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:54908 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:60414 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:47904 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:32972 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:60486 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:54752 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:54792 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:56312 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:60480 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:60502 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:60512 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:56316 - "GET /metrics HTTP/1.1" 200 OK
+### 9. limpeza: apaga os pods e libera as GPUs   10:19:42
+pod "vllm-qual" deleted from vllm-estudo namespace
+Name:               sabdiia01
+  nvidia.com/gpu     0           0
+== fim 2026-11-06T10:19:45-03:00   resultados em /home/utec/vllm-estudo/qualidade/resultados/2026-11-06-1009-nemo-carga

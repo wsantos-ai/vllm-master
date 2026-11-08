@@ -1,5 +1,8 @@
 # Runbook — Medição B-003: o Llama-3.1-8B dividido em 3 nós pelo Ray (*pipeline parallel* 3)
 
+> **Histórico (2026-11-07):** o Ray foi eliminado do *cluster* e dos *hosts* (D-07,
+> [remover-ray.md](remover-ray.md)). Este *runbook* fica como registro das medições; não rode.
+
 **Pergunta:** quanto entrega, em *tokens*/s e em tempo por *token*, o arranjo que o administrador quer levar
 ao MVP? É o `meta-llama/Meta-Llama-3.1-8B-Instruct` no vLLM `0.5.4` com `--pipeline-parallel-size 3`, um
 pedaço por nó, executor Ray ([AC-19](../ESTUDO-DE-CASO.md#ac-19)). **Decisão que destrava:** se o Ray com

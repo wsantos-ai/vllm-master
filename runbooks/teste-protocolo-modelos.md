@@ -205,7 +205,10 @@ for o in $GPUS; do echo "$o: $(X $o nvidia-smi --query-gpu=memory.used,utilizati
 echo "### 4. sanidade: uma pergunta simples, temperature 0"
 XI $SRV python3 - "$M" <<'PY'
 import json,sys,urllib.request
-b=json.dumps({"model":sys.argv[1],"messages":[{"role":"user","content":"Qual é a capital do Brasil? Responda em uma frase curta."}],"max_tokens":64,"temperature":0,"chat_template_kwargs":{"enable_thinking":False}}).encode()
+c={"model":sys.argv[1],"messages":[{"role":"user","content":"Qual é a capital do Brasil? Responda em uma frase curta."}],"max_tokens":64,"temperature":0}
+# Mistral (mistral_common) recusa chat_template_kwargs na v0.19.1
+if not sys.argv[1].startswith("mistralai/"): c["chat_template_kwargs"]={"enable_thinking":False}
+b=json.dumps(c).encode()
 r=json.load(urllib.request.urlopen(urllib.request.Request("http://127.0.0.1:8000/v1/chat/completions",b,{"Content-Type":"application/json"}),timeout=300))
 print("RESPOSTA:",r["choices"][0]["message"]["content"].strip()[:400].replace("\n"," "))
 PY

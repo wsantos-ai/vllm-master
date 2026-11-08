@@ -1,5 +1,8 @@
 # Runbook — Ray próprio em 01 + 02: `Qwen2.5-7B-Instruct` com *pipeline parallel* 2 (B-004)
 
+> **Histórico (2026-11-07):** o Ray foi eliminado do *cluster* e dos *hosts* (D-07,
+> [remover-ray.md](remover-ray.md)). Este *runbook* fica como registro das medições; não rode.
+
 **Pergunta:** dividir um modelo entre dois nós pelo Ray ajuda ou atrapalha nesta rede? Muda **uma
 variável** em relação ao `T-001` (B-001c): o mesmo `Qwen/Qwen2.5-7B-Instruct` FP16, a mesma `v0.19.1`, as
 mesmas flags e a mesma carga, agora em 2 GPUs (`sabdiia01` + `sabdiia02`), com

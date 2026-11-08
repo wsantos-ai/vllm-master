@@ -1,5 +1,8 @@
 # Runbook — Ray com as 3 GPUs (`sabdiia01` + `02` + `03`) e vLLM `v0.19.1`
 
+> **Histórico (2026-11-07):** o Ray foi eliminado do *cluster* e dos *hosts* (D-07,
+> [remover-ray.md](remover-ray.md)). Este *runbook* fica como registro das medições; não rode.
+
 **Para quem:** o administrador do *cluster*. É o mesmo arranjo que subiu e mediu em 2026-10-29 com 2 nós
 (B-004, [runbook](teste-ray-pp2-qwen25-7b.md), [AC-23](../ESTUDO-DE-CASO.md#ac-23)), estendido a 3 nós.
 O resultado esperado são 3 *pods* com 1 V100S cada, um *cluster* Ray com `3.0 GPU` e um `vllm serve`

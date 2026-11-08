@@ -1,3 +1,4 @@
+# HISTÓRICO (2026-11-07): Ray eliminado do cluster e dos hosts (D-07, runbooks/remover-ray.md). Não aplicar.
 # =============================================================================
 # As três mudanças realizadas no cluster para o vLLM v0.19.1:
 #  1. O servidor do vLLM sobe pelo próprio manifesto do head (antes: `kubectl exec -it` à mão,

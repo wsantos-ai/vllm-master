@@ -1,0 +1,479 @@
+== sabdiia01  2026-11-07T21:30:41-03:00  D-05 G1: vLLM atrás do Kong, com chave, NetworkPolicy e rota única
+### 1. pré-condições
+b3076d4e095817d2f5b737a49a8a8fb353913abadd1169680573462aee47cfed  vllm-nemo-gateway.yaml
+vllm-server do administrador: ADOÇÃO (acordo de 2026-11-07, D-06). Como está:
+réplicas 3; seletor {"app":"vllm-server"}
+["vllm serve deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct \\\n--host 0.0.0.0 \\\n--port 8000 \\\n--dtype float16 \\\n--gpu-memory-utilization 0.95 \\\n--max-model-len 4096 \\\n--max-num-seqs 64 \\\n--trust-remote-code\n"]
+Name:               sabdiia01
+  nvidia.com/gpu     1           1
+Name:               sabdiia02
+  nvidia.com/gpu     1           1
+Name:               sabdiia03
+  nvidia.com/gpu     1            1
+processos na GPU de 01 (os do vllm-server atual saem no rollout): 3113717, VLLM::EngineCore, 30570 MiB 
+/var/lib/vllm-estudo/hf-cache/hub/models--mistralai--Mistral-Nemo-Instruct-2407/snapshots/04d8a90549d23fc6bd7f642064003592df51e9b3/consolidated.safetensors
+pesos em 02 e 03, segundo d05-w-pesos-sabdiia01-2026-11-07-2120.log:
+-rw-r--r-- 1 root root 24495604224 Nov  5 11:44 consolidated.safetensors
+21:26:28 d05-pesos-sabdiia02=Succeeded/ d05-pesos-sabdiia03=Running/ 
+21:27:28 d05-pesos-sabdiia02=Succeeded/ d05-pesos-sabdiia03=Succeeded/ 
+-rw-r--r-- 1 root root 24495604224 Nov  8 00:26 consolidated.safetensors
+-rw-r--r-- 1 root root 24495604224 Nov  8 00:26 consolidated.safetensors
+proxy do Kong: kong-gateway-proxy  IP 192.168.50.161  externalTrafficPolicy Local
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+### 2. chave do vLLM (fora do log)   21:30:43
+secret/vllm-nemo-api-key created
+secret/vllm-nemo-api-key labeled
+### 3. manifesto   21:30:43
+-rw------- 1 root root 1055 Nov  7 21:30 vllm-llama-service-adocao-2026-11-07-2130.yaml
+-rw------- 1 root root 5327 Nov  7 21:30 vllm-server-adocao-2026-11-07-2130.yaml
+deployment.apps/vllm-server configured
+service/vllm-server created
+networkpolicy.networking.k8s.io/vllm-server-so-kong created
+kongplugin.configuration.konghq.com/d05-key-auth created
+kongplugin.configuration.konghq.com/d05-rate-limit created
+ingress.networking.k8s.io/vllm-server created
+fecha o LoadBalancer sem chave (AC-06, AC-32): 192.168.50.160:8000
+service "vllm-llama-service" deleted from vllms namespace
+rótulos {"app":"vllm-server","decisao":"d-05"}
+volumes pesos-local shm
+NAME              TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE   SELECTOR
+vllm-llama31-8b   ClusterIP   10.104.155.104   <none>        8002/TCP   10d   app=vllm-llama31-8b
+vllm-server       ClusterIP   10.106.142.203   <none>        8000/TCP   1s    app=vllm-server
+plugins na rota: d05-key-auth,d05-rate-limit
+### 4. aguardando as 3 réplicas, trocadas uma a uma (até 45 min)   21:30:45
+21:30:45 prontas/atualizadas/indisponíveis = /1/3
+     vllm-server-58699c67bf-xrpct 0/1 Pending 0 <none>
+     vllm-server-78bbbb846f-95xcj 0/1 CrashLoopBackOff 298 30h
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 298 30h
+     vllm-server-78bbbb846f-nbwv7 0/1 Terminating 308 30h
+21:31:15 prontas/atualizadas/indisponíveis = /1/3
+     vllm-server-58699c67bf-xrpct 0/1 Pending 0 <none>
+     vllm-server-78bbbb846f-95xcj 0/1 CrashLoopBackOff 298 30h
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 298 30h
+     vllm-server-78bbbb846f-nbwv7 0/1 Terminating 308 30h
+21:31:45 prontas/atualizadas/indisponíveis = /1/3
+     vllm-server-58699c67bf-xrpct 0/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-95xcj 0/1 CrashLoopBackOff 298 30h
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 298 30h
+21:32:15 prontas/atualizadas/indisponíveis = /1/3
+     vllm-server-58699c67bf-xrpct 0/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-95xcj 0/1 CrashLoopBackOff 298 30h
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 298 30h
+21:32:45 prontas/atualizadas/indisponíveis = /1/3
+     vllm-server-58699c67bf-xrpct 0/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-95xcj 0/1 CrashLoopBackOff 298 30h
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 298 30h
+21:33:16 prontas/atualizadas/indisponíveis = /1/3
+     vllm-server-58699c67bf-xrpct 0/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-95xcj 0/1 CrashLoopBackOff 298 30h
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 298 30h
+21:33:46 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 Error 1 29s
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 298 30h
+21:34:16 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 Running 3 59s
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 298 30h
+21:34:46 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 3 89s
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 298 30h
+21:35:16 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 4 119s
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 298 30h
+21:35:46 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 4 2m29s
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 298 30h
+21:36:17 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 4 3m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 298 30h
+21:36:47 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 4 3m30s
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 298 30h
+21:37:17 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 5 4m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 298 30h
+21:37:47 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 5 4m30s
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 299 30h
+21:38:17 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 5 5m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 299 30h
+21:38:47 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 5 5m30s
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 299 30h
+21:39:17 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 5 6m1s
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 299 30h
+21:39:48 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 6 6m31s
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 299 30h
+21:40:18 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 6 7m1s
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 299 30h
+21:40:48 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 6 7m31s
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 299 30h
+21:41:18 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 6 8m1s
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 299 30h
+21:41:48 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 6 8m31s
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 299 30h
+21:42:18 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 6 9m1s
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 299 30h
+21:42:49 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 6 9m32s
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 299 30h
+21:43:19 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 6 10m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 299 30h
+21:43:49 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 6 10m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 299 30h
+21:44:19 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 6 11m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 299 30h
+21:44:49 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 6 11m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 300 30h
+21:45:19 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 7 12m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 300 30h
+21:45:49 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 7 12m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 300 30h
+21:46:20 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 7 13m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 300 30h
+21:46:50 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 7 13m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 300 30h
+21:47:20 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 7 14m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 300 31h
+21:47:50 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 7 14m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 300 31h
+21:48:20 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 7 15m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 300 31h
+21:48:50 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 7 15m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 300 31h
+21:49:21 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 7 16m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 300 31h
+21:49:51 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 7 16m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 300 31h
+21:50:21 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 7 17m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 300 31h
+21:50:51 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 8 17m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 300 31h
+21:51:21 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 8 18m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 300 31h
+21:51:51 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 8 18m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 300 31h
+21:52:21 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 8 19m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 301 31h
+21:52:52 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 8 19m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 301 31h
+21:53:22 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 8 20m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 301 31h
+21:53:52 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 8 20m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 302 31h
+21:54:22 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 8 21m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 302 31h
+21:54:52 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 8 21m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 302 31h
+21:55:22 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 8 22m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 302 31h
+21:55:53 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 9 22m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 302 31h
+21:56:23 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 9 23m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 302 31h
+21:56:53 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 9 23m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 302 31h
+21:57:23 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 9 24m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 302 31h
+21:57:53 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 9 24m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 302 31h
+21:58:23 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 9 25m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 302 31h
+21:58:53 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 9 25m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 302 31h
+21:59:24 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 9 26m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 302 31h
+21:59:54 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 9 26m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 302 31h
+22:00:24 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 9 27m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 302 31h
+22:00:54 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 Error 10 27m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 303 31h
+22:01:24 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 10 28m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 303 31h
+22:01:54 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 10 28m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 303 31h
+22:02:25 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 10 29m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 303 31h
+22:02:55 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 10 29m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 303 31h
+22:03:25 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 10 30m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 303 31h
+22:03:55 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 10 30m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 303 31h
+22:04:25 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 10 31m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 303 31h
+22:04:55 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 10 31m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 303 31h
+22:05:25 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 10 32m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 303 31h
+22:05:56 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 Running 11 32m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 303 31h
+22:06:26 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 11 33m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 303 31h
+22:06:56 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 11 33m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 303 31h
+22:07:26 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 11 34m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 303 31h
+22:07:56 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 11 34m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 303 31h
+22:08:26 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 11 35m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 304 31h
+22:08:57 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 11 35m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 304 31h
+22:09:27 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 11 36m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 304 31h
+22:09:57 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 11 36m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 304 31h
+22:10:27 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 11 37m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 304 31h
+22:10:57 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 11 37m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 304 31h
+22:11:27 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 12 38m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 304 31h
+22:11:57 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 12 38m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 304 31h
+22:12:28 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 12 39m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 304 31h
+22:12:58 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 12 39m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 304 31h
+22:13:28 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 12 40m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 304 31h
+22:13:58 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 12 40m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 304 31h
+22:14:28 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 12 41m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 304 31h
+22:14:58 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 12 41m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 304 31h
+22:15:29 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 12 42m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 304 31h
+pronto=0 depois de 45 min
+NAME                           READY   STATUS             RESTARTS          AGE   IP               NODE        NOMINATED NODE   READINESS GATES
+vllm-server-58699c67bf-4sn8m   0/1     CrashLoopBackOff   12 (4m54s ago)    42m   10.244.182.161   sabdiia02   <none>           <none>
+vllm-server-58699c67bf-xrpct   1/1     Running            0                 45m   10.244.179.112   sabdiia01   <none>           <none>
+vllm-server-78bbbb846f-kvjfh   0/1     Running            305 (5m43s ago)   31h   10.244.50.142    sabdiia03   <none>           <none>
+[pod/vllm-server-58699c67bf-4sn8m/vllm] Traceback (most recent call last):
+[pod/vllm-server-58699c67bf-4sn8m/vllm]   File "<string>", line 1, in <module>
+[pod/vllm-server-58699c67bf-4sn8m/vllm]   File "/usr/local/lib/python3.12/dist-packages/huggingface_hub/utils/_validators.py", line 88, in _inner_fn
+[pod/vllm-server-58699c67bf-4sn8m/vllm]     return fn(*args, **kwargs)
+[pod/vllm-server-58699c67bf-4sn8m/vllm]            ^^^^^^^^^^^^^^^^^^^
+[pod/vllm-server-58699c67bf-4sn8m/vllm]   File "/usr/local/lib/python3.12/dist-packages/huggingface_hub/_snapshot_download.py", line 310, in snapshot_download
+[pod/vllm-server-58699c67bf-4sn8m/vllm]     raise LocalEntryNotFoundError(
+[pod/vllm-server-58699c67bf-4sn8m/vllm] huggingface_hub.errors.LocalEntryNotFoundError: Cannot find an appropriate cached snapshot folder for the specified revision on the local disk and outgoing traffic has been disabled. To enable repo look-ups and
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:45346 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:43134 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:40510 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:51404 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:51410 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:49430 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:37926 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:38870 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:38876 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:39078 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:56996 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:49692 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:49696 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:42026 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:39938 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:36028 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:36042 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:42426 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:44392 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:58112 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:58116 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:53340 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:43510 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:39574 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:39576 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:58128 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:46018 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:37368 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:37380 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-58699c67bf-xrpct/vllm] (APIServer pid=1) INFO:     192.168.50.151:56020 - "GET /health HTTP/1.1" 200 OK
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) INFO 11-08 01:15:55 [utils.py:299]  ▄▄ ▄█ █     █     █ ▀▄▀ █  version 0.19.1
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) INFO 11-08 01:15:55 [utils.py:299]   █▄█▀ █     █     █     █  model   deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) INFO 11-08 01:15:55 [utils.py:299]    ▀▀  ▀▀▀▀▀ ▀▀▀▀▀ ▀     ▀
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) INFO 11-08 01:15:55 [utils.py:299] 
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) INFO 11-08 01:15:55 [utils.py:233] non-default args: {'model_tag': 'deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct', 'host': '0.0.0.0', 'model': 'deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct', 'tr
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) WARNING 11-08 01:15:55 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_LLAMA31_8B_PORT
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) WARNING 11-08 01:15:55 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_LLAMA31_8B_PORT_8002_TCP_PORT
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) WARNING 11-08 01:15:55 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_LLAMA31_8B_PORT_8002_TCP_ADDR
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) WARNING 11-08 01:15:55 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_SERVER_PORT_8000_TCP_ADDR
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) WARNING 11-08 01:15:55 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_SERVER_PORT
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) WARNING 11-08 01:15:55 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_LLAMA31_8B_SERVICE_PORT_OPENAI
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) WARNING 11-08 01:15:55 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_LLAMA31_8B_PORT_8002_TCP
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) WARNING 11-08 01:15:55 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_LLAMA31_8B_SERVICE_PORT
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) WARNING 11-08 01:15:55 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_SERVER_SERVICE_PORT_HTTP
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) WARNING 11-08 01:15:55 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_SERVER_PORT_8000_TCP_PROTO
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) WARNING 11-08 01:15:55 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_SERVER_SERVICE_HOST
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) WARNING 11-08 01:15:55 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_LLAMA31_8B_SERVICE_HOST
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) WARNING 11-08 01:15:55 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_SERVER_PORT_8000_TCP_PORT
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) WARNING 11-08 01:15:55 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_SERVER_PORT_8000_TCP
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) WARNING 11-08 01:15:55 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_LLAMA31_8B_PORT_8002_TCP_PROTO
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) WARNING 11-08 01:15:55 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_SERVER_SERVICE_PORT
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) `rope_parameters`'s factor field must be a float >= 1, got 40
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) `rope_parameters`'s beta_fast field must be a float, got 32
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) `rope_parameters`'s beta_slow field must be a float, got 1
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) `rope_parameters`'s factor field must be a float >= 1, got 40
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) `rope_parameters`'s beta_fast field must be a float, got 32
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) `rope_parameters`'s beta_slow field must be a float, got 1
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) `rope_parameters`'s factor field must be a float >= 1, got 40
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) `rope_parameters`'s beta_fast field must be a float, got 32
+[pod/vllm-server-78bbbb846f-kvjfh/vllm] (APIServer pid=1) `rope_parameters`'s beta_slow field must be a float, got 1
+FALHOU A SUBIDA: traga o log; para desmontar, Bloco L

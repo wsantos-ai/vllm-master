@@ -1,0 +1,30 @@
+== WSANTOSDELL  2026-11-07T21:06:15.6311231-03:00  D-05 E0: esta máquina alcança o Kong em 192.168.50.161?
+### 1. IPv4 desta máquina (172.16.30.6 na máquina virtual; 172.16.254.x na VPN do notebook)
+
+IPAddress      PrefixLength InterfaceAlias PrefixOrigin
+---------      ------------ -------------- ------------
+172.16.254.143           24 Ethernet 2             Dhcp
+192.168.1.66             24 Wi-Fi                  Dhcp
+
+
+### 2. portas do Kong e, como controle, o ssh de 01
+192.168.50.161:443  origem 172.16.254.143  alcançou=True
+192.168.50.161:80  origem 172.16.254.143  alcançou=True
+192.168.50.151:22  origem 172.16.254.143  alcançou=True
+### 3. caminho até o Kong
+
+Rastreando a rota para 192.168.50.161 com no máximo 8 saltos
+
+  1     8 ms     6 ms     7 ms  200.0.135.250 
+  2     9 ms    11 ms     8 ms  192.168.30.251 
+  3     9 ms     8 ms     8 ms  192.168.50.150 
+  4     *        *        *     Esgotado o tempo limite do pedido.
+  5     *        *        *     Esgotado o tempo limite do pedido.
+  6     *        *        *     Esgotado o tempo limite do pedido.
+  7     *        *        *     Esgotado o tempo limite do pedido.
+  8     *        *        *     Esgotado o tempo limite do pedido.
+
+Rastreamento concluído.
+### 4. o Kong responde HTTPS? (sem rota ainda: 404 é resposta)
+https://192.168.50.161/vllm/v1/chat/completions  HTTP 404
+== fim 2026-11-07T21:06:51.1335348-03:00

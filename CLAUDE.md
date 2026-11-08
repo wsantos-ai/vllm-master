@@ -23,24 +23,27 @@ resumo que muda o jeito de trabalhar é este:
   NFS), que os *pods* não usam (AC-08). A porta a 100 Mbps de `sabdiia01` segue fora do agregado. Desde
   2026-10-28, **`/` tem 631 G e `/home` 200 G nos 3 nós** (534-580 G livres em `/`, 77-156 G em `/home`);
   imagens e `etcd` ficam em `/` (AC-09; o `/` de 70 G encheu em 2026-10-27, AC-20). CPU sem AVX2. Docker e
-  Podman foram instalados nos 3 nós, fora do Kubernetes, com `data-root` em `/home/utec/docker_data`.
+  Podman foram instalados nos 3 nós, fora do Kubernetes, com `data-root` em `/home/utec/docker_data`; em
+  2026-11-07, 01 e 02 não tinham mais `docker.service` (só o cliente) nem contêineres, e o Podman estava vazio.
   `kubectl` falha em `sabdiia03` (OIDC): blocos com `kubectl` rodam em 01 ou 02.
-- **Há produção no *namespace* `vllms`**. **Desde 2026-11-03 ~16:33, as 3 GPUs estão com o administrador:**
-  `vllm-server` (`v0.19.1`, modelo `[não verificado]`) com 3 réplicas, uma por nó, mais o *DaemonSet*
-  `ray-worker` dele nos 3 nós, sem `ray-head` (§2). Os antigos `vllm-deepseek-33b` (`v0.6.4`, AC-05, AC-06)
-  e `vllm-llama31-8b` não existem mais. O estado muda de um dia para o outro: rode o Bloco 0 de
-  [runbooks/teste-protocolo-modelos.md](runbooks/teste-protocolo-modelos.md) antes de usar GPU. **Nunca proponha parar, reiniciar, editar
-  ou apagar recursos de `vllms` sem o usuário pedir explicitamente.** Com o acordo do administrador,
-  a pausa e a restauração reversíveis estão em [runbooks/pausar-vllms.md](runbooks/pausar-vllms.md)
-  (usada no P-05, 2026-11-03). Experimentos vão para uma GPU livre,
-  com `Service` `ClusterIP`. O Ray do administrador roda no *host* e, quando liga, ocupa as GPUs de
-  `sabdiia01` e `sabdiia02` sem o Kubernetes saber, que continua mostrando as duas como livres (AC-19;
-  ocupadas às 12:14 e vazias às 14:20 de 2026-10-27). Em 2026-10-28 14:21 a GPU de `sabdiia03` também
-  estava vazia (o deepseek usava 27.882 MiB na véspera): confira o *pod* antes de supor produção no ar. Livre é `0 0`
-  no Kubernetes **e** `nvidia-smi --query-compute-apps` vazio ("Qual GPU está livre?" do COMANDOS.md).
-  O Ray do administrador segue a mesma regra de `vllms`: não proponha pará-lo sem o usuário pedir. O estudo
-  sobe o **próprio** Ray em `vllm-estudo`, criado e apagado pelo
-  [runbook](runbooks/teste-ray-pp2-qwen25-7b.md) (AC-23). Antes do 1º *pod* com uma imagem do vLLM num nó,
+- **As 3 GPUs são da aplicação desde 2026-11-07 (acordo do usuário com o administrador, D-06):** o estudo
+  **adota o *Deployment* `vllm-server`** do administrador em `vllms` (mesmo nome e seletor `app=vllm-server`),
+  que passa a rodar o **Mistral-Nemo 12B FP16 em 3 réplicas, uma por nó**, atrás do Kong
+  ([runbook](runbooks/acesso-aplicacoes-d05.md), D-05). O manifesto versionado
+  ([configs/vllm-nemo-gateway.yaml](configs/vllm-nemo-gateway.yaml)) é a única fonte; o administrador não
+  reaplica mais o dele (cópia do que ele tinha: `vllm-server-adocao-<data>.yaml` em 01, gravada pelo Bloco G1).
+  Tudo o que o estudo controla em `vllms` leva o rótulo `decisao=d-05`: só isso o estudo edita ou apaga. **Nunca
+  proponha editar ou apagar os outros recursos de `vllms` (como o `Service` `vllm-llama31-8b`), nem
+  devolver o `vllm-server` ao administrador, sem o usuário pedir explicitamente.** Os antigos `vllm-deepseek-33b` (`v0.6.4`, AC-05,
+  AC-06) e `vllm-llama31-8b` não existem mais. Com o `vllm-server` no ar, não há GPU livre: um teste que
+  precise de uma GPU combina antes com o usuário tirar uma réplica (a aplicação fica com 2). Rode o Bloco 0 de
+  [runbooks/teste-protocolo-modelos.md](runbooks/teste-protocolo-modelos.md) antes de usar uma GPU liberada.
+  **O Ray foi eliminado** (usuário com o administrador, 2026-11-07, D-07): o *DaemonSet* `ray-worker` e o Ray do
+  *host* (que tomava GPU sem o Kubernetes saber e abria GCS `:6379` e painel `:8265` sem autenticação, AC-19)
+  saem pelo [runbooks/remover-ray.md](runbooks/remover-ray.md). Não proponha Ray nem *pipeline/tensor parallel*
+  entre nós (AC-23, AC-27); os *runbooks* de Ray ficam como histórico. Livre é `0 0` no Kubernetes **e**
+  `nvidia-smi --query-compute-apps` vazio ("Qual GPU está livre?" do COMANDOS.md): se o Ray reaparecer num
+  *host*, é ali que se vê. Antes do 1º *pod* com uma imagem do vLLM num nó,
   baixe-a com `ctr -n k8s.io images pull`: pelo *kubelet*, o *pull* da `v0.19.1` cai por limite de 5 min (AC-24).
 - **Testes de modelos da equipe** seguem um protocolo fixo (512 → 256 *tokens*, `temperature 0`, c=1/16/32)
   e são registrados em `C:\www\vllm-config\docs\registro-de-testes.md` (repositório compartilhado, `T-xxx`);
@@ -191,12 +194,22 @@ p50/p95/p99 de TTFT, ITL e *throughput*, o comando do gerador de carga e a saíd
 ### Onde os comandos rodam
 
 Esta estação é **Windows/PowerShell** e não tem acesso direto ao servidor: os comandos são colados pelo
-usuário no servidor. Todo bloco colável diz **no título** a máquina e o *shell* (servidor/bash com
+usuário no servidor. **Três ambientes** (usuário, 2026-11-07): o **notebook** com o repositório (`WSANTOSDELL`, sem IP fixo: a
+VPN dá um endereço em `172.16.254.0/24`, adaptador "Ethernet 2"), de onde saem o SSH (MobaXterm) para os
+servidores e os blocos PowerShell (terminal do VS Code); a **máquina virtual** `DESKTOP-WELLINGT`, pela VPN,
+IP fixo 172.16.30.6 `[a confirmar]`, sem o repositório (bloco que roda nela grava o log na Área de Trabalho);
+e os **servidores** `sabdiia01..03`. Todo bloco colável diz **no título** a máquina e o *shell* (servidor/bash com
 `kubectl`, ou estação/PowerShell). **Nenhum *placeholder*:** o bloco traz valores reais já conferidos
 (imagem, *tag*, nó) ou os descobre sozinho. Um *placeholder* colado sem edição virou nome de imagem
 inválido três vezes seguidas no Bloco 3 (§9). O `tee` grava **todas** as etapas do bloco, não só a
 última, para que a falha apareça no log. O nome do log usa `$(hostname -s)`, nunca o nó escrito à mão, e
 o bloco feito para um nó aborta em outro: um bloco de 01 rodou em 03 e gravou o log com o nome de 01 (§9).
+**Bloco dado no chat tem linhas de até ~100 colunas** (quebre com `\`) ou aponta para o *runbook*: a linha
+longa copiada do terminal chega partida ao servidor, e o *jsonpath* quebrou assim duas vezes em 2026-11-07 (§9).
+**Blocos PowerShell da estação rodam no terminal do VS Code com o perfil PowerShell (prompt `PS C:\...>`; o
+padrão do VS Code no notebook é o Git Bash) ou no Windows Terminal, não no terminal do MobaXterm**. **Bloco PowerShell longo vira arquivo `.ps1`** em
+`runbooks/ps/` (UTF-8 com BOM, para o 5.1), rodado com `pwsh -ExecutionPolicy Bypass -File`: colar corrompeu o
+texto três vezes em 2026-11-07: colado ali, o Bloco E0 caiu com `Token '{' inesperado` (2026-11-07, §9).
 
 ### Ao executar algo no servidor
 
@@ -232,9 +245,10 @@ Corrija no lugar e acrescente uma linha em §9 com o **mecanismo do erro**.
 
 ## Segurança, disco e segredos
 
-- **Exposição:** o servidor OpenAI-compatível do vLLM não exige autenticação por padrão
-  `[não verificado na versão em uso]`. Todo manifesto declara como o `Service` é exposto
-  (`ClusterIP`/`NodePort`/`Ingress`) e se usa `--api-key`, ou registra o risco assumido.
+- **Exposição:** o servidor OpenAI-compatível do vLLM não exige autenticação por padrão, e na `v0.19.1`
+  o `--api-key` só protege caminhos `/v1`: `POST /invocations` gera texto sem chave (AC-32, conferido no
+  código). Todo manifesto declara como o `Service` é exposto (`ClusterIP`/`NodePort`/`Ingress`) e se usa
+  `--api-key`, ou registra o risco assumido. Acesso de aplicações: pelo Kong, com rota única (D-05).
 - **Disco:** *weights* têm dezenas de GB. O cache de modelos (`HF_HOME`) fica em volume persistente,
   nunca na camada do contêiner, ou cada reinício do *pod* baixa tudo de novo. Registre onde cada modelo
   mora e quanto ocupa.
@@ -277,10 +291,10 @@ A lista viva e priorizada está em §7 do estudo; esta é só a ordem de ataque:
 4. **Linha de base.** **Objetivo do estudo (usuário, 2026-10-14): vLLM servindo várias requisições
    simultâneas.** Medição B-001 em [runbooks/teste-concorrencia-vllm.md](runbooks/teste-concorrencia-vllm.md):
    `Qwen/Qwen2.5-7B-Instruct` FP16, `vllm bench serve` dentro do *pod*, concorrência 1 a 64.
-5. **As GPUs.** 3 réplicas independentes (1 por nó) atrás de um `Service` (D-04). Dividir entre nós pelo
-   Ray foi medido em 2026-10-29: o 7B em 2 GPUs (*pipeline parallel* 2) rende 22-25 % **menos** que em 1
-   (AC-23). Multinó só para um modelo necessário que não caiba em 1 GPU, aceitando essa perda. **E o
-   arranjo responde sem sentido a *prompts* de ~1.400 *tokens* (AC-27, 2026-11-04): fora até a PD-33.**
+5. **As GPUs.** 3 réplicas independentes (1 por nó) atrás de um `Service` (D-04). **Ray eliminado em
+   2026-11-07 (D-07).** Dividir entre nós pelo Ray foi medido em 2026-10-29: o 7B em 2 GPUs (*pipeline parallel* 2) rende 22-25 % **menos** que em 1
+   (AC-23), e o arranjo responde sem sentido a *prompts* de ~1.400 *tokens* (AC-27, 2026-11-04). Multinó saiu
+   do caso junto com o Ray; PD-31 e PD-33 encerradas.
 6. **Maior modelo útil.** Quais *quantizations* têm *kernel* em `sm_70`.
 7. **Contexto × concorrência.** `--max-model-len`, `--max-num-seqs`, `--gpu-memory-utilization` medidos.
 8. **Operação.** *Probes*, reinício, arranque a frio, atualização sem queda.

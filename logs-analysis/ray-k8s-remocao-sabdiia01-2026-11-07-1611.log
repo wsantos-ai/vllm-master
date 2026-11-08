@@ -1,0 +1,26 @@
+== sabdiia01  2026-11-07T16:11:19-03:00  D-07 K1: Ray no Kubernetes, inventário e remoção
+### 1. CRDs do KubeRay
+nenhuma CRD ray.io
+### 2. workloads com ray no nome ou na imagem (fora do estudo: decisao!=d-05)
+DaemonSet|vllms|ray-worker|rayproject/ray:latest-gpu|
+### 3. Services com ray no nome ou nas portas do Ray (6379, 8265, 10001)
+(nenhum)
+### 4. cópia e remoção (só em vllms e vllm-estudo)   16:11:19
+daemonset.apps "ray-worker" deleted from vllms namespace
+cópia: ray-k8s-copia-2026-11-07-1611.yaml (1 objetos)
+### 5. conferência   16:11:20
+vllms            ray-worker-jwbk7                                              1/1     Terminating        128 (4m31s ago)    29h    10.244.179.100   sabdiia01   <none>           <none>
+vllms            ray-worker-kn2zh                                              1/1     Terminating        128 (69s ago)      29h    10.244.182.186   sabdiia02   <none>           <none>
+Name:               sabdiia01
+  nvidia.com/gpu     1           1
+Name:               sabdiia02
+  nvidia.com/gpu     1           1
+Name:               sabdiia03
+  nvidia.com/gpu     1            1
+NAME                          READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                     SELECTOR
+deployment.apps/vllm-server   0/3     3            0           25h   vllm         vllm/vllm-openai:v0.19.1   app=vllm-server
+
+NAME                         TYPE           CLUSTER-IP       EXTERNAL-IP      PORT(S)          AGE     SELECTOR
+service/vllm-llama-service   LoadBalancer   10.98.168.42     192.168.50.160   8000:31364/TCP   3d23h   app=vllm-server
+service/vllm-llama31-8b      ClusterIP      10.104.155.104   <none>           8002/TCP         9d      app=vllm-llama31-8b
+== fim 2026-11-07T16:11:40-03:00

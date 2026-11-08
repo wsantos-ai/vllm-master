@@ -4,7 +4,10 @@
 #   python pontuar-respostas.py <gabarito.json> <a.jsonl> --comparar <b.jsonl> -> respostas iguais?
 #
 # Etapa 1 (a consulta), sem banco: a nota é aproximada. Conta como certa se
-#   formato:     veio tool_calls com nome consultar_sql e "sql" em JSON válido;
+#   formato:     veio tool_calls com nome consultar_sql e "sql" em JSON válido; na variante "enum",
+#                consultar_indicadores com "indicadores" (lista de textos) e "datas" opcional (lista de
+#                textos). Os argumentos viram o SQL equivalente (IN nos nomes e nas datas; sem datas,
+#                a série inteira) e passam pela mesma régua de indicadores e datas;
 #   indicadores: cada NM_INDICADOR do alvo aparece entre aspas no SQL (maiúsculas/minúsculas iguais;
 #                espaços NÃO normalizados, salvo em volta do hífen; ver hifen()), ou um LIKE cobre todos;
 #   datas:       cada data do alvo aparece ('AAAA-MM-DD' ou 'AAAAMMDD'); para "ano", as 4 datas
@@ -14,7 +17,8 @@
 # Etapa 2 (a resposta): certa se cada número esperado aparece no texto, aceitando o arredondamento
 #   que o próprio texto mostra (ex.: 10,2 escrito "10%" passa; "R$ 45,7 bilhões" vale 45.700 milhões),
 #   e se os termos exigidos aparecem. Números sem lastro (fora dos dados, dos esperados e da pergunta)
-#   são só alerta.
+#   são só alerta. Nas perguntas com aceita_nova_consulta (43, 47), pedir de novo só membros do grupo
+#   também vale: os dados simulados trazem só a linha vencedora (aparece como "etapa 2 (aceita)").
 import argparse, json, math, re, statistics, sys, unicodedata
 
 def sem_acento(s):
@@ -50,16 +54,39 @@ def sqls_da_mensagem(msg):
     sqls = []
     for tc in tcs:
         f = tc.get("function") or {}
-        if f.get("name") != "consultar_sql":
-            return False, f"ferramenta errada: {f.get('name')}", []
         try:
             arg = json.loads(f.get("arguments") or "")
         except json.JSONDecodeError:
             return False, "arguments não é JSON válido", []
+        if f.get("name") == "consultar_indicadores":
+            ok, motivo, sql = sql_de_indicadores(arg)
+            if not ok:
+                return False, motivo, []
+            sqls.append(sql)
+            continue
+        if f.get("name") != "consultar_sql":
+            return False, f"ferramenta errada: {f.get('name')}", []
         if not isinstance(arg, dict) or not isinstance(arg.get("sql"), str) or not arg["sql"].strip():
             return False, "arguments sem campo sql", []
         sqls.append(arg["sql"])
     return True, "", sqls
+
+def sql_de_indicadores(arg):
+    """Argumentos de consultar_indicadores -> (formato_ok, motivo, SQL equivalente)."""
+    if not isinstance(arg, dict):
+        return False, "arguments não é objeto", ""
+    ind, datas = arg.get("indicadores"), arg.get("datas", [])
+    if not isinstance(ind, list) or not ind or not all(isinstance(x, str) and x.strip() for x in ind):
+        return False, "arguments sem lista indicadores", ""
+    if datas is None:
+        datas = []
+    if not isinstance(datas, list) or not all(isinstance(x, str) for x in datas):
+        return False, "datas não é lista de textos", ""
+    q = lambda xs: ", ".join("'" + x.replace("'", "''") + "'" for x in xs)
+    sql = f"SELECT [DT_REGISTRO], [NM_INDICADOR], [VL_INDICADOR] FROM tabela WHERE [NM_INDICADOR] IN ({q(ind)})"
+    if datas:
+        sql += f" AND [DT_REGISTRO] IN ({q(datas)})"
+    return True, "", sql
 
 def like_para_regex(padrao):
     r = ""
@@ -168,6 +195,14 @@ def etapa2(p, r):
     msg = e.get("mensagem") or {}
     texto = msg.get("content") or ""
     if msg.get("tool_calls"):
+        if p.get("aceita_nova_consulta"):
+            ok, _, sqls = sqls_da_mensagem(msg)
+            pedidos = [hifen(x.lower()) for s in sqls for x in re.findall(r"N?'((?:[^']|'')*)'", s)
+                       if x.startswith(("Saldo", "Taxa"))]
+            grupo = {hifen(n.lower()) for n in p["alvo"]["grupo"]}
+            if ok and pedidos and set(pedidos) <= grupo:
+                return dict(ok=True, aceita=True, motivo="pediu os outros membros do grupo (dados simulados incompletos)",
+                            sem_lastro=[], texto=texto)
         return dict(ok=False, motivo="pediu nova consulta em vez de responder", sem_lastro=[], texto=texto)
     if e.get("finish_reason") == "length":
         motivo_len = "resposta cortada por max_tokens; "
@@ -234,12 +269,14 @@ def relatorio(g, meta, resp):
         c[0] += 1; c[1] += s1; c[2] += b["ok"]
         if not s1:
             falhas.append(f"| {p['id']} | etapa 1 | {a['motivo'][:160]} | `{a['sql'][:200].replace(chr(10), ' ').replace('|', '/')}` |")
+        if b.get("aceita"):
+            falhas.append(f"| {p['id']} | etapa 2 (aceita) | {b['motivo']} | — |")
         if not b["ok"]:
             falhas.append(f"| {p['id']} | etapa 2 | {b['motivo'][:160]} | {b['texto'][:200].replace(chr(10), ' ').replace('|', '/')} |")
     n = len(auto)
     out = [f"# Teste de qualidade — {meta.get('modelo')}", "",
            f"vLLM `{meta.get('vllm')}`, gabarito `{meta.get('gabarito_versao')}`, início {meta.get('inicio')}, "
-           f"{len(pergs)} perguntas ({n} na nota automática). Parâmetros: `{json.dumps(meta.get('params'), ensure_ascii=False)}`.", "",
+           f"{len(pergs)} perguntas ({n} na nota automática). Variante: `{meta.get('variante', 'sql')}`. Parâmetros: `{json.dumps(meta.get('params'), ensure_ascii=False)}`.", "",
            "| Medida | Resultado |", "|---|---|",
            f"| Etapa 1 — formato (`tool_calls` válido) | {pct(k['fmt'], n)} |",
            f"| Etapa 1 — indicadores certos | {pct(k['ind'], n)} |",

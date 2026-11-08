@@ -8,6 +8,14 @@
 #   esperados  os números que a resposta da etapa 2 precisa conter;
 #   termos     palavras que a resposta precisa conter (perguntas "qual região/faixa");
 #   manual     true = fora da nota automática (revisão à mão).
+#   args_dados os argumentos da chamada simulada na variante "enum" (ferramenta consultar_indicadores).
+#   aceita_nova_consulta  true = na etapa 2, pedir de novo os outros membros do grupo também vale
+#              (IDs 43 e 47: os dados simulados trazem só a linha vencedora; ver a nota da pergunta).
+# Variantes da etapa 1 (coletar-respostas.py --variante):
+#   sql            sistema + ferramenta consultar_sql (SQL livre); a de AC-28 e AC-29.
+#   enum           sistema_enum + ferramenta_enum: consultar_indicadores(indicadores: lista fechada com os
+#                  nomes do catálogo, datas). Com tool_choice "auto" o vLLM não obriga o enum ([F-044]).
+#   enum-required  a mesma, com tool_choice "required" na etapa 1: o vLLM obriga o schema.
 # IDs 1-26 saem do CSV automaticamente; 27-50 estão escritos à mão abaixo, a partir de
 # Valor_Identificado e da Resposta do próprio CSV.
 import csv, json, re, sys
@@ -73,7 +81,9 @@ M[42] = dict(dados=linhas(*[("2022-04-01", REG("pequeno porte", r), v) for r, v 
              so=esp(("Sudeste", 128504.4)), termos=["sudeste"])
 M[43] = dict(dados=linhas(("2021-10-01", REG("microempresa", "Norte"), 2139.2)), origem="sql_ref",
              grupo=[REG("microempresa", r) for r in REGIOES], termos=["norte"],
-             nota="dados = saída do SQL de referência (TOP 1); os outros 4 valores não estão no CSV")
+             nota="dados = saída do SQL de referência (TOP 1); os outros 4 valores não estão no CSV. Na variante "
+                  "enum, a chamada simulada pede só o Norte, e pedir as outras regiões na etapa 2 é correto",
+             aceita_nova_consulta=True)
 M[44] = dict(dados=linhas(("2023-04-01", PRZ("maior que 2 a 5 anos"), 202159.3),
                           ("2023-04-01", PRZ("até 1 ano"), 33925.9)),
              extra=esp(("diferença R$ milhões", 168233.4)))
@@ -84,7 +94,9 @@ M[46] = dict(dados=[{"Maior_Taxa": 10.9, "Menor_Taxa": 2.6}], origem="sql_ref", 
              nota="dados = saída do SQL de referência (MAX/MIN, sem datas); a série completa não está no CSV")
 M[47] = dict(dados=linhas(("2022-10-01", FX("Acima de 100 mil"), 207578.5)), origem="sql_ref",
              grupo=[FX(f) for f in FAIXAS], termos=["100 mil"],
-             nota="dados = saída do SQL de referência (TOP 1); as outras 5 faixas não estão no CSV")
+             nota="dados = saída do SQL de referência (TOP 1); as outras 5 faixas não estão no CSV. Na variante "
+                  "enum, a chamada simulada pede só a faixa vencedora, e pedir as outras na etapa 2 é correto",
+             aceita_nova_consulta=True)
 M[48] = dict(dados=serie(2022, IN_MIC, [5.6, 5.4, 5.5, 6.1]), ano=2022, so=esp(("média", 5.65)),
              nota="as 4 linhas vêm da ID 49 (o CSV da 48 só traz a média)")
 M[49] = dict(dados=serie(2022, IN_MIC, [5.6, 5.4, 5.5, 6.1]), ano=2022)
@@ -166,8 +178,13 @@ def main():
         p.update(alvo=alvo, dados=dados, origem_dados=origem,
                  sql_dados=p["sql_referencia"] if origem == "sql_ref" else sql_canonico(dados),
                  esperados=esperados, termos=cfg.get("termos", []), manual=cfg.get("manual", False),
-                 nota=cfg.get("nota", ""))
+                 nota=cfg.get("nota", ""), aceita_nova_consulta=cfg.get("aceita_nova_consulta", False))
         for n in ind + alvo["grupo"]:
+            assert n in cat, (i, n)
+        nomes_d = sorted({d["NM_INDICADOR"] for d in dados if "NM_INDICADOR" in d}) or ind
+        datas_d = sorted({d["DT_REGISTRO"] for d in dados if "DT_REGISTRO" in d})
+        p["args_dados"] = {"indicadores": nomes_d, **({"datas": datas_d} if datas_d else {})}
+        for n in nomes_d:
             assert n in cat, (i, n)
         perguntas.append(p)
 
@@ -193,8 +210,27 @@ def main():
         "parameters": {"type": "object", "properties": {"sql": {
             "type": "string", "description": f"Consulta SELECT em T-SQL sobre {TABELA}."}},
             "required": ["sql"]}}}
-    g = dict(versao="2026-11-04", fonte="dataset/dataset-test.csv", n_perguntas=len(perguntas),
-             n_indicadores=len(cat), sistema=sistema, ferramenta=ferramenta, perguntas=perguntas)
+    # Variante "enum": muda só a regra 1 do sistema e a ferramenta; o resto do texto é o mesmo.
+    regra1 = ("1. Para obter qualquer valor, chame a ferramenta consultar_sql com uma consulta SELECT em T-SQL. "
+              "Nunca responda com valores que não vieram de uma consulta.")
+    assert regra1 in sistema
+    sistema_enum = sistema.replace(regra1, (
+        "1. Para obter qualquer valor, chame a ferramenta consultar_indicadores com os nomes exatos dos "
+        "indicadores e as datas. Nunca responda com valores que não vieram de uma consulta."))
+    ferramenta_enum = {"type": "function", "function": {
+        "name": "consultar_indicadores",
+        "description": f"Busca em {TABELA} os valores dos indicadores pedidos, nas datas pedidas, e devolve "
+                       "as linhas em JSON (DT_REGISTRO, NM_INDICADOR, VL_INDICADOR).",
+        "parameters": {"type": "object", "properties": {
+            "indicadores": {"type": "array", "minItems": 1, "items": {"type": "string", "enum": sorted(cat)},
+                            "description": "Nomes exatos dos indicadores, da lista de indicadores disponíveis."},
+            "datas": {"type": "array", "items": {"type": "string"},
+                      "description": "Datas no formato AAAA-MM-DD (dia 1 de janeiro, abril, julho ou outubro). "
+                                     "Omita para receber a série inteira."}},
+            "required": ["indicadores"]}}}
+    g = dict(versao="2026-11-06", fonte="dataset/dataset-test.csv", n_perguntas=len(perguntas),
+             n_indicadores=len(cat), sistema=sistema, ferramenta=ferramenta,
+             sistema_enum=sistema_enum, ferramenta_enum=ferramenta_enum, perguntas=perguntas)
     SAIDA.write_text(json.dumps(g, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"{SAIDA}: {len(perguntas)} perguntas, {len(cat)} indicadores no catálogo, "
           f"{sum(p['manual'] for p in perguntas)} para revisão manual, "

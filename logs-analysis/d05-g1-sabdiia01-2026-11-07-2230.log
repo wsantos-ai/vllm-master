@@ -1,0 +1,178 @@
+== sabdiia01  2026-11-07T22:30:25-03:00  D-05 G1: vLLM atrás do Kong, com chave, NetworkPolicy e rota única
+### 1. pré-condições
+b3076d4e095817d2f5b737a49a8a8fb353913abadd1169680573462aee47cfed  vllm-nemo-gateway.yaml
+vllm-server já é do estudo: o apply troca uma réplica por vez (RollingUpdate), 2 seguem atendendo
+Name:               sabdiia01
+  nvidia.com/gpu     1             1
+Name:               sabdiia02
+  nvidia.com/gpu     1             1
+Name:               sabdiia03
+  nvidia.com/gpu     1            1
+processos na GPU de 01 (os do vllm-server atual saem no rollout): 3117026, VLLM::EngineCore, 29458 MiB 
+/var/lib/vllm-estudo/hf-cache/hub/models--mistralai--Mistral-Nemo-Instruct-2407/snapshots/04d8a90549d23fc6bd7f642064003592df51e9b3/consolidated.safetensors
+pesos em 02 e 03, segundo d05-w-pesos-sabdiia01-2026-11-07-2120.log:
+-rw-r--r-- 1 root root 24495604224 Nov  5 11:44 consolidated.safetensors
+21:26:28 d05-pesos-sabdiia02=Succeeded/ d05-pesos-sabdiia03=Running/ 
+21:27:28 d05-pesos-sabdiia02=Succeeded/ d05-pesos-sabdiia03=Succeeded/ 
+-rw-r--r-- 1 root root 24495604224 Nov  8 00:26 consolidated.safetensors
+-rw-r--r-- 1 root root 24495604224 Nov  8 00:26 consolidated.safetensors
+proxy do Kong: kong-gateway-proxy  IP 192.168.50.161  externalTrafficPolicy Local
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+### 2. chave do vLLM (fora do log)   22:30:27
+Secret vllm-nemo-api-key já existe: mantido
+### 3. manifesto   22:30:27
+deployment.apps/vllm-server configured
+service/vllm-server unchanged
+networkpolicy.networking.k8s.io/vllm-server-so-kong unchanged
+kongplugin.configuration.konghq.com/d05-key-auth unchanged
+kongplugin.configuration.konghq.com/d05-rate-limit unchanged
+ingress.networking.k8s.io/vllm-server unchanged
+rótulos {"app":"vllm-server","decisao":"d-05"}
+volumes pesos-local shm
+NAME              TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE   SELECTOR
+vllm-llama31-8b   ClusterIP   10.104.155.104   <none>        8002/TCP   10d   app=vllm-llama31-8b
+vllm-server       ClusterIP   10.106.142.203   <none>        8000/TCP   59m   app=vllm-server
+plugins na rota: d05-key-auth,d05-rate-limit
+### 4. aguardando as 3 réplicas, trocadas uma a uma (até 45 min)   22:30:28
+22:30:28 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 15 57m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 307 31h
+22:30:59 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 15 57m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 307 31h
+22:31:29 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 CrashLoopBackOff 15 58m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 307 31h
+22:31:59 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 Running 16 58m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 CrashLoopBackOff 307 31h
+22:32:29 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 Running 16 59m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 308 31h
+22:32:59 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 Running 16 59m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 308 31h
+22:33:29 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 Running 16 60m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 308 31h
+22:34:00 prontas/atualizadas/indisponíveis = 1/2/2
+     vllm-server-58699c67bf-4sn8m 0/1 Running 16 60m
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Running 308 31h
+22:34:30 prontas/atualizadas/indisponíveis = 2/3/1
+     vllm-server-58699c67bf-4sn8m 1/1 Running 16 61m
+     vllm-server-58699c67bf-w9bsm 0/1 Pending 0 <none>
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+     vllm-server-78bbbb846f-kvjfh 0/1 Terminating 308 31h
+22:35:00 prontas/atualizadas/indisponíveis = 2/3/1
+     vllm-server-58699c67bf-4sn8m 1/1 Running 16 61m
+     vllm-server-58699c67bf-w9bsm 0/1 ContainerCreating 0 sabdiia03
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+22:35:30 prontas/atualizadas/indisponíveis = 2/3/1
+     vllm-server-58699c67bf-4sn8m 1/1 Running 16 62m
+     vllm-server-58699c67bf-w9bsm 0/1 Running 0 sabdiia03
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+22:36:00 prontas/atualizadas/indisponíveis = 2/3/1
+     vllm-server-58699c67bf-4sn8m 1/1 Running 16 62m
+     vllm-server-58699c67bf-w9bsm 0/1 Running 0 sabdiia03
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+22:36:30 prontas/atualizadas/indisponíveis = 2/3/1
+     vllm-server-58699c67bf-4sn8m 1/1 Running 16 63m
+     vllm-server-58699c67bf-w9bsm 0/1 Running 0 sabdiia03
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+22:37:01 prontas/atualizadas/indisponíveis = 2/3/1
+     vllm-server-58699c67bf-4sn8m 1/1 Running 16 63m
+     vllm-server-58699c67bf-w9bsm 0/1 Running 0 sabdiia03
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+22:37:31 prontas/atualizadas/indisponíveis = 2/3/1
+     vllm-server-58699c67bf-4sn8m 1/1 Running 16 64m
+     vllm-server-58699c67bf-w9bsm 0/1 Running 0 sabdiia03
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+22:38:01 prontas/atualizadas/indisponíveis = 2/3/1
+     vllm-server-58699c67bf-4sn8m 1/1 Running 16 64m
+     vllm-server-58699c67bf-w9bsm 0/1 Running 0 sabdiia03
+     vllm-server-58699c67bf-xrpct 1/1 Running 0 sabdiia01
+pronto=1 depois de 8 min
+NAME                           READY   STATUS    RESTARTS       AGE    IP               NODE        NOMINATED NODE   READINESS GATES
+vllm-server-58699c67bf-4sn8m   1/1     Running   16 (12m ago)   65m    10.244.182.161   sabdiia02   <none>           <none>
+vllm-server-58699c67bf-w9bsm   1/1     Running   0              4m4s   10.244.50.168    sabdiia03   <none>           <none>
+vllm-server-58699c67bf-xrpct   1/1     Running   0              67m    10.244.179.112   sabdiia01   <none>           <none>
+[pod/vllm-server-58699c67bf-4sn8m/vllm] pesos em /hf-cache/hub/models--mistralai--Mistral-Nemo-Instruct-2407/snapshots/04d8a90549d23fc6bd7f642064003592df51e9b3
+[pod/vllm-server-58699c67bf-4sn8m/vllm] (APIServer pid=1) WARNING 11-08 01:31:54 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_LLAMA31_8B_PORT
+[pod/vllm-server-58699c67bf-4sn8m/vllm] (APIServer pid=1) WARNING 11-08 01:31:54 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_LLAMA31_8B_PORT_8002_TCP_PORT
+[pod/vllm-server-58699c67bf-4sn8m/vllm] (APIServer pid=1) WARNING 11-08 01:31:54 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_LLAMA31_8B_PORT_8002_TCP_ADDR
+[pod/vllm-server-58699c67bf-4sn8m/vllm] (APIServer pid=1) WARNING 11-08 01:31:54 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_SERVER_PORT_8000_TCP_ADDR
+[pod/vllm-server-58699c67bf-4sn8m/vllm] (APIServer pid=1) WARNING 11-08 01:31:54 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_SERVER_PORT
+[pod/vllm-server-58699c67bf-4sn8m/vllm] (APIServer pid=1) WARNING 11-08 01:31:54 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_LLAMA31_8B_SERVICE_PORT_OPENAI
+[pod/vllm-server-58699c67bf-4sn8m/vllm] (APIServer pid=1) WARNING 11-08 01:31:54 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_LLAMA31_8B_PORT_8002_TCP
+[pod/vllm-server-58699c67bf-4sn8m/vllm] (APIServer pid=1) WARNING 11-08 01:31:54 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_LLAMA31_8B_SERVICE_PORT
+[pod/vllm-server-58699c67bf-4sn8m/vllm] (APIServer pid=1) WARNING 11-08 01:31:54 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_SERVER_SERVICE_PORT_HTTP
+[pod/vllm-server-58699c67bf-4sn8m/vllm] (APIServer pid=1) WARNING 11-08 01:31:54 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_SERVER_PORT_8000_TCP_PROTO
+[pod/vllm-server-58699c67bf-4sn8m/vllm] (APIServer pid=1) WARNING 11-08 01:31:54 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_SERVER_SERVICE_HOST
+[pod/vllm-server-58699c67bf-4sn8m/vllm] (APIServer pid=1) WARNING 11-08 01:31:54 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_LLAMA31_8B_SERVICE_HOST
+[pod/vllm-server-58699c67bf-4sn8m/vllm] (APIServer pid=1) WARNING 11-08 01:31:54 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_SERVER_PORT_8000_TCP_PORT
+[pod/vllm-server-58699c67bf-4sn8m/vllm] (APIServer pid=1) WARNING 11-08 01:31:54 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_SERVER_PORT_8000_TCP
+[pod/vllm-server-58699c67bf-4sn8m/vllm] (APIServer pid=1) WARNING 11-08 01:31:54 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_LLAMA31_8B_PORT_8002_TCP_PROTO
+[pod/vllm-server-58699c67bf-4sn8m/vllm] (APIServer pid=1) WARNING 11-08 01:31:54 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_SERVER_SERVICE_PORT
+[pod/vllm-server-58699c67bf-4sn8m/vllm] (APIServer pid=1) WARNING 11-08 01:32:04 [model.py:2016] Casting torch.bfloat16 to torch.float16.
+[pod/vllm-server-58699c67bf-4sn8m/vllm] (EngineCore pid=198) ERROR 11-08 01:32:19 [fa_utils.py:145] Cannot use FA version 2 is not supported due to FA2 is only supported on devices with compute capability >= 8
+[pod/vllm-server-58699c67bf-4sn8m/vllm] (EngineCore pid=198) <frozen importlib._bootstrap_external>:1301: FutureWarning: The cuda.cudart module is deprecated and will be removed in a future release, please switch to use the cuda.bindings.runtime modu
+[pod/vllm-server-58699c67bf-4sn8m/vllm] (EngineCore pid=198) <frozen importlib._bootstrap_external>:1301: FutureWarning: The cuda.nvrtc module is deprecated and will be removed in a future release, please switch to use the cuda.bindings.nvrtc module 
+[pod/vllm-server-58699c67bf-4sn8m/vllm] (EngineCore pid=198) INFO 11-08 01:34:03 [gpu_worker.py:436] Available KV cache memory: 4.32 GiB
+[pod/vllm-server-58699c67bf-4sn8m/vllm] (EngineCore pid=198) INFO 11-08 01:34:03 [kv_cache_utils.py:1319] GPU KV cache size: 28,288 tokens
+[pod/vllm-server-58699c67bf-4sn8m/vllm] (EngineCore pid=198) INFO 11-08 01:34:03 [kv_cache_utils.py:1324] Maximum concurrency for 8,192 tokens per request: 3.45x
+[pod/vllm-server-58699c67bf-w9bsm/vllm] pesos em /hf-cache/hub/models--mistralai--Mistral-Nemo-Instruct-2407/snapshots/04d8a90549d23fc6bd7f642064003592df51e9b3
+[pod/vllm-server-58699c67bf-w9bsm/vllm] (APIServer pid=1) WARNING 11-08 01:35:26 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_LLAMA31_8B_PORT
+[pod/vllm-server-58699c67bf-w9bsm/vllm] (APIServer pid=1) WARNING 11-08 01:35:26 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_LLAMA31_8B_PORT_8002_TCP_PORT
+[pod/vllm-server-58699c67bf-w9bsm/vllm] (APIServer pid=1) WARNING 11-08 01:35:26 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_LLAMA31_8B_PORT_8002_TCP_ADDR
+[pod/vllm-server-58699c67bf-w9bsm/vllm] (APIServer pid=1) WARNING 11-08 01:35:26 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_SERVER_PORT_8000_TCP_ADDR
+[pod/vllm-server-58699c67bf-w9bsm/vllm] (APIServer pid=1) WARNING 11-08 01:35:26 [envs.py:1744] Unknown vLLM environment variable detected: VLLM_SERVER_PORT
+### 4b. cada réplica responde?   22:38:31
+sabdiia02 vllm-server-58699c67bf-4sn8m -> Brasília
+sabdiia03 vllm-server-58699c67bf-w9bsm -> Brasília
+sabdiia01 vllm-server-58699c67bf-xrpct -> Brasília
+### 5. de dentro do pod: o que a chave do vLLM protege (AC-32)   22:38:41
+saúde                              GET  /health               chave=não -> 200  [como esperado] | 
+/v1 sem chave                      GET  /v1/models            chave=não -> 401  [como esperado] | {"error":"Unauthorized"}
+/v1 com chave                      GET  /v1/models            chave=sim -> 200  [como esperado] | {"object":"list","data":[{"id":"mistralai/Mistral-Nemo-Instruct-2407","object":"model","created":1794101921,"owned_by":"vllm","root":"/hf-cache/hub/models--mistralai--Mis
+chat /v1 sem chave                 POST /v1/chat/completions  chave=não -> 401  [como esperado] | {"error":"Unauthorized"}
+chat /v1 com chave                 POST /v1/chat/completions  chave=sim -> 200  [como esperado] | {"id":"chatcmpl-8552a1eb4693a1a0","object":"chat.completion","created":1794101921,"model":"mistralai/Mistral-Nemo-Instruct-2407","choices":[{"index":0,"message":{"role":"
+SageMaker sem chave (AC-32)        POST /invocations          chave=não -> 200  [como esperado] | {"id":"chatcmpl-8331795a3a1163b3","object":"chat.completion","created":1794101921,"model":"mistralai/Mistral-Nemo-Instruct-2407","choices":[{"index":0,"message":{"role":"
+métricas sem chave                 GET  /metrics              chave=não -> 200  [como esperado] | # HELP python_gc_objects_collected_total Objects collected during gc # TYPE python_gc_objects_collected_total counter python_gc_objects_collected_total{generation="0"} 13
+docs (--disable-fastapi-docs)      GET  /docs                 chave=não -> 404  [como esperado] | {"detail":"Not Found"}
+### 6. NetworkPolicy: outro pod chega ao vLLM?   22:38:42
+Service do vLLM 10.106.142.203, pod 10.244.182.161, proxy do Kong (ClusterIP) 10.98.30.231
+pod/d05-sonda created
+pod/d05-sonda condition met
+vLLM pelo Service (bloqueio esperado) -> sem resposta: URLError <urlopen error timed out>
+vLLM pelo IP do pod (bloqueio esperado) -> sem resposta: URLError <urlopen error timed out>
+controle: proxy do Kong (deve responder) -> 404
+pod "d05-sonda" deleted from vllms namespace
+### 7. a rota no Kong (o controlador leva alguns segundos)   22:38:59
+NAME                                    CLASS   HOSTS   ADDRESS          PORTS   AGE
+ingress.networking.k8s.io/vllm-server   kong    *       192.168.50.161   80      68m
+
+NAME                                                 PLUGIN-TYPE     AGE   PROGRAMMED
+kongplugin.configuration.konghq.com/d05-key-auth     key-auth        68m   
+kongplugin.configuration.konghq.com/d05-rate-limit   rate-limiting   68m   
+LAST SEEN   TYPE      REASON              OBJECT                              MESSAGE
+4m52s       Warning   FailedScheduling    pod/vllm-server-58699c67bf-w9bsm    0/3 nodes are available: 3 Insufficient nvidia.com/gpu. preemption: 0/3 nodes are available: 3 No preemption victims found for incoming pod.
+11m         Warning   BackOff             pod/vllm-server-78bbbb846f-kvjfh    Back-off restarting failed container vllm in pod vllm-server-78bbbb846f-kvjfh_vllms(b2b3473c-4223-4ce8-876c-52163638e61e)
+10m         Warning   BackOff             pod/vllm-server-58699c67bf-4sn8m    Back-off restarting failed container vllm in pod vllm-server-58699c67bf-4sn8m_vllms(6cf22fa2-7b80-4f55-ad44-cf99ade1b72b)
+4m53s       Normal    ScalingReplicaSet   deployment/vllm-server              Scaled up replica set vllm-server-58699c67bf from 2 to 3
+4m53s       Normal    ScalingReplicaSet   deployment/vllm-server              Scaled down replica set vllm-server-78bbbb846f from 1 to 0
+4m53s       Normal    SuccessfulDelete    replicaset/vllm-server-78bbbb846f   Deleted pod: vllm-server-78bbbb846f-kvjfh
+4m24s       Normal    AddedInterface      pod/vllm-server-58699c67bf-w9bsm    Add eth0 [10.244.50.168/32] from k8s-pod-network
+35s         Normal    AddedInterface      pod/d05-sonda                       Add eth0 [10.244.179.113/32] from k8s-pod-network
+### 8. de 01 pelo Kong, sem chave   22:39:19
+sem chave (401 do Kong) -> HTTP 401 | { "message":"No API key found in request", "request_id":"d0dc104afbcafd58fccd3a0414876b4b" }
+/vllm/metrics (404: sem rota) -> HTTP 404 | { "message":"no Route matched with those values", "request_id":"b0521c76d484632a7d52c7650f9ec663" }
+Kong em 192.168.50.161. Próximo: Bloco C.
+== fim 2026-11-07T22:39:19-03:00

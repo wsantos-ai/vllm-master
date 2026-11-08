@@ -1,0 +1,12 @@
+== sabdiia01  2026-11-07T16:29:48-03:00  D-07 H0: Ray no host, inventário (só leitura)
+### 1. processos do Ray
+### 2. portas do Ray (6379 GCS, 8265 painel, 10001 cliente)
+(nenhuma)
+### 3. GPU
+### 4. contêineres e imagens com ray (Docker e Podman)
+### 5. início automático
+### 6. projeto e venv do administrador
+ls: cannot access '/home/utec/llm_lhama_prototype/venv': No such file or directory
+drwxr-xr-x 7 root root 4096 Nov  6 14:54 /home/utec/llm_lhama_prototype
+ls: cannot access '/home/utec/llm_lhama_prototype/venv/bin/ray': No such file or directory
+== fim 2026-11-07T16:29:49-03:00

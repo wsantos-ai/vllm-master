@@ -11,6 +11,12 @@ ar. Nada é apagado:
 
 *Pods* sem dono (criados à mão) não são parados: o bloco só os lista.
 
+**Desde 2026-11-07, as 3 GPUs são da aplicação** (acordo do usuário com o administrador, D-06): o estudo
+adota o `vllm-server` do administrador, que passa a rodar o Mistral-Nemo em 3 réplicas
+([runbooks/acesso-aplicacoes-d05.md](acesso-aplicacoes-d05.md)). Os recursos do estudo levam o rótulo
+`decisao=d-05`, e os dois blocos os ignoram: o P não pausa o `vllm-server` adotado, e o R não o mexe. Com o Ray
+eliminado (D-07, [remover-ray.md](remover-ray.md)), o P não tem mais o que pausar. **O Bloco R só roda por decisão explícita do usuário.**
+
 ## Bloco P — Pausar (servidor `sabdiia01` ou `sabdiia02`, bash)
 
 **Expectativa (escrita antes; estado de 2026-11-03, §2):** `vllm-server` vai de 3 para 0 (não há
@@ -30,9 +36,10 @@ mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
   kubectl describe nodes sabdiia01 sabdiia02 sabdiia03 | grep -E '^Name:|^  nvidia\.com/gpu +[0-9]'
 
   echo "### 2. cópia de segurança"
-  kubectl get deploy,sts,ds -n vllms -o yaml > vllms-backup-$TS.yaml || { echo "ABORTA: não consegui gravar a cópia"; exit 1; }
-  { kubectl get deploy,sts -n vllms -o jsonpath='{range .items[*]}{.kind}/{.metadata.name} {.spec.replicas}{"\n"}{end}'
-    kubectl get ds -n vllms -o jsonpath='{range .items[*]}{.kind}/{.metadata.name} ds{"\n"}{end}'; } | tr 'A-Z' 'a-z' > vllms-replicas-$TS.txt
+  # -l 'decisao!=d-05': só os recursos do administrador (os sem o rótulo do estudo)
+  kubectl get deploy,sts,ds -n vllms -l 'decisao!=d-05' -o yaml > vllms-backup-$TS.yaml || { echo "ABORTA: não consegui gravar a cópia"; exit 1; }
+  { kubectl get deploy,sts -n vllms -l 'decisao!=d-05' -o jsonpath='{range .items[*]}{.kind}/{.metadata.name} {.spec.replicas}{"\n"}{end}'
+    kubectl get ds -n vllms -l 'decisao!=d-05' -o jsonpath='{range .items[*]}{.kind}/{.metadata.name} ds{"\n"}{end}'; } | tr 'A-Z' 'a-z' > vllms-replicas-$TS.txt
   echo "vllms-backup-$TS.yaml: $(wc -l < vllms-backup-$TS.yaml) linhas"; echo "## vllms-replicas-$TS.txt"; cat vllms-replicas-$TS.txt
   echo "## pods sem dono (não são parados por este bloco)"
   kubectl get pods -n vllms --no-headers -o custom-columns='POD:.metadata.name,DONO:.metadata.ownerReferences[0].kind' | awk '$2=="<none>"' | grep . || echo "(nenhum)"
@@ -47,7 +54,7 @@ mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
 
   echo "### 4. aguardando os pods saírem (até 5 min)"
   for i in $(seq 1 30); do
-    R=$(kubectl get pods -n vllms --no-headers 2>/dev/null | grep -E 'ray|vllm')
+    R=$(kubectl get pods -n vllms -l 'decisao!=d-05' --no-headers 2>/dev/null | grep -E 'ray|vllm')
     [ -z "$R" ] && break
     echo "$(date +%T) ainda: $(echo "$R" | awk '{print $1"("$3")"}' | tr '\n' ' ')"; sleep 10
   done
@@ -78,6 +85,7 @@ mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
   [ -n "$F" ] || { echo "ABORTA: nenhum vllms-replicas-*.txt neste nó; rode no nó onde o Bloco P rodou"; exit 1; }
   echo "restaurando a partir de $F"; cat "$F"
   kubectl get pods -n vllm-estudo --no-headers 2>/dev/null | grep . && echo "AVISO: ainda há pods em vllm-estudo; eles seguram GPU e os do administrador podem ficar Pending"
+  kubectl get pods -n vllms -l decisao=d-05 --no-headers 2>/dev/null | grep . && echo "AVISO: o vllm-server do estudo (decisao=d-05) está no ar e segura as GPUs; o que o R restaurar com GPU vai ficar Pending"
 
   echo "### 1. restaurando   $(date +%T)"
   while read o r; do

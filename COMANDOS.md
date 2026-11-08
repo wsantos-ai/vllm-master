@@ -426,6 +426,104 @@ $corpo = @{ model = "TheBloke/deepseek-coder-33B-instruct-GPTQ"; messages = @(@{
 Invoke-RestMethod -Uri "http://192.168.50.160:8001/v1/chat/completions" -Method Post -ContentType "application/json" -Body $corpo
 ```
 
+### O que o `vllm-server` do administrador roda? (só leitura)
+
+Servidor, bash, `sabdiia01` ou `sabdiia02`. Chave e *tokens* mascarados. A seção 2 usa `|` como separador:
+um texto com espaço dentro do *jsonpath* chegou partido ao servidor em 2026-11-07 (§9 do estudo).
+
+```bash
+# modelo, flags, volumes, exposição e quem aplica o manifesto        [executado 2026-11-07, seções 1, 3, 4, 5]
+kubectl get deploy vllm-server -n vllms -o jsonpath='{.spec.replicas}{"\n"}{.spec.template.spec.containers[0].args}{"\n"}' | sed -E 's/(--api-key[= "]+)[^ ",]+/\1***/g'
+kubectl get deploy vllm-server -n vllms -o jsonpath='{range .spec.template.spec.containers[0].env[*]}{.name}={.value}|{.valueFrom.secretKeyRef.name}{"\n"}{end}' | sed -E 's/^([A-Z_]*(TOKEN|KEY|SECRET|PASS)[A-Z_]*=)[^|]+/\1***/'   # [não executado]
+kubectl get deploy vllm-server -n vllms -o jsonpath='{range .spec.template.spec.volumes[*]}{.name}={.persistentVolumeClaim.claimName}{"\n"}{end}'
+kubectl get svc,ingress,networkpolicy -n vllms -o wide
+kubectl get deploy vllm-server -n vllms -o jsonpath='{range .metadata.managedFields[*]}{.manager} {.operation} {.time}{"\n"}{end}'
+```
+
+### Acesso das aplicações pelo Kong (D-05)
+
+O `scp` do notebook para `/home/utec/vllm-estudo/` dá `Permission denied`? Em 01, depois de `sudo -i`, rode o
+bloco de permissão do E0 em [runbooks/acesso-aplicacoes-d05.md](runbooks/acesso-aplicacoes-d05.md) (ACL só
+para o seu usuário: `setfacl -m "u:$SUDO_USER:rwx" /home/utec/vllm-estudo`). `[executado 2026-11-07]`
+
+Desde 2026-11-06 no *namespace* `vllms` (D-06), recursos com o rótulo `decisao=d-05`. Procedimento completo, com chaves e log: [runbooks/acesso-aplicacoes-d05.md](runbooks/acesso-aplicacoes-d05.md).
+Na `v0.19.1`, o `--api-key` só protege `/v1`: `/invocations` gera texto sem chave ([AC-32](ESTUDO-DE-CASO.md#ac-32)).
+
+Servidor, bash, `sabdiia01` ou `sabdiia02`:
+
+```bash
+# o proxy do Kong: IP do MetalLB, externalTrafficPolicy e portas        [não executado]
+kubectl get svc -n kong -o jsonpath='{range .items[?(@.spec.type=="LoadBalancer")]}{.metadata.name}{"  IP="}{.status.loadBalancer.ingress[0].ip}{"  externalTrafficPolicy="}{.spec.externalTrafficPolicy}{"  portas="}{.spec.ports[*].port}{"\n"}{end}'
+
+# rotas que já passam pelo Kong e plugins globais                      [não executado]
+kubectl get ingress -A -o jsonpath='{range .items[*]}{.metadata.namespace}/{.metadata.name}{"  caminhos="}{.spec.rules[*].http.paths[*].path}{"\n"}{end}'
+kubectl get kongclusterplugins
+
+# as 3 réplicas, uma por nó                                          [não executado]
+kubectl get pods -n vllms -l app=vllm-server -o wide
+
+# consumidores (um por ator) e IPs liberados na rota                    [não executado]
+kubectl get kongconsumer -n vllms -l decisao=d-05
+kubectl get kongplugin d05-ip-restriction -n vllms -o jsonpath='{.config.allow}{"
+"}'
+
+# trocar a chave de um ator (ex.: dev-1): apaga o Secret dele e roda o Bloco C, que cria outra   [não executado]
+# (ALTERA: a chave antiga para de valer na hora; entregue o novo d05-chave-dev-1.env)
+kubectl delete secret kong-cred-dev-1 -n vllms
+
+# o controlador do Kong aceitou a rota e os plugins? (procure TranslationFailed / ApplyFailed)   [não executado]
+kubectl get events -n vllms --sort-by=.lastTimestamp | tail -15
+
+# chamada pelo Kong com os cabeçalhos num arquivo (a chave não vai para a linha de comando nem para o log)   [não executado]
+# usa a chave do consumidor "estacao" (arquivo do Bloco C) e o d05-corpo.json dos Blocos G1/C; o arquivo de cabeçalhos é apagado no fim
+cd /home/utec/vllm-estudo && ( umask 077; . ./d05-chave-estacao.env; printf 'apikey: %s\nAuthorization: Bearer %s\n' "$CHAVE_KONG" "$CHAVE_VLLM" > d05-h.txt
+  curl -sk -X POST -H @d05-h.txt -H 'Content-Type: application/json' --data-binary @d05-corpo.json "$BASE_URL/chat/completions"; echo; rm -f d05-h.txt )
+```
+
+Estação, PowerShell (o IP é o da seção 2 do Bloco K0):
+
+```powershell
+# a estação alcança a porta 443 do Kong? (mostra também o IP de origem)   [não executado]
+$ip = Read-Host "IP do proxy do Kong"
+Test-NetConnection $ip -Port 443 | Select-Object ComputerName, RemotePort, SourceAddress, TcpTestSucceeded
+```
+
+O teste do SSE pelo Kong (primeiro *byte* contra total, `curl.exe -N -w "%{time_starttransfer} %{time_total}"`)
+está na seção 2 do Bloco E1 do runbook, que monta os arquivos de cabeçalho.
+
+### Chamar o vLLM pelo Kong a partir do notebook (consumidor `wsantos`)
+
+Estação (notebook), PowerShell 7. Traz o arquivo de chave (fica fora do repositório) e faz uma pergunta.
+`-SkipCertificateCheck`: o Kong usa certificado autoassinado (PD-34). `[não executado]`
+
+```powershell
+$d = "$env:USERPROFILE\.vllm-estudo"; New-Item -ItemType Directory -Force $d | Out-Null
+scp "utec@192.168.50.151:/home/utec/vllm-estudo/d05-chave-wsantos.env" "$d\"
+$c = Get-Content "$d\d05-chave-wsantos.env" -Raw | ConvertFrom-StringData
+$h = @{ apikey = $c.CHAVE_KONG; Authorization = "Bearer $($c.CHAVE_VLLM)" }
+$m = @(@{ role = "user"; content = "Qual é a capital do Brasil?" })
+$b = @{ model = $c.MODELO; messages = $m; max_tokens = 100; temperature = 0 } |
+  ConvertTo-Json -Depth 5
+$r = Invoke-RestMethod "$($c.BASE_URL)/chat/completions" -Method Post -Headers $h `
+  -ContentType "application/json; charset=utf-8" -Body $b -SkipCertificateCheck
+$r.choices[0].message.content
+```
+
+Python, com o pacote `openai` (`pip install openai`); o mesmo arquivo de chave. `verify=False` só para teste. `[não executado]`
+
+```python
+import os, httpx
+from openai import OpenAI
+c = dict(l.strip().split("=", 1) for l in open(os.path.expanduser(
+    "~/.vllm-estudo/d05-chave-wsantos.env")) if "=" in l)
+cli = OpenAI(base_url=c["BASE_URL"], api_key=c["CHAVE_VLLM"],
+             default_headers={"apikey": c["CHAVE_KONG"]},
+             http_client=httpx.Client(verify=False))
+r = cli.chat.completions.create(model=c["MODELO"], max_tokens=100, temperature=0,
+    messages=[{"role": "user", "content": "Qual é a capital do Brasil?"}])
+print(r.choices[0].message.content)
+```
+
 ### Qual é a versão do vLLM?
 
 Não existe `vllm --version` para rodar no nó: o vLLM não está instalado no sistema, só dentro das
@@ -482,11 +580,29 @@ kubectl exec -n vllm-estudo vllm-qual -- sh -c 'for p in /proc/[0-9]*/cmdline; d
 
 # um candidato inteiro: sobe, coleta 50 perguntas, pontua e apaga (servidor sabdiia01)  [não executado]
 cd /home/utec/vllm-estudo && bash qualidade/qualidade.sh 7b 2>&1 | tee qualidade-7b-$(hostname -s)-$(date +%F-%H%M).log
+
+# variantes da ferramenta no mesmo servidor: lista fechada de indicadores (enum), com e sem tool_choice "required" [executado 2026-11-06]
+cd /home/utec/vllm-estudo && bash qualidade/qualidade.sh nemo "enum enum-required" 2>&1 | tee qualidade-nemo-enum-$(hostname -s)-$(date +%F-%H%M).log
+
+# carga com as perguntas da aplicação (enum-required), 1/8/16/32 usuários, numa GPU (Rodada 3 do runbook) [executado 2026-11-06]
+cd /home/utec/vllm-estudo && bash qualidade/qualidade.sh nemo carga 2>&1 | tee qualidade-nemo-carga-$(hostname -s)-$(date +%F-%H%M).log
+
+# Mistral-Nemo: formato Mistral fixado e servido pelo caminho local (runbooks/teste-mistral-nemo.md) [executado 2026-11-05]
+cd /home/utec/vllm-estudo && bash qualidade/qualidade.sh nemo 2>&1 | tee qualidade-nemo-$(hostname -s)-$(date +%F-%H%M).log
+```
+
+```bash
+# servir um modelo Mistral sem depender da rede: caminho local + nome do repo na API (v0.19.1)  [executado 2026-11-05]
+# com HF_HUB_OFFLINE=1 e o nome do repo, o "auto" não lista o repositório e cai no formato HF
+vllm serve "$P" --served-model-name mistralai/Mistral-Nemo-Instruct-2407 --tokenizer_mode mistral --config_format mistral --load_format mistral --enable-auto-tool-choice --tool-call-parser mistral
 ```
 
 ```powershell
-# gerar o gabarito a partir do CSV (estação)                        [executado 2026-11-04]
+# gerar o gabarito a partir do CSV (estação)                        [executado 2026-11-05]
 python C:\www\vllm-master\qualidade\montar-gabarito.py
+
+# coletor e pontuador na estação: -X utf8, senão o Windows grava o JSONL em cp1252  [executado 2026-11-05]
+python -X utf8 C:\www\vllm-master\qualidade\coletar-respostas.py C:\www\vllm-master\qualidade\gabarito-qualidade.json --url http://127.0.0.1:18766 --variante enum > respostas.jsonl
 
 # repontuar uma coleta, ou comparar duas (controle Ray x 1 GPU), sem GPU (estação) [executado 2026-11-04, com coletas simuladas]
 python C:\www\vllm-master\qualidade\pontuar-respostas.py C:\www\vllm-master\qualidade\gabarito-qualidade.json respostas.jsonl
@@ -505,6 +621,12 @@ kubectl exec -n vllms deploy/vllm-deepseek-33b -- python3 -c "from huggingface_h
 kubectl exec -n vllms deploy/vllm-deepseek-33b -- python3 -c "from huggingface_hub import hf_hub_download; print(hf_hub_download('meta-llama/Llama-3.1-8B-Instruct', 'config.json'))"
 ```
 
+```bash
+# que arquivos um repositório tem, com tamanho (estação, bash; sem token se não for gated)  [executado 2026-11-05]
+# mostra repositório com os pesos em dois formatos (Mistral: consolidated + partes HF), que dobra o download
+curl -sL "https://huggingface.co/api/models/mistralai/Mistral-Nemo-Instruct-2407/tree/main" | python -I -c "import json,sys;[print(f['path'],f.get('size')) for f in json.load(sys.stdin)]"
+```
+
 ## 7. Armazenamento
 
 ```bash
@@ -513,6 +635,28 @@ kubectl get storageclass
 
 # volumes persistentes, tamanho e a quem pertencem                    [executado 2026-09-28]
 kubectl get pv
+```
+
+## 7a. Ray eliminado (D-07, 2026-11-07)
+
+Procedimento completo, com cópia antes e logs: [runbooks/remover-ray.md](runbooks/remover-ray.md). As
+seções 7b e 7c abaixo são histórico.
+
+```bash
+# servidor, bash (01 ou 02): sobrou algo do Ray no Kubernetes?           [não executado]
+kubectl get pods -A -o wide | grep -iE '(^|[-_/ ])ray([-_:/ ]|$)|rayproject' || echo "nenhum pod com ray"
+
+# servidor, bash (01 ou 02): os pods do ray-worker já saíram? quem segura cada GPU?   [não executado]
+kubectl wait --for=delete pod -n vllms -l app=ray-worker --timeout=180s
+kubectl get pods -n vllms -o jsonpath='{range .items[*]}{.metadata.name}|{.spec.nodeName}|{.status.phase}|{.status.containerStatuses[0].state.waiting.reason}|reinicios={.status.containerStatuses[0].restartCount}|gpu={.spec.containers[0].resources.limits.nvidia\.com/gpu}{"\n"}{end}'
+
+# cada nó, bash como root: processo ou porta do Ray no host?            [não executado]
+pgrep -af 'gcs_server|raylet|ray::|ray/dashboard|default_worker\.py|bin/ray ' || echo "nenhum processo do Ray"
+ss -ltnp | grep -E ':(6379|8265|10001)\b' || echo "nenhuma porta do Ray"
+
+# cada nó, bash como root: algo religa o Ray? (systemd e cron)          [não executado]
+systemctl list-unit-files --no-pager --no-legend | awk 'tolower($1) ~ /ray/'
+for U in $(ls /var/spool/cron/crontabs 2>/dev/null); do crontab -l -u "$U" | grep -nE 'ray|llm_lhama' | sed "s/^/$U: /"; done
 ```
 
 ## 7b. Ray fora do Kubernetes (projeto do administrador)

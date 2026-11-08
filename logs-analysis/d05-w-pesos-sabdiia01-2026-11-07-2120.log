@@ -1,0 +1,71 @@
+== sabdiia01  2026-11-07T21:20:26-03:00  D-05 W: pesos do Nemo em 02 e 03, na revisão de 01
+revisão em 01: 04d8a90549d23fc6bd7f642064003592df51e9b3
+total 23950700
+drwxr-xr-x 2 root root        4096 Nov  5 11:44 .
+drwxr-xr-x 3 root root          54 Nov  5 11:39 ..
+-rw-r--r-- 1 root root         622 Nov  5 11:39 config.json
+-rw-r--r-- 1 root root 24495604224 Nov  5 11:44 consolidated.safetensors
+-rw-r--r-- 1 root root         116 Nov  5 11:39 generation_config.json
+-rw-r--r-- 1 root root     3127378 Nov  5 11:39 merges.txt
+-rw-r--r-- 1 root root       29894 Nov  5 11:39 model.safetensors.index.json
+-rw-r--r-- 1 root root         243 Nov  5 11:39 params.json
+-rw-r--r-- 1 root root         414 Nov  5 11:39 special_tokens_map.json
+-rw-r--r-- 1 root root    14801223 Nov  5 11:39 tekken.json
+-rw-r--r-- 1 root root      181297 Nov  5 11:39 tokenizer_config.json
+-rw-r--r-- 1 root root     9264445 Nov  5 11:39 tokenizer.json
+-rw-r--r-- 1 root root     2472536 Nov  5 11:39 vocab.json
+### 1. imagem v0.19.1 nos 3 nós (lista de imagens do nó)
+sabdiia01: v0.19.1 presente
+sabdiia02: v0.19.1 presente
+sabdiia03: v0.19.1 presente
+### 2. pods de download   21:20:27
+pod/d05-pesos-sabdiia02 created
+pod/d05-pesos-sabdiia03 created
+### 3. aguardando (até 60 min)
+21:20:27 d05-pesos-sabdiia02=Pending/ContainerCreating d05-pesos-sabdiia03=Pending/ContainerCreating 
+21:21:27 d05-pesos-sabdiia02=Running/ d05-pesos-sabdiia03=Running/ 
+21:22:27 d05-pesos-sabdiia02=Running/ d05-pesos-sabdiia03=Running/ 
+21:23:27 d05-pesos-sabdiia02=Running/ d05-pesos-sabdiia03=Running/ 
+21:24:27 d05-pesos-sabdiia02=Running/ d05-pesos-sabdiia03=Running/ 
+21:25:27 d05-pesos-sabdiia02=Running/ d05-pesos-sabdiia03=Running/ 
+21:26:28 d05-pesos-sabdiia02=Succeeded/ d05-pesos-sabdiia03=Running/ 
+21:27:28 d05-pesos-sabdiia02=Succeeded/ d05-pesos-sabdiia03=Succeeded/ 
+### 4. resultado
+-- sabdiia02
+total 23950700
+drwxr-xr-x 2 root root        4096 Nov  8 00:26 .
+drwxr-xr-x 3 root root          54 Nov  8 00:20 ..
+-rw-r--r-- 1 root root         622 Nov  8 00:20 config.json
+-rw-r--r-- 1 root root 24495604224 Nov  8 00:26 consolidated.safetensors
+-rw-r--r-- 1 root root         116 Nov  8 00:20 generation_config.json
+-rw-r--r-- 1 root root     3127378 Nov  8 00:20 merges.txt
+-rw-r--r-- 1 root root       29894 Nov  8 00:20 model.safetensors.index.json
+-rw-r--r-- 1 root root         243 Nov  8 00:20 params.json
+-rw-r--r-- 1 root root         414 Nov  8 00:20 special_tokens_map.json
+-rw-r--r-- 1 root root    14801223 Nov  8 00:20 tekken.json
+-rw-r--r-- 1 root root     9264445 Nov  8 00:20 tokenizer.json
+-rw-r--r-- 1 root root      181297 Nov  8 00:20 tokenizer_config.json
+-rw-r--r-- 1 root root     2472536 Nov  8 00:20 vocab.json
+23G	/hf-cache/hub/models--mistralai--Mistral-Nemo-Instruct-2407
+-- sabdiia03
+total 23950700
+drwxr-xr-x 2 root root        4096 Nov  8 00:26 .
+drwxr-xr-x 3 root root          54 Nov  8 00:20 ..
+-rw-r--r-- 1 root root         622 Nov  8 00:20 config.json
+-rw-r--r-- 1 root root 24495604224 Nov  8 00:26 consolidated.safetensors
+-rw-r--r-- 1 root root         116 Nov  8 00:20 generation_config.json
+-rw-r--r-- 1 root root     3127378 Nov  8 00:20 merges.txt
+-rw-r--r-- 1 root root       29894 Nov  8 00:20 model.safetensors.index.json
+-rw-r--r-- 1 root root         243 Nov  8 00:20 params.json
+-rw-r--r-- 1 root root         414 Nov  8 00:20 special_tokens_map.json
+-rw-r--r-- 1 root root    14801223 Nov  8 00:20 tekken.json
+-rw-r--r-- 1 root root     9264445 Nov  8 00:20 tokenizer.json
+-rw-r--r-- 1 root root      181297 Nov  8 00:20 tokenizer_config.json
+-rw-r--r-- 1 root root     2472536 Nov  8 00:20 vocab.json
+23G	/hf-cache/hub/models--mistralai--Mistral-Nemo-Instruct-2407
+NAME                  READY   STATUS      RESTARTS   AGE    IP               NODE        NOMINATED NODE   READINESS GATES
+d05-pesos-sabdiia02   0/1     Completed   0          7m1s   192.168.50.152   sabdiia02   <none>           <none>
+d05-pesos-sabdiia03   0/1     Completed   0          7m1s   192.168.50.150   sabdiia03   <none>           <none>
+pod "d05-pesos-sabdiia02" deleted from vllms namespace
+pod "d05-pesos-sabdiia03" deleted from vllms namespace
+== fim 2026-11-07T21:27:28-03:00

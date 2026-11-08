@@ -1,0 +1,25 @@
+== sabdiia01  2026-11-07T15:12:52-03:00  vllm-server do administrador: o que roda e como é exposto (só leitura)
+### 1. réplicas, imagem, comando e argumentos (chave mascarada)
+réplicas: 3
+imagem:
+  vllm/vllm-openai:v0.19.1
+command: ["/bin/bash","-c"]
+args: ["vllm serve deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct \\\n--host 0.0.0.0 \\\n--port 8000 \\\n--dtype float16 \\\n--gpu-memory-utilization 0.95 \\\n--max-model-len 4096 \\\n--max-num-seqs 64 \\\n--trust-remote-code\n"]
+### 2. variáveis de ambiente (valores com TOKEN/KEY/SECRET/PASS mascarados)
+error: error parsing jsonpath {range .spec.template.spec.containers[*].env[*]}{.name}={.value}{"
+  secret:"}{.valueFrom.secretKeyRef.name}{"\n"}{end}, unterminated quoted string
+### 3. volumes (onde ficam os pesos) e recursos
+hf-cache: pvc=hf-cache-pvc
+  hostPath= emptyDir=
+dshm: pvc=
+  hostPath= emptyDir=Memory
+{"limits":{"nvidia.com/gpu":"1"}}
+### 4. como vllms é exposto
+NAME                         TYPE           CLUSTER-IP       EXTERNAL-IP      PORT(S)          AGE     SELECTOR
+service/vllm-llama-service   LoadBalancer   10.98.168.42     192.168.50.160   8000:31364/TCP   3d22h   app=vllm-server
+service/vllm-llama31-8b      ClusterIP      10.104.155.104   <none>           8002/TCP         9d      app=vllm-llama31-8b
+### 5. quem gerencia o Deployment (kubectl, helm, argocd...)
+
+kubectl-client-side-apply Update 2026-11-06T17:47:19Z
+kube-controller-manager Update 2026-11-06T17:57:20Z
+== fim 2026-11-07T15:12:52-03:00

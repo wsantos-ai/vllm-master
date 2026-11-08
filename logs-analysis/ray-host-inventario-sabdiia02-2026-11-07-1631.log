@@ -1,0 +1,12 @@
+== sabdiia02  2026-11-07T16:31:10-03:00  D-07 H0: Ray no host, inventário (só leitura)
+### 1. processos do Ray
+### 2. portas do Ray (6379 GCS, 8265 painel, 10001 cliente)
+(nenhuma)
+### 3. GPU
+### 4. contêineres e imagens com ray (Docker e Podman)
+### 5. início automático
+### 6. projeto e venv do administrador
+drwxr-xr-x 7 root root 4096 Oct 29 14:53 /home/utec/llm_lhama_prototype
+drwxr-xr-x 7 root root   98 Oct 27 11:43 /home/utec/llm_lhama_prototype/venv
+-rwxr-xr-x 1 root root 197 Oct 27 11:44 /home/utec/llm_lhama_prototype/venv/bin/ray
+== fim 2026-11-07T16:31:13-03:00

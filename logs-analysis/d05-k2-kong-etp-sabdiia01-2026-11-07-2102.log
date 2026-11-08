@@ -1,0 +1,47 @@
+== sabdiia01  2026-11-07T21:02:52-03:00  D-05 K2: externalTrafficPolicy Local no proxy do Kong (PD-35)
+### 1. como está
+externalTrafficPolicy=Cluster healthCheckNodePort= IP=192.168.50.161
+NAME                              READY   STATUS    RESTARTS       AGE   IP              NODE        NOMINATED NODE   READINESS GATES
+kong-controller-76f66d77f-jsplg   1/1     Running   20 (10d ago)   12d   10.244.50.156   sabdiia03   <none>           <none>
+kong-gateway-5f88dd7bcd-mpmk8     1/1     Running   1 (10d ago)    12d   10.244.50.179   sabdiia03   <none>           <none>
+metallb: metallb-system controller-5d66678cc4-jzbcv Running 12d
+metallb: metallb-system speaker-92kh5 Running 11d
+metallb: metallb-system speaker-cjqcl Running 11d
+metallb: metallb-system speaker-swxl8 Running 12d
+### 2. release do Helm
+v4.1.1+g5caf004
+NAME	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART         	APP VERSION
+kong	kong     	1       	2026-09-14 14:27:08.730837332 -0300 -03	deployed	ingress-0.24.0	3.9        
+releases em kong: 1; release=kong chart=ingress-0.24.0
+values atuais em kong-helm-values-antes-2026-11-07-2102.yaml (1 linhas)
+### 3. mudança   21:02:53
+helm upgrade kong ingress --repo https://charts.konghq.com --version 0.24.0 -n kong --reuse-values --set gateway.proxy.externalTrafficPolicy=Local
+Release "kong" has been upgraded. Happy Helming!
+NAME: kong
+LAST DEPLOYED: Sat Nov  7 21:02:54 2026
+NAMESPACE: kong
+STATUS: deployed
+REVISION: 2
+DESCRIPTION: Upgrade complete
+TEST SUITE: None
+REVISION	UPDATED                 	STATUS    	CHART         	APP VERSION	DESCRIPTION     
+1       	Mon Sep 14 14:27:08 2026	superseded	ingress-0.24.0	3.9        	Install complete
+2       	Sat Nov  7 21:02:54 2026	deployed  	ingress-0.24.0	3.9        	Upgrade complete
+### 4. conferência   21:02:56
+externalTrafficPolicy=Local healthCheckNodePort=32310 IP=192.168.50.161
+NAME                              READY   STATUS    RESTARTS       AGE   IP              NODE        NOMINATED NODE   READINESS GATES
+kong-controller-76f66d77f-jsplg   1/1     Running   20 (10d ago)   12d   10.244.50.156   sabdiia03   <none>           <none>
+kong-gateway-5f88dd7bcd-mpmk8     1/1     Running   1 (10d ago)    12d   10.244.50.179   sabdiia03   <none>           <none>
+LAST SEEN   TYPE     REASON                       OBJECT                                MESSAGE
+4m31s       Normal   KongConfigurationSucceeded   pod/kong-controller-76f66d77f-jsplg   successfully applied Kong configuration to https://10.244.50.179:8444
+16s         Normal   nodeAssigned                 service/kong-gateway-proxy            announcing from node "sabdiia03" with protocol "layer2"
+de sabdiia01: https://192.168.50.161/vllm/  HTTP 404
+de sabdiia01: https://192.168.50.161/vllm/  HTTP 404
+de sabdiia01: https://192.168.50.161/vllm/  HTTP 404
+### 5. que IP o Kong registrou (as últimas requisições)
+10.244.179.64 - - [08/Nov/2026:00:00:05 +0000] "HEAD / HTTP/2.0" 404 0 "-" "Zabbix 7.0.7" kong_request_id: "ee997e17c379742f3a1a2376c1d8771d"
+10.244.179.64 - - [08/Nov/2026:00:00:16 +0000] "HEAD / HTTP/1.1" 404 0 "-" "Zabbix 7.0.7" kong_request_id: "ce275a46070964522af915106e92d47f"
+10.244.179.64 - - [08/Nov/2026:00:03:11 +0000] "GET /vllm/ HTTP/2.0" 404 103 "-" "curl/7.76.1" kong_request_id: "07f4ee4da09be86b744a3c19f3fe5301"
+10.244.179.64 - - [08/Nov/2026:00:03:11 +0000] "GET /vllm/ HTTP/2.0" 404 103 "-" "curl/7.76.1" kong_request_id: "44aa5a01b5871e1dd8b6282668cb5b1a"
+10.244.179.64 - - [08/Nov/2026:00:03:11 +0000] "GET /vllm/ HTTP/2.0" 404 103 "-" "curl/7.76.1" kong_request_id: "5e4baa6dc8216271e4c200401bf78275"
+== fim 2026-11-07T21:03:11-03:00

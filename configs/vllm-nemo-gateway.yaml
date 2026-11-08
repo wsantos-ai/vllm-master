@@ -1,0 +1,214 @@
+# D-05 — Acesso das aplicações ao vLLM pelo Kong — APLICADO em 2026-11-07 (G1 de 21:30 e 22:30, C de 22:58)
+#
+# Ambiente: §2 do ESTUDO-DE-CASO.md (2026-11-06). 3 nós, 1 x Tesla V100S-PCIE-32GB (sm_70) cada, vLLM v0.19.1.
+# Namespace vllms. As 3 GPUs são da aplicação (acordo com o administrador, 2026-11-07, D-06): este arquivo ADOTA o
+#   Deployment vllm-server dele (mesmo nome e seletor app=vllm-server, que não muda depois de criado) e passa a
+#   ser a única fonte da configuração; o administrador não reaplica mais o dele. Cópia do que ele tinha:
+#   vllm-server-adocao-<data>.yaml em 01 (Bloco G1). Tudo o que é do estudo leva o rótulo decisao=d-05: o Bloco P
+#   o ignora, e o Bloco L o usa para apagar.
+# Modelo: mistralai/Mistral-Nemo-Instruct-2407 FP16, com as flags de AC-29 (formato Mistral, parser mistral).
+#   Pesos no cache local de cada nó (/var/lib/vllm-estudo/hf-cache): em 01 desde o Bloco N1 de
+#   runbooks/teste-mistral-nemo.md; em 02 e 03 pelo Bloco W, na mesma revisão de 01.
+# Aplicado e apagado por runbooks/acesso-aplicacoes-d05.md (Blocos G1 e L). Fica FORA deste arquivo (nenhum
+# valor de chave é versionado):
+#   - Secret vllm-nemo-api-key (VLLM_API_KEY, lida pelo vLLM; F-045), criado pelo Bloco G1;
+#   - por ator, um KongConsumer, um Secret kong-cred-<nome> e um KongPlugin d05-ip-<nome> (ip-restriction com
+#     os IPs dele, ligado ao consumidor), gerados pelo Bloco C a partir de configs/d05-consumidores.txt. O Bloco C pode ser rodado de
+#     novo a cada IP novo: mantém as chaves existentes e não reinicia o vLLM.
+#
+# Exposição: Service ClusterIP (o vLLM não sai do cluster por ele) + Ingress do Kong, que publica SÓ
+#   POST /vllm/v1/chat/completions, em HTTPS, no IP do Service do proxy do Kong (MetalLB).
+#   Autenticação em duas camadas:
+#   1. Kong: chave por ator no cabeçalho "apikey" (key-auth), retirada antes de chegar ao vLLM;
+#      limite de 120 requisições/min por ator; IP de origem só os do próprio ator (ip-restriction por
+#      consumidor, do Bloco C; exige externalTrafficPolicy Local no proxy do Kong, AC-33). Os IPs são os das máquinas que chamam o modelo (PCs dos devs, servidor da aplicação),
+#      nunca os navegadores dos usuários: o Next.js chama o vLLM do lado do servidor.
+#   2. vLLM: --api-key via VLLM_API_KEY, cabeçalho "Authorization: Bearer". Na v0.19.1 ela só protege caminhos
+#      /v1; /invocations, /metrics e /health ficam abertos (AC-32). Por isso a NetworkPolicy: só o
+#      namespace kong chega à porta 8000; o Kong só encaminha o caminho acima.
+# Risco assumido no teste: certificado TLS padrão do Kong (autoassinado) `[não verificado]`; o cliente usa -k.
+#   Em produção, Secret TLS com certificado da organização no Ingress (PD-34).
+#
+# Para produção `[não executado]`: só o IP do servidor da aplicação na lista, e limite por minuto acima da
+#   capacidade total (~214 requisições/min por GPU com 32 usuários, AC-31: 2 chamadas por pergunta).
+#
+# Campos conferidos em 2026-11-06:
+#   vLLM v0.19.1: VLLM_API_KEY (envs.py), --api-key e --disable-fastapi-docs (cli_args.py),
+#     AuthenticationMiddleware (server_utils.py) [F-045].
+#   Kong Ingress Controller: anotações konghq.com/* e KongPlugin/KongConsumer na doc atual [F-046]. O cluster
+#     roda KIC 3.5 e Kong 3.9 (imagens de 2026-09-29); os campos dos plugins são postos explicitamente,
+#     para não depender do padrão da versão.
+#   NetworkPolicy: o tráfego do próprio nó (probes do kubelet) é sempre permitido [F-047].
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-server
+  namespace: vllms
+  labels: {app: vllm-server, decisao: d-05}
+spec:
+  # 3 réplicas independentes, uma por GPU (D-04).
+  replicas: 3
+  # 1 GPU por nó: troca uma réplica por vez, sem pod a mais (o novo esperaria a GPU do antigo).
+  # Durante a troca, 2 das 3 réplicas seguem atendendo.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: {maxSurge: 0, maxUnavailable: 1}
+  selector:
+    matchLabels: {app: vllm-server}
+  template:
+    metadata:
+      labels: {app: vllm-server, decisao: d-05}
+    spec:
+      # No máximo uma réplica por nó.
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels: {app: vllm-server}
+            topologyKey: kubernetes.io/hostname
+      # Sem token da API do Kubernetes dentro do pod: o vLLM não precisa dele.
+      automountServiceAccountToken: false
+      containers:
+      - name: vllm
+        # Última versão com sm_70 (AC-11). Fixar por digest em produção.
+        image: vllm/vllm-openai:v0.19.1
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          set -e
+          P=$(python3 -c "from huggingface_hub import snapshot_download as s; print(s('mistralai/Mistral-Nemo-Instruct-2407', local_files_only=True))")
+          echo "pesos em $P"
+          exec vllm serve "$P" --served-model-name mistralai/Mistral-Nemo-Instruct-2407 --dtype float16 --max-model-len 8192 --gpu-memory-utilization 0.90 --generation-config vllm --tokenizer_mode mistral --config_format mistral --load_format mistral --enable-auto-tool-choice --tool-call-parser mistral --disable-fastapi-docs --host 0.0.0.0 --port 8000
+        env:
+        - {name: HF_HOME, value: /hf-cache}
+        # Nunca baixa nada: o que roda é o que está no cache (AC-18).
+        - {name: HF_HUB_OFFLINE, value: "1"}
+        - name: VLLM_API_KEY
+          valueFrom:
+            secretKeyRef: {name: vllm-nemo-api-key, key: VLLM_API_KEY}
+        ports:
+        - {name: http, containerPort: 8000, protocol: TCP}
+        startupProbe:
+          httpGet: {path: /health, port: 8000}
+          periodSeconds: 10
+          failureThreshold: 90
+        readinessProbe:
+          httpGet: {path: /health, port: 8000}
+          periodSeconds: 10
+        livenessProbe:
+          httpGet: {path: /health, port: 8000}
+          periodSeconds: 30
+          failureThreshold: 3
+        resources:
+          requests: {cpu: "8", memory: 32Gi, nvidia.com/gpu: 1}
+          limits: {cpu: "16", memory: 64Gi, nvidia.com/gpu: 1}
+        volumeMounts:
+        - {name: pesos-local, mountPath: /hf-cache, readOnly: true}
+        - {name: shm, mountPath: /dev/shm}
+      volumes:
+      # Nome diferente do volume do administrador (hf-cache, PVC hf-cache-pvc): o apply troca o volume inteiro
+      # em vez de mesclar PVC e hostPath no mesmo item.
+      - name: pesos-local
+        hostPath: {path: /var/lib/vllm-estudo/hf-cache, type: Directory}
+      - name: shm
+        emptyDir: {medium: Memory, sizeLimit: 8Gi}
+---
+# ClusterIP: nenhuma porta do vLLM fora do cluster. As anotações configuram o serviço que o Kong cria:
+#   path: todo pedido que o Kong encaminha vira /v1/chat/completions (a rota do Ingress é retirada inteira);
+#   read-timeout 120 s: o p95 por pergunta foi 25 s com 32 usuários numa GPU, sem streaming (AC-31);
+#   retries 0: o Kong reenvia até 5 vezes por padrão `[não verificado na 3.9]`, e cada reenvio refaz a geração.
+apiVersion: v1
+kind: Service
+metadata:
+  name: vllm-server
+  namespace: vllms
+  labels: {app: vllm-server, decisao: d-05}
+  annotations:
+    konghq.com/protocol: "http"
+    konghq.com/path: "/v1/chat/completions"
+    konghq.com/connect-timeout: "5000"
+    konghq.com/read-timeout: "120000"
+    konghq.com/write-timeout: "60000"
+    konghq.com/retries: "0"
+spec:
+  type: ClusterIP
+  selector: {app: vllm-server}
+  ports:
+  - {name: http, protocol: TCP, port: 8000, targetPort: 8000}
+---
+# Só o namespace kong chega à porta 8000 dos pods do vLLM. O Kong encaminha direto ao IP do pod (F-046),
+# então a regra vale para ele. Probes do kubelet vêm do nó e passam sempre (F-047).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: vllm-server-so-kong
+  namespace: vllms
+  labels: {decisao: d-05}
+spec:
+  podSelector:
+    matchLabels: {app: vllm-server}
+  policyTypes: [Ingress]
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels: {kubernetes.io/metadata.name: kong}
+    ports:
+    - {protocol: TCP, port: 8000}
+---
+# Chave da aplicação no cabeçalho "apikey". Fora da URL (key_in_query false: a URL vai para logs) e
+# retirada antes do vLLM (hide_credentials true).
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: d05-key-auth
+  namespace: vllms
+  labels: {decisao: d-05}
+plugin: key-auth
+config:
+  key_names: [apikey]
+  key_in_header: true
+  key_in_query: false
+  key_in_body: false
+  hide_credentials: true
+---
+# 120 requisições/min por ator, contadas em cada pod do Kong (policy local). Valor de desenvolvimento: uma
+# pergunta são 2 chamadas (AC-30), então ~60 perguntas/min por ator. Abaixo da capacidade de 1 GPU (~214, AC-31),
+# para um loop de testes de um ator não tomar a GPU dos outros.
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: d05-rate-limit
+  namespace: vllms
+  labels: {decisao: d-05}
+plugin: rate-limiting
+config:
+  minute: 120
+  limit_by: consumer
+  policy: local
+---
+# Uma rota, um método, só HTTPS. O SSE passa sem acumular (response-buffering false).
+# Sem consumidor, nenhuma chave vale: até o Bloco C rodar, tudo dá 401. A lista de IPs não fica aqui:
+# fica em cada KongConsumer (Bloco C), para a chave de um ator não valer dos IPs de outro.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vllm-server
+  namespace: vllms
+  labels: {decisao: d-05}
+  annotations:
+    konghq.com/plugins: d05-key-auth,d05-rate-limit
+    konghq.com/strip-path: "true"
+    konghq.com/methods: "POST"
+    konghq.com/protocols: "https"
+    konghq.com/response-buffering: "false"
+spec:
+  ingressClassName: kong
+  rules:
+  - http:
+      paths:
+      - path: /vllm/v1/chat/completions
+        pathType: Prefix
+        backend:
+          service:
+            name: vllm-server
+            port: {number: 8000}

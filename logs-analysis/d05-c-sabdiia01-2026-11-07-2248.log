@@ -1,0 +1,67 @@
+== sabdiia01  2026-11-07T22:48:23-03:00  D-05 C: consumidores do Kong a partir de d05-consumidores.txt
+79a796322c150284126e805cfa9a01208d9980dc7f9388e292d1ba3311479bea  d05-consumidores.txt
+proxy do Kong: kong-gateway-proxy  IP 192.168.50.161  externalTrafficPolicy Local
+### 1. a lista
+estacao: 172.16.30.6
+wsantos: 172.16.254.0/24
+dev-1: (sem IP: o Kong recusa até o IP entrar na lista)
+dev-2: (sem IP: o Kong recusa até o IP entrar na lista)
+crp: (sem IP: o Kong recusa até o IP entrar na lista)
+### 2. chaves e consumidores (chaves fora do log)   22:48:23
+secret/kong-cred-estacao created
+estacao: chave nova
+kongconsumer.configuration.konghq.com/estacao created
+secret/kong-cred-wsantos created
+wsantos: chave nova
+kongconsumer.configuration.konghq.com/wsantos created
+secret/kong-cred-dev-1 created
+dev-1: chave nova
+kongconsumer.configuration.konghq.com/dev-1 created
+secret/kong-cred-dev-2 created
+dev-2: chave nova
+kongconsumer.configuration.konghq.com/dev-2 created
+secret/kong-cred-crp created
+crp: chave nova
+kongconsumer.configuration.konghq.com/crp created
+### 3. lista de IPs no Kong   22:48:25
+kongplugin.configuration.konghq.com/d05-ip-restriction created
+ingress.networking.k8s.io/vllm-server annotated
+IPs liberados:  172.16.30.6 172.16.254.0/24
+### 4. o Kong aceitou?   22:48:26
+NAME                                            USERNAME   AGE   PROGRAMMED
+kongconsumer.configuration.konghq.com/crp       crp        21s   True
+kongconsumer.configuration.konghq.com/dev-1     dev-1      22s   True
+kongconsumer.configuration.konghq.com/dev-2     dev-2      21s   True
+kongconsumer.configuration.konghq.com/estacao   estacao    23s   True
+kongconsumer.configuration.konghq.com/wsantos   wsantos    22s   True
+
+NAME                                                     PLUGIN-TYPE      AGE   PROGRAMMED
+kongplugin.configuration.konghq.com/d05-ip-restriction   ip-restriction   21s   
+kongplugin.configuration.konghq.com/d05-key-auth         key-auth         78m   
+kongplugin.configuration.konghq.com/d05-rate-limit       rate-limiting    78m   
+
+NAME                                    CLASS   HOSTS   ADDRESS          PORTS   AGE
+ingress.networking.k8s.io/vllm-server   kong    *       192.168.50.161   80      78m
+plugins na rota: d05-ip-restriction,d05-key-auth,d05-rate-limit
+LAST SEEN   TYPE      REASON              OBJECT                              MESSAGE
+14m         Warning   FailedScheduling    pod/vllm-server-58699c67bf-w9bsm    0/3 nodes are available: 3 Insufficient nvidia.com/gpu. preemption: 0/3 nodes are available: 3 No preemption victims found for incoming pod.
+20m         Warning   BackOff             pod/vllm-server-78bbbb846f-kvjfh    Back-off restarting failed container vllm in pod vllm-server-78bbbb846f-kvjfh_vllms(b2b3473c-4223-4ce8-876c-52163638e61e)
+19m         Warning   BackOff             pod/vllm-server-58699c67bf-4sn8m    Back-off restarting failed container vllm in pod vllm-server-58699c67bf-4sn8m_vllms(6cf22fa2-7b80-4f55-ad44-cf99ade1b72b)
+14m         Normal    ScalingReplicaSet   deployment/vllm-server              Scaled up replica set vllm-server-58699c67bf from 2 to 3
+14m         Normal    ScalingReplicaSet   deployment/vllm-server              Scaled down replica set vllm-server-78bbbb846f from 1 to 0
+14m         Normal    SuccessfulDelete    replicaset/vllm-server-78bbbb846f   Deleted pod: vllm-server-78bbbb846f-kvjfh
+13m         Normal    AddedInterface      pod/vllm-server-58699c67bf-w9bsm    Add eth0 [10.244.50.168/32] from k8s-pod-network
+10m         Normal    AddedInterface      pod/d05-sonda                       Add eth0 [10.244.179.113/32] from k8s-pod-network
+### 5. de 01 com a chave de cada ator (01 fora da lista: 403 se a lista vale, 200 se não)   22:48:46
+estacao -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"9da6c51b6115c8252a95495962f21700" }
+wsantos -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"8fabc74e0b48c351793f3f15b536976c" }
+dev-1 -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"c4c731385dd0dc066ec62c781a9d4d51" }
+dev-2 -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"e41cfb502e7e9d645e0ce8012ee38d4a" }
+crp -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"295031476354fa4f47d17a0a2b2b297c" }
+### 6. arquivos de chave (entregar cada um só ao seu ator)
+-rw------- 1 utec root 242 Nov  7 22:48 d05-chave-crp.env
+-rw------- 1 utec root 244 Nov  7 22:48 d05-chave-dev-1.env
+-rw------- 1 utec root 244 Nov  7 22:48 d05-chave-dev-2.env
+-rw------- 1 utec root 246 Nov  7 22:48 d05-chave-estacao.env
+-rw------- 1 utec root 246 Nov  7 22:48 d05-chave-wsantos.env
+== fim 2026-11-07T22:48:46-03:00

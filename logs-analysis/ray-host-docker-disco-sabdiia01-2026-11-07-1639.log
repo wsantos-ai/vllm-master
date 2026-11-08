@@ -1,0 +1,7 @@
+== sabdiia01 2026-11-07T16:39:44-03:00 D-07 H0c: contêineres Docker no disco
+## sobe no boot?
+Failed to get unit file state for docker.service: No such file or directory
+## data-root
+    "data-root": "/home/utec/docker_data",
+pasta: /home/utec/docker_data
+## total: 0

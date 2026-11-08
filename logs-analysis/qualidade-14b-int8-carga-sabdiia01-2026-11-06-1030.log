@@ -1,0 +1,165 @@
+== sabdiia01  2026-11-06T10:30:06-03:00  teste de qualidade: 14b-int8 (Qwen/Qwen2.5-14B-Instruct-GPTQ-Int8, Ray=0), variantes: carga
+resultados em /home/utec/vllm-estudo/qualidade/resultados/2026-11-06-1030-14b-int8-carga
+### 1. pré-condições
+Name:               sabdiia01
+  nvidia.com/gpu     0           0
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/ol-root  631G  207G  425G  33% /
+/dev/mapper/ol-home  200G  168G   33G  84% /home
+### 2. manifesto e criação   10:30:07
+namespace/vllm-estudo unchanged
+16:      python3 -c "from huggingface_hub import snapshot_download as s; print('pesos em', s('Qwen/Qwen2.5-14B-Instruct-GPTQ-Int8', local_files_only=True))" || HF_HUB_OFFLINE=0 python3 -c "from huggingface_hub import snapshot_download as s; print('pesos em', s
+17:      exec vllm serve Qwen/Qwen2.5-14B-Instruct-GPTQ-Int8 --dtype float16 --max-model-len 8192 --gpu-memory-utilization 0.90 --generation-config vllm --enable-auto-tool-choice --tool-call-parser hermes --host 0.0.0.0 --port 8000
+pod/vllm-qual created
+### 3. aguardando o servidor (até 60 min)   10:30:07
+10:30:07 vllm-qual=Pending/false | 
+10:30:38 vllm-qual=Running/false | (APIServer pid=1) INFO 11-06 13:30:38 [model.py:1678] Using max model len 8192
+10:31:08 vllm-qual=Running/false | (EngineCore pid=196) INFO 11-06 13:30:56 [gpu_model_runner.py:4820] Model loading took 15.67 GiB memory and 6.548565 seconds
+10:31:38 vllm-qual=Running/false | (EngineCore pid=196) INFO 11-06 13:31:30 [monitor.py:76] Initial profiling/warmup run took 0.92 s
+10:32:08 vllm-qual=Running/false | (APIServer pid=1) INFO 11-06 13:32:08 [parser_manager.py:202] "auto" tool choice has been enabled.
+pronto=1 depois de 2 min
+NAME        READY   STATUS    RESTARTS   AGE     IP              NODE        NOMINATED NODE   READINESS GATES
+vllm-qual   1/1     Running   0          2m32s   10.244.179.75   sabdiia01   <none>           <none>
+### 4. servidor: versão, comando, parser de tool call
+vllm 0.19.1
+/usr/bin/python3 /usr/local/bin/vllm serve Qwen/Qwen2.5-14B-Instruct-GPTQ-Int8 --dtype float16 --max-model-len 8192 --gpu-memory-utilization 0.90 --generation-config vllm --enable-auto-tool-choice --tool-call-parser hermes --host 0.0.0.0 --port 8000 
+sh -c for p in /proc/[0-9]*/cmdline; do tr "\0" " " < $p 2>/dev/null | grep -E "vllm serve" ; done | sort -u | cut -c1-600 
+(APIServer pid=1) INFO 11-06 13:30:28 [utils.py:233] non-default args: {'model_tag': 'Qwen/Qwen2.5-14B-Instruct-GPTQ-Int8', 'enable_auto_tool_choice': True, 'tool_call_parser': 'hermes', 'host': '0.0.0.0', 'model': 'Qwen/Qwen2.5-14B-Instruct-GPTQ-Int
+(EngineCore pid=196) INFO 11-06 13:30:56 [gpu_model_runner.py:4820] Model loading took 15.67 GiB memory and 6.548565 seconds
+(EngineCore pid=196) INFO 11-06 13:31:46 [kv_cache_utils.py:1319] GPU KV cache size: 61,440 tokens
+(EngineCore pid=196) INFO 11-06 13:31:46 [kv_cache_utils.py:1324] Maximum concurrency for 8,192 tokens per request: 7.50x
+(APIServer pid=1) INFO 11-06 13:32:08 [parser_manager.py:202] "auto" tool choice has been enabled.
+### 5-carga. teste de carga: enum-required, 1/8/16/32 usuários   10:32:42
+        SW Power Cap                                   : Not Active
+        HW Slowdown                                    : Not Active
+            HW Thermal Slowdown                        : Not Active
+            HW Power Brake Slowdown                    : Not Active
+        SW Thermal Slowdown                            : Not Active
+        SW Power Capping                               : 451646055250 us
+        SW Thermal Slowdown                            : 0 us
+        HW Thermal Slowdown                            : 0 us
+aquecimento: 4 perguntas, 4 usuários
+  nível aquecimento: 1/4 perguntas, 10 s
+  nível aquecimento: 2/4 perguntas, 10 s
+  nível aquecimento: 3/4 perguntas, 10 s
+  nível aquecimento: 4/4 perguntas, 11 s
+nível 1: 1 x 50 perguntas, 1 usuários   13:32:54
+  nível 1: 5/50 perguntas, 14 s
+  nível 1: 10/50 perguntas, 29 s
+  nível 1: 15/50 perguntas, 43 s
+  nível 1: 20/50 perguntas, 59 s
+  nível 1: 25/50 perguntas, 77 s
+  nível 1: 30/50 perguntas, 96 s
+  nível 1: 35/50 perguntas, 123 s
+  nível 1: 40/50 perguntas, 156 s
+  nível 1: 45/50 perguntas, 181 s
+  nível 1: 50/50 perguntas, 205 s
+nível 8: 1 x 50 perguntas, 8 usuários   13:36:19
+  nível 8: 5/50 perguntas, 8 s
+  nível 8: 10/50 perguntas, 15 s
+  nível 8: 15/50 perguntas, 17 s
+  nível 8: 20/50 perguntas, 25 s
+  nível 8: 25/50 perguntas, 33 s
+  nível 8: 30/50 perguntas, 37 s
+  nível 8: 35/50 perguntas, 49 s
+  nível 8: 40/50 perguntas, 60 s
+  nível 8: 45/50 perguntas, 66 s
+  nível 8: 50/50 perguntas, 72 s
+nível 16: 2 x 50 perguntas, 16 usuários   13:37:31
+  nível 16: 10/100 perguntas, 14 s
+  nível 16: 20/100 perguntas, 29 s
+  nível 16: 30/100 perguntas, 35 s
+  nível 16: 40/100 perguntas, 55 s
+  nível 16: 50/100 perguntas, 67 s
+  nível 16: 60/100 perguntas, 79 s
+  nível 16: 70/100 perguntas, 87 s
+  nível 16: 80/100 perguntas, 102 s
+  nível 16: 90/100 perguntas, 118 s
+  nível 16: 100/100 perguntas, 129 s
+nível 32: 4 x 50 perguntas, 32 usuários   13:39:40
+  nível 32: 20/200 perguntas, 29 s
+  nível 32: 40/200 perguntas, 57 s
+  nível 32: 60/200 perguntas, 75 s
+  nível 32: 80/200 perguntas, 106 s
+  nível 32: 100/200 perguntas, 119 s
+  nível 32: 120/200 perguntas, 146 s
+  nível 32: 140/200 perguntas, 171 s
+  nível 32: 160/200 perguntas, 189 s
+  nível 32: 180/200 perguntas, 217 s
+  nível 32: 200/200 perguntas, 233 s
+fim: 2026-11-06T13:43:33.441124+00:00
+linhas gravadas: 732   10:43:33
+### 6-carga. resumo
+# Teste de carga — Qwen/Qwen2.5-14B-Instruct-GPTQ-Int8
+
+vLLM `0.19.1`, gabarito `2026-11-06`, variante `enum-required`, início 2026-11-06T13:32:43.605203+00:00. Cada pergunta = etapa 1 (consulta) + etapa 2 (resposta), em sequência, sem *streaming*: a latência é até a resposta completa. Vazão na janela estável (todos os usuários ocupados).
+
+| Usuários | Perguntas | Janela estável | Perguntas/min | *Tokens* gerados/s | Latência por pergunta p50 / p95 / máx | Etapa 1 p50 / p95 | Etapa 2 p50 / p95 | Erros HTTP |
+|---|---|---|---|---|---|---|---|---|
+| 1 | 50 | 205 s (50 perguntas) | 14.6 | 39.8 | 3.47 / 6.33 / 10.35 s | 1.98 / 3.56 s | 1.48 / 3.96 s | 0 |
+| 8 | 50 | 62 s (43 perguntas) | 41.3 | 102.8 | 9.27 / 17.52 / 27.99 s | 5.41 / 10.25 s | 3.81 / 8.86 s | 0 |
+| 16 | 100 | 113 s (85 perguntas) | 45.1 | 113.6 | 16.76 / 30.49 / 52.00 s | 9.91 / 18.10 s | 6.61 / 15.30 s | 0 |
+| 32 | 200 | 199 s (169 perguntas) | 51.0 | 131.8 | 30.15 / 56.74 / 93.76 s | 18.05 / 32.55 s | 11.87 / 29.44 s | 0 |
+
+## Qualidade sob carga (mesma régua do teste de qualidade; ID 50 fora)
+
+| Usuários | Repetição | Consulta certa | Resposta certa | As duas | Idênticas às de 1 usuário(s) |
+|---|---|---|---|---|---|
+| 1 | 1 | 49/49 | 47/49 | 47/49 | — |
+| 8 | 1 | 49/49 | 47/49 | 47/49 | 49/49 |
+| 16 | 1 | 49/49 | 47/49 | 47/49 | 48/49 |
+| 16 | 2 | 49/49 | 47/49 | 47/49 | 48/49 |
+| 32 | 1 | 49/49 | 47/49 | 47/49 | 49/49 |
+| 32 | 2 | 49/49 | 47/49 | 47/49 | 49/49 |
+| 32 | 3 | 49/49 | 47/49 | 47/49 | 49/49 |
+| 32 | 4 | 49/49 | 47/49 | 47/49 | 47/49 |
+
+## Servidor (/metrics; nomes como o vLLM publica, somados por nome)
+
+| Usuários | Δ `vllm:external_prefix_cache_hits_total` | Δ `vllm:external_prefix_cache_queries_total` | Δ `vllm:num_preemptions_total` | Δ `vllm:prefix_cache_hits_total` | Δ `vllm:prefix_cache_queries_total` | máx `vllm:kv_cache_usage_perc` | máx `vllm:num_requests_running` | máx `vllm:num_requests_waiting` |
+|---|---|---|---|---|---|---|---|---|
+| 1 | 0 | 0 | 0 | 228368 | 239945 | 0.0458453 | 1 | 0 |
+| 8 | 0 | 0 | 0 | 239168 | 239945 | 0.0859599 | 8 | 0 |
+| 16 | 0 | 0 | 0 | 478336 | 479890 | 0.12347 | 16 | 0 |
+| 32 | 0 | 0 | 0 | 956672 | 959780 | 0.185465 | 32 | 0 |
+## GPU durante a carga (325 amostras de 2 s): temperatura máx, clock mín e máx, potência máx
+76 C, 1245-1597 MHz, 269.11 W
+        SW Power Cap                                   : Not Active
+        HW Slowdown                                    : Not Active
+            HW Thermal Slowdown                        : Not Active
+            HW Power Brake Slowdown                    : Not Active
+        SW Thermal Slowdown                            : Not Active
+        SW Power Capping                               : 451646055250 us
+        SW Thermal Slowdown                            : 0 us
+        HW Thermal Slowdown                            : 0 us
+### 7. estrangulamento de 01 depois da coleta (a nota não depende dele; a latência sim)
+        SW Power Cap                                   : Not Active
+        HW Slowdown                                    : Not Active
+            HW Thermal Slowdown                        : Not Active
+            HW Power Brake Slowdown                    : Not Active
+        SW Thermal Slowdown                            : Not Active
+        SW Power Capping                               : 451646055250 us
+        SW Thermal Slowdown                            : 0 us
+        HW Thermal Slowdown                            : 0 us
+### 8. logs dos pods em /home/utec/vllm-estudo/qualidade/resultados/2026-11-06-1030-14b-int8-carga
+## vllm-qual (1351 linhas): fim
+(APIServer pid=1) INFO:     127.0.0.1:52946 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:52914 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     192.168.50.151:50296 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:55854 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:60716 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:55428 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:52966 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:54212 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:60722 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO 11-06 13:43:29 [loggers.py:259] Engine 000: Avg prompt throughput: 4.8 tokens/s, Avg generation throughput: 105.1 tokens/s, Running: 2 reqs, Waiting: 0 reqs, GPU KV cache usage: 4.8%, Prefix cache hit rate: 99.0%
+(APIServer pid=1) INFO:     127.0.0.1:52978 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:43380 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:52950 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:52976 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     127.0.0.1:43384 - "GET /metrics HTTP/1.1" 200 OK
+### 9. limpeza: apaga os pods e libera as GPUs   10:43:34
+pod "vllm-qual" deleted from vllm-estudo namespace
+Name:               sabdiia01
+  nvidia.com/gpu     0           0
+== fim 2026-11-06T10:43:37-03:00   resultados em /home/utec/vllm-estudo/qualidade/resultados/2026-11-06-1030-14b-int8-carga

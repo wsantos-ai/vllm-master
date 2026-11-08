@@ -1,0 +1,19 @@
+== sabdiia01  2026-11-06T10:07:58-03:00  preparo do teste de qualidade
+cp: overwrite 'qualidade/coletar-respostas.py'? cp: overwrite 'qualidade/gabarito-qualidade.json'? cp: overwrite 'qualidade/pontuar-respostas.py'? cp: overwrite 'qualidade/qualidade.sh'? '/tmp/qualidade-copia/carga-respostas.py' -> 'qualidade/carga-respostas.py'
+'/tmp/qualidade-copia/coletar-respostas.py' -> 'qualidade/coletar-respostas.py'
+'/tmp/qualidade-copia/gabarito-qualidade.json' -> 'qualidade/gabarito-qualidade.json'
+'/tmp/qualidade-copia/pontuar-respostas.py' -> 'qualidade/pontuar-respostas.py'
+'/tmp/qualidade-copia/qualidade.sh' -> 'qualidade/qualidade.sh'
+-rw-r--r-- 1 root root  11632 Nov  6 10:08 carga-respostas.py
+-rw-r--r-- 1 root root   5767 Nov  6 10:08 coletar-respostas.py
+-rw-r--r-- 1 root root 142920 Nov  6 10:08 gabarito-qualidade.json
+-rw-r--r-- 1 root root  18002 Nov  6 10:08 pontuar-respostas.py
+-rw-r--r-- 1 root root  16326 Nov  6 10:08 qualidade.sh
+1232b4fe09556ecd8da124d21ba3cc287f6ffa2fb539e602220ff1026f5927db  qualidade.sh
+1991d9007ac904369bad7abf5efbd891551f686406d60678baf9f40d16452113  coletar-respostas.py
+5ff81cccff05cb80a8d31b82e1e238e650afc1597da5486903343742013c65ed  pontuar-respostas.py
+d323d0e8463b84eb9f41036cf77edcadfef49268fc908ea49b870f270e0bddf2  gabarito-qualidade.json
+b474497d6070502cdbc13a376bdc826202396551fcbfbc43d9822e89622421ad  carga-respostas.py
+qualidade.sh sem erro de sintaxe
+entradas com id no gabarito (esperado >= 50): 50
+flags de tool call presentes

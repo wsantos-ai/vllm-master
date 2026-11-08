@@ -1,5 +1,8 @@
 # Runbook — P-05: `Qwen2.5-14B-Instruct` FP16 em 01 + 02 pelo Ray (*pipeline parallel* 2)
 
+> **Histórico (2026-11-07):** o Ray foi eliminado do *cluster* e dos *hosts* (D-07,
+> [remover-ray.md](remover-ray.md)). Este *runbook* fica como registro das medições; não rode.
+
 **Pergunta:** o teto de 114-195 *tok*/s da onda 1 com 32 usuários vem do GPTQ ou do tamanho do modelo?
 O P-05 roda o **mesmo 14B do P-01** (`T-003`, GPTQ Int8, 1 GPU), agora em FP16. Os pesos em FP16
 (27,51 GiB) não deixam espaço para *KV cache* numa V100S, por isso o teste precisa de 2 GPUs.
