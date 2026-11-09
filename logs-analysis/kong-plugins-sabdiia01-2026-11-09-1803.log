@@ -1,0 +1,15 @@
+pod: pod/kong-gateway-5f88dd7bcd-mpmk8
+3.9.4
+--- env do contêiner proxy (KONG_PLUGINS, KONG_DATABASE)
+KONG_DATABASE=off
+--- arquivos dos plugins no contêiner
+pasta: /usr/local/share/lua/5.1/kong/plugins
+sem enterprise_edition
+ai-prompt-decorator
+ai-prompt-guard
+ai-prompt-template
+ai-proxy
+ai-request-transformer
+ai-response-transformer
+pre-function
+request-size-limiting

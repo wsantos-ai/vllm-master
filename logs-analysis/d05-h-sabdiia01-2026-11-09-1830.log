@@ -1,0 +1,30 @@
+== sabdiia01  2026-11-09T18:30:43-03:00  D-05 H: ai-prompt-decorator e ai-prompt-guard na rota do vLLM (PD-37)
+1de61d5973ced1629c867f980a5225460c1278a7c8f08f885ad734f7635b6dc2  d05-ia-kong.yaml
+plugins na rota antes: d05-key-auth,d05-rate-limit
+### 1. validação no servidor, sem aplicar   18:30:43
+kongplugin.configuration.konghq.com/d05-ai-decorator created (server dry run)
+kongplugin.configuration.konghq.com/d05-ai-guard created (server dry run)
+### 2. aplica e liga à rota   18:30:43
+kongplugin.configuration.konghq.com/d05-ai-decorator created
+kongplugin.configuration.konghq.com/d05-ai-guard created
+ingress.networking.k8s.io/vllm-server annotated
+### 3. o Kong aceitou?   18:30:43
+NAME               PLUGIN-TYPE           AGE   PROGRAMMED
+d05-ai-decorator   ai-prompt-decorator   21s   
+d05-ai-guard       ai-prompt-guard       21s   
+d05-ip-crp         ip-restriction        43h   
+d05-ip-dev-1       ip-restriction        43h   
+d05-ip-dev-2       ip-restriction        43h   
+d05-ip-estacao     ip-restriction        43h   
+d05-ip-wsantos     ip-restriction        43h   
+d05-key-auth       key-auth              45h   
+d05-rate-limit     rate-limiting         45h   
+plugins na rota: d05-key-auth,d05-rate-limit,d05-ai-decorator,d05-ai-guard
+--- eventos de vllms (falha de configuração do Kong aparece aqui)
+No resources found in vllms namespace.
+--- erros do controller do Kong nos últimos 2 min
+controller: pod/kong-controller-76f66d77f-jsplg
+(nenhuma linha acima = nenhum erro)
+### 4. a rota responde? de 01, sem chave: 401 esperado   18:31:04
+https://192.168.50.161/vllm/v1/chat/completions -> HTTP 401
+== fim 2026-11-09T18:31:04-03:00

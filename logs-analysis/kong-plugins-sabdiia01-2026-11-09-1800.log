@@ -1,0 +1,5 @@
+pod: pod/kong-gateway-5f88dd7bcd-mpmk8
+proxy kong:3.9
+3.9.4
+sh: 1: curl: not found
+command terminated with exit code 127

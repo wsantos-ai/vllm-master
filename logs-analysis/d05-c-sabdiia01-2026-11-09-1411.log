@@ -1,0 +1,67 @@
+== sabdiia01  2026-11-09T14:11:25-03:00  D-05 C: consumidores do Kong a partir de d05-consumidores.txt
+f401f58cfef3a768030286c0344e2f00a4024170e42a4982899b721c881ff136  d05-consumidores.txt
+proxy do Kong: kong-gateway-proxy  IP 192.168.50.161  externalTrafficPolicy Local
+### 1. a lista
+estacao: 172.16.30.6
+wsantos: 172.16.254.0/24
+dev-1: (sem IP: o Kong recusa até o IP entrar na lista)
+dev-2: (sem IP: o Kong recusa até o IP entrar na lista)
+crp: 172.16.30.201
+lista de IPs: uma por consumidor (a chave de um ator só vale dos IPs dele)
+### 2. chaves, listas de IPs e consumidores (chaves fora do log)   14:11:26
+estacao: chave já existe, mantida
+kongplugin.configuration.konghq.com/d05-ip-estacao unchanged
+kongconsumer.configuration.konghq.com/estacao unchanged
+estacao: IPs liberados:  172.16.30.6
+wsantos: chave já existe, mantida
+kongplugin.configuration.konghq.com/d05-ip-wsantos unchanged
+kongconsumer.configuration.konghq.com/wsantos unchanged
+wsantos: IPs liberados:  172.16.254.0/24
+dev-1: chave já existe, mantida
+kongplugin.configuration.konghq.com/d05-ip-dev-1 unchanged
+kongconsumer.configuration.konghq.com/dev-1 unchanged
+dev-1: IPs liberados: 127.0.0.1
+dev-2: chave já existe, mantida
+kongplugin.configuration.konghq.com/d05-ip-dev-2 unchanged
+kongconsumer.configuration.konghq.com/dev-2 unchanged
+dev-2: IPs liberados: 127.0.0.1
+crp: chave já existe, mantida
+kongplugin.configuration.konghq.com/d05-ip-crp configured
+kongconsumer.configuration.konghq.com/crp unchanged
+crp: IPs liberados:  172.16.30.201
+### 3. a rota: chave e limite (a lista de IPs fica em cada consumidor)   14:11:31
+ingress.networking.k8s.io/vllm-server annotated
+### 4. o Kong aceitou?   14:11:31
+NAME                                            USERNAME   AGE   PROGRAMMED
+kongconsumer.configuration.konghq.com/crp       crp        39h   True
+kongconsumer.configuration.konghq.com/dev-1     dev-1      39h   True
+kongconsumer.configuration.konghq.com/dev-2     dev-2      39h   True
+kongconsumer.configuration.konghq.com/estacao   estacao    39h   True
+kongconsumer.configuration.konghq.com/wsantos   wsantos    39h   True
+
+NAME                                                 PLUGIN-TYPE      AGE   PROGRAMMED
+kongplugin.configuration.konghq.com/d05-ip-crp       ip-restriction   39h   
+kongplugin.configuration.konghq.com/d05-ip-dev-1     ip-restriction   39h   
+kongplugin.configuration.konghq.com/d05-ip-dev-2     ip-restriction   39h   
+kongplugin.configuration.konghq.com/d05-ip-estacao   ip-restriction   39h   
+kongplugin.configuration.konghq.com/d05-ip-wsantos   ip-restriction   39h   
+kongplugin.configuration.konghq.com/d05-key-auth     key-auth         40h   
+kongplugin.configuration.konghq.com/d05-rate-limit   rate-limiting    40h   
+
+NAME                                    CLASS   HOSTS   ADDRESS          PORTS   AGE
+ingress.networking.k8s.io/vllm-server   kong    *       192.168.50.161   80      40h
+plugins na rota: d05-key-auth,d05-rate-limit
+No resources found in vllms namespace.
+### 5. de 01 com a chave de cada ator (01 fora da lista: 403 se a lista vale, 200 se não)   14:11:51
+estacao -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"fb4ac44a9637b0272ae9c4760fa74c5c" }
+wsantos -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"1bc436285154425281ea1967c1858e13" }
+dev-1 -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"b93bb947ae02c93f54854f22ace84d52" }
+dev-2 -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"4e01117fd61fc638b7d43633a2bfef38" }
+crp -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"4bc93758c3aa7b07e56cc36f7f75f739" }
+### 6. arquivos de chave (entregar cada um só ao seu ator)
+-rw------- 1 utec root 242 Nov  9 14:11 d05-chave-crp.env
+-rw------- 1 utec root 244 Nov  9 14:11 d05-chave-dev-1.env
+-rw------- 1 utec root 244 Nov  9 14:11 d05-chave-dev-2.env
+-rw------- 1 utec root 246 Nov  9 14:11 d05-chave-estacao.env
+-rw------- 1 utec root 246 Nov  9 14:11 d05-chave-wsantos.env
+== fim 2026-11-09T14:11:52-03:00

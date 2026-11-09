@@ -17,4 +17,7 @@ estacao        172.16.30.6
 wsantos       172.16.254.0/24
 dev-1          pendente
 dev-2          pendente
-crp            pendente
+# crp: máquina DSABDICRP01, 172.16.30.201 por DHCP ("Ethernet0", gateway 172.16.30.252; testar-rede.ps1 de
+# 2026-11-09). Só o /32: a faixa 172.16.30.0/24 liberaria toda a rede da estação com esta chave. Se o DHCP trocar o
+# IP, o Kong responde 403: peça à infraestrutura uma reserva de DHCP para esta máquina.
+crp            172.16.30.201

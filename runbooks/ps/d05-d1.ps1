@@ -4,7 +4,11 @@
 # (Windows PowerShell 5.1 também serve: powershell -ExecutionPolicy Bypass -File ...)
 # Colar blocos longos corrompeu o texto três vezes em 2026-11-07 (§9 do estudo).
 
-$ip = Read-Host "IP do Kong (recebido de quem coordena os testes)"
+$padrao = "192.168.50.161"  # IP do Kong (proxy, MetalLB); não é o gateway da rede
+$ip = Read-Host "IP do Kong [Enter = $padrao]"
+if ([string]::IsNullOrWhiteSpace($ip)) { $ip = $padrao }
+$ip = $ip.Trim()
+if ($ip -ne $padrao) { "AVISO: $ip não é o IP do Kong conhecido ($padrao). Confira com quem coordena os testes." }
 if ($ip -notmatch '^\d{1,3}(\.\d{1,3}){3}$') { "ABORTA: IP inválido: $ip"; return }
 $log = Join-Path ([Environment]::GetFolderPath('Desktop')) "d05-d1-rede-$($env:COMPUTERNAME.ToLower())-$(Get-Date -Format yyyy-MM-dd-HHmm).log"
 & {

@@ -1,0 +1,13 @@
+== wsantosDell  2026-11-09T09:41:56-03:00  PD-34: certificado do Kong visto pelo Node.js (notebook, Git Bash)
+### 1. certificado apresentado em 192.168.50.161:443
+No extensions in certificate
+subject=C=US, ST=California, L=San Francisco, O=Kong, OU=IT Department, CN=localhost
+issuer=C=US, ST=California, L=San Francisco, O=Kong, OU=IT Department, CN=localhost
+notBefore=Oct 26 20:27:01 2026 GMT
+notAfter=Oct 21 20:27:01 2046 GMT
+### 2. node v22.22.2, @ai-sdk/openai 4.0.111, ai 7.0.166
+### 2a. sem nada (verificação normal)
+Last error: AI_APICallError: Cannot connect to API: self-signed certificate
+### 2b. NODE_EXTRA_CA_CERTS=kong.pem (o próprio certificado do Kong como CA)
+Last error: AI_APICallError: Cannot connect to API: Hostname/IP does not match certificate's altnames: IP: 192.168.50.161 is not in the cert's list: 
+== fim 2026-11-09T09:42:12-03:00

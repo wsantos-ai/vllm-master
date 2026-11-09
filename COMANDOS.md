@@ -524,6 +524,124 @@ r = cli.chat.completions.create(model=c["MODELO"], max_tokens=100, temperature=0
 print(r.choices[0].message.content)
 ```
 
+### Que certificado o Kong apresenta, e o Node.js aceita? (PD-34)
+
+Estação (notebook), Git Bash, em `C:\www\vllm-app` (com `.env` e `server.js`). Sem `subjectAltName` com o IP, o
+Node recusa mesmo confiando no certificado. `[executado: 2026-11-09]`, com o script anterior (`run-vllm.js`,
+`generateText`, erro em `Last error:`) ([log](logs-analysis/kong-tls-node-wsantosdell-2026-11-09-0941.log)). O
+`server.js` usa `streamText` e escreve o erro como `Erro:`; com ele, o bloco abaixo foi executado em 2026-11-09 e deu o
+mesmo `Hostname/IP does not match certificate's altnames` (saída vista no terminal, sem log).
+
+```bash
+cd /c/www/vllm-app
+echo | openssl s_client -connect 192.168.50.161:443 2>/dev/null \
+  | openssl x509 -noout -subject -issuer -dates -ext subjectAltName
+echo | openssl s_client -connect 192.168.50.161:443 2>/dev/null | openssl x509 > kong.pem
+NODE_EXTRA_CA_CERTS=kong.pem node server.js "teste" 2>&1 | grep -m1 -E "^Erro:"
+```
+
+### O Nemo mistura inglês na resposta? (system prompt × temperatura)
+
+Estação (notebook), Git Bash, em `C:\www\vllm-app` (script `test/teste-idioma.js`, com o `.env` do consumidor
+`wsantos`). Rode da raiz da aplicação, não de dentro de `test/`: o script lê o `.env` e o `node_modules` da pasta atual.
+"Quem é Demis Hassabis?" 10 vezes em 4 configurações (A sem nada, B `temperature 0.3`, C `system` + 0.3, D só
+`system`), em sequência; grava `logs-analysis/idioma-nemo-<host>-<data>.log`. 40 chamadas em ~5 min.
+`[executado: 2026-11-09]` ([log](logs-analysis/idioma-nemo-wsantosdell-2026-11-09-1129.log), AC-34)
+
+```bash
+cd /c/www/vllm-app
+NODE_TLS_REJECT_UNAUTHORIZED=0 node test/teste-idioma.js
+```
+
+### O Nemo resiste a *prompt injection*? (PD-37)
+
+Estação (notebook), Git Bash, em `C:\www\vllm-app` (script `test/teste-injecao.js`, `.env` do `wsantos`), da raiz da
+aplicação. Empresa fictícia com 2 documentos; 22 casos (diretos, vazamento do identificador, fora dos documentos,
+indiretos num documento, controle) × N=3 em 4 configurações (A sem regras, B regras no `system`, C documentos
+delimitados, D 2ª mensagem de sistema como a do `ai-prompt-decorator`); `temperature 0.3`, até 300 *tokens*. Grava
+`logs-analysis/injecao-nemo-<host>-<data>.log`. 264 chamadas, ~7 min (2026-11-09). `N=1` faz uma rodada curta;
+`SO=C` roda só uma configuração. `[executado: 2026-11-09]` ([log](logs-analysis/injecao-nemo-wsantosdell-2026-11-09-1505.log), AC-35)
+
+```bash
+cd /c/www/vllm-app
+NODE_TLS_REJECT_UNAUTHORIZED=0 node test/teste-injecao.js
+```
+
+### O `ai-prompt-guard` do Kong barraria os ataques? (PD-37)
+
+Estação (notebook), Git Bash, em `C:\www\vllm-app`. Sem rede e sem `.env`: aplica as expressões do *plugin* às
+mensagens do teste de injeção (`test/injecao-casos.js`) e tira as respostas do log mais recente dele (ou de `LOG=<arquivo>`).
+Grava `logs-analysis/guard-sim-<host>-<data>.log`. `[executado: 2026-11-09]` ([log](logs-analysis/guard-sim-wsantosdell-2026-11-09-1809.log), AC-36)
+
+```bash
+cd /c/www/vllm-app
+node test/simula-prompt-guard.js
+```
+
+### Os *plugins* de IA do Kong funcionam na rota? (Bloco H, PD-37)
+
+Estação (notebook), Git Bash, em `C:\www\vllm-app`, depois do Bloco H de
+[runbooks/acesso-aplicacoes-d05.md](runbooks/acesso-aplicacoes-d05.md). `test/teste-kong-ia.js` chama a rota direto
+(`fetch`) em 7 casos: pergunta normal (200), ataque grosseiro (400 do `ai-prompt-guard`), mensagem de sistema do Kong
+na resposta, *streaming*, corpo de ~19 KB (acima dos 8 KiB padrão), conversa com ferramenta (assistente com `content`
+nulo) e mensagem do usuário em partes (400, limite do *guard*). Grava `logs-analysis/kong-ia-<host>-<data>.log`. A 2ª
+linha repete a configuração C do AC-35 pela rota com os *plugins*; o 400 do Kong conta como "bloqueado".
+`[executado: 2026-11-09]` com os *plugins* ([log](logs-analysis/kong-ia-wsantosdell-2026-11-09-1833.log): *streaming* quebrado, AC-37) e sem eles ([log](logs-analysis/kong-ia-wsantosdell-2026-11-09-1846.log))
+
+```bash
+cd /c/www/vllm-app
+NODE_TLS_REJECT_UNAUTHORIZED=0 node test/teste-kong-ia.js
+NODE_TLS_REJECT_UNAUTHORIZED=0 SO=C ROTA="Bloco H: decorator + guard G1" node test/teste-injecao.js
+```
+
+### Que *plugins* o Kong instalado tem? (PD-37)
+
+Servidor `sabdiia01`, bash com `kubectl`. Confere a edição do Kong e se os *plugins* de IA de [F-049] estão no
+*gateway* em uso: os arquivos dos *plugins* no contêiner, a pasta `enterprise_edition` (só existe na edição paga) e
+`KONG_PLUGINS` (que *plugins* o Kong carrega; ausente = `bundled`, todos os embutidos). Só lê, não muda nada.
+`[executado: 2026-11-09]` ([log](logs-analysis/kong-plugins-sabdiia01-2026-11-09-1803.log): `3.9.4` de código aberto, *plugins* `ai-*` presentes, `KONG_DATABASE=off`). 1ª versão, com `curl` na API de administração, `[executado: 2026-11-09]`
+([log](logs-analysis/kong-plugins-sabdiia01-2026-11-09-1800.log)): contêiner `proxy`, imagem `kong:3.9`,
+`kong version` = `3.9.4`; a imagem não tem `curl` (`sh: 1: curl: not found`).
+
+```bash
+mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
+{ P=$(kubectl get pod -n kong -o name | grep gateway | head -1); echo "pod: $P"
+  kubectl exec -n kong $P -c proxy -- kong version
+  echo "--- env do contêiner proxy (KONG_PLUGINS, KONG_DATABASE)"
+  kubectl get $P -n kong \
+    -o jsonpath='{range .spec.containers[?(@.name=="proxy")].env[*]}{.name}={.value}{"\n"}{end}' \
+    | grep -E '^KONG_(PLUGINS|DATABASE)=' || echo "nenhuma das duas definida"
+  echo "--- arquivos dos plugins no contêiner"
+  kubectl exec -n kong $P -c proxy -- sh -c \
+    'D=$(find / -type d -path "*/kong/plugins" 2>/dev/null | head -1); echo "pasta: $D";
+     ls -d "$(dirname $D)/enterprise_edition" 2>/dev/null || echo "sem enterprise_edition";
+     ls "$D" | grep -E "^(ai-|request-size|pre-function)"'
+} 2>&1 | tee kong-plugins-$(hostname -s)-$(date +%F-%H%M).log
+```
+
+### Ver o Kong Manager (painel do administrador; só leitura)
+
+O painel (`kong-gateway-manager`, *NodePort* 32492/32616) abre, mas vem sem dados: o `kconfig.js` dele tem
+`ADMIN_API_URL` vazio e `ADMIN_API_SSL_PORT` `8444`, e a Admin API (`kong-gateway-admin`, `ClusterIP` *headless*
+8444) não sai do *cluster* (2026-11-09: `192.168.50.151:8444` e `.161:8444` sem resposta do notebook).
+Túnel sem mudar nada no Kong. **Não edite pelo painel:** o Kong é do administrador, e o
+*ingress controller* reescreve o que vem dos `KongConsumer`/`KongPlugin`. `[não executado]`
+
+Servidor `sabdiia01`, bash (deixe aberto):
+
+```bash
+kubectl port-forward -n kong svc/kong-gateway-admin 8444:8444
+```
+
+Estação (notebook), PowerShell, em outra janela (deixe aberta):
+
+```powershell
+ssh -N -L 8444:127.0.0.1:8444 -L 8445:192.168.50.151:32616 utec@192.168.50.151
+```
+
+No navegador, abra `https://localhost:8444` uma vez e aceite o certificado (autoassinado); depois abra
+`https://localhost:8445`.
+
 ### Qual é a versão do vLLM?
 
 Não existe `vllm --version` para rodar no nó: o vLLM não está instalado no sistema, só dentro das

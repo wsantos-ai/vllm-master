@@ -1,0 +1,31 @@
+# Saída colada no chat pelo usuário (o log original ficou na Área de Trabalho do ator), não editada.
+# Ator crp, máquina DSABDICRP01, script testar-rede.ps1 (= runbooks/ps/d05-d1.ps1). Os caracteres trocados vêm do console do ator.
+# Rodada anterior, 09:51, com o IP errado (200.0.135.1, roteador da rede): alcançou=False, mesma origem 172.16.30.201 por DHCP.
+== DSABDICRP01  2026-11-09T12:19:11.8701613-03:00  D-05 D1: rede do ator atÃ© o Kong 192.168.50.161
+### 1. IPv4 desta mÃ¡quina (DHCP ou fixo)
+
+IPAddress     PrefixLength InterfaceAlias                     PrefixOrigin
+---------     ------------ --------------                     ------------
+172.30.64.1             20 vEthernet (WSL (Hyper-V firewall))       Manual
+172.20.192.1            20 vEthernet (Default Switch)               Manual
+172.16.30.201           24 Ethernet0                                  Dhcp
+
+
+
+### 2. alcanÃ§a a porta 443 do Kong? com que IP de origem?
+192.168.50.161:443  origem 172.16.30.201  alcanÃ§ou=True
+### 3. caminho
+
+Rastreando a rota para 192.168.50.161 com no máximo 8 saltos
+
+  1    <1 ms    <1 ms    <1 ms  172.16.30.252
+  2    <1 ms    <1 ms    <1 ms  192.168.50.150
+  3     *        *        *     Esgotado o tempo limite do pedido.
+  4     *        *        *     Esgotado o tempo limite do pedido.
+  5     *        *        *     Esgotado o tempo limite do pedido.
+  6     *        *        *     Esgotado o tempo limite do pedido.
+  7     *        *        *     Esgotado o tempo limite do pedido.
+  8     *        *        *     Esgotado o tempo limite do pedido.
+
+Rastreamento concluído.
+== fim 2026-11-09T12:19:28.6955251-03:00

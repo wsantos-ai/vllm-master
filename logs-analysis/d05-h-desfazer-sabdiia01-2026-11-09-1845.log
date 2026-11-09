@@ -1,0 +1,5 @@
+== sabdiia01  2026-11-09T18:45:30-03:00  D-05 H-desfazer
+ingress.networking.k8s.io/vllm-server annotated
+kongplugin.configuration.konghq.com "d05-ai-decorator" deleted from vllms namespace
+kongplugin.configuration.konghq.com "d05-ai-guard" deleted from vllms namespace
+plugins na rota: d05-key-auth,d05-rate-limit

@@ -1,0 +1,12 @@
+# Saída colada no chat pelo usuário (o log original ficou na Área de Trabalho do ator), não editada.
+# Ator crp, máquina DSABDICRP01, script testar-chave.ps1 (D2). Os caracteres trocados vêm do console do ator.
+# Lista em vigor: crp 172.16.30.201 (Bloco C de 2026-11-09 14:11, d05-c-sabdiia01-2026-11-09-1411.log).
+== DSABDICRP01  2026-11-09T14:31:40.6504485-03:00  D-05 D2: consumidor crp, Kong 192.168.50.161
+443: origem 172.16.30.201  alcanÃ§ou=True
+### 1. uma pergunta (200 e BrasÃlia; 403 = IP de saÃda fora da lista; 401 = chave)
+HTTP 200 | {"id":"chatcmpl-adedd82ff0622abf","object":"chat.completion","created":1794245508,"model":"mistralai/Mistral-Nemo-Instruct-2407","choices":[{"index":0,"message":{"role":"assistant","content":"BrasÃƒÂlia","refusal":null,"annotations":null,"audio":null,"function_call":null,"tool_calls":[],"reasoning":null},"logprobs":null,"finish_reason":"stop","stop_reason":null,"token_ids":null}],"service_tier":null,"system_fingerprint":null,"usage":{"prompt_tokens":19,"total_tokens":24,"completion_tokens":5,"prompt_tokens_details":null},"prompt_logprobs":null,"prompt_token_ids":null,"kv_transfer_params":null}
+### 2. streaming: primeiro byte antes do fim?
+primeiro byte 0.026437 s, total 4.366072 s, HTTP 200
+
+linhas 'data:': 127
+== fim 2026-11-09T14:31:53.3914514-03:00

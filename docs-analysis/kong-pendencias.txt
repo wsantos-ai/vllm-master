@@ -1,0 +1,19 @@
+ 1. Nome DNS com certificado próprio. É a minha recomendação.
+     - Pede-se à infraestrutura um nome, por exemplo vllm.<domínio interno>, apontando para 192.168.50.161.
+     - O certificado é emitido para esse nome, de preferência pela autoridade certificadora interna, se a empresa tiver uma.
+     - O certificado entra no Ingress do estudo (spec.tls, com hosts e secretName). Isso fica dentro do que o estudo controla (decisao=d-05) e não mexe na
+       configuração do Kong do administrador.
+     - Se o certificado vier da autoridade certificadora interna e as máquinas já confiarem nela, nada muda no código. Se não, a aplicação aponta para ele com
+       NODE_EXTRA_CA_CERTS e a verificação fica completa.
+     - O caminho é por nome e não por IP porque o Kong escolhe o certificado pelo nome que o cliente pede, e quem chama por IP não informa nenhum nome.
+     - [não executado]: precisa do registro DNS e do certificado.
+  2. Certificado emitido para o IP. Funciona sem DNS, mas teria que ser o certificado padrão do Kong. Isso é configuração do Helm do administrador e afeta as
+     rotas dele, então a decisão é dele.
+  3. Provisório: fixar o certificado atual no código. Em vez de desligar tudo, o script confia exatamente no certificado do Kong, que já salvei em
+     C:\www\vllm-app\kong.pem, e ignora só a diferença de nome. A conexão continua cifrada e verificada contra esse certificado específico.
+     - Mas não serve para produção. Pelo log, o certificado de fábrica foi gerado em 26/10, quando o pod do Kong subiu. Isso indica [hipótese] que ele muda a
+       cada reinício do Kong, e aí a aplicação para de funcionar sem aviso.
+     - Também não testei esse código.
+
+  Próximo passo: pedir à infraestrutura um nome DNS para 192.168.50.161 e, se houver, um certificado da autoridade certificadora interna. Com isso, eu preparo
+  o bloco que coloca o certificado no Ingress e testa.
