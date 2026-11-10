@@ -34,7 +34,10 @@ resumo que muda o jeito de trabalhar é este:
   reaplica mais o dele (cópia do que ele tinha: `vllm-server-adocao-<data>.yaml` em 01, gravada pelo Bloco G1).
   Tudo o que o estudo controla em `vllms` leva o rótulo `decisao=d-05`: só isso o estudo edita ou apaga. **Nunca
   proponha editar ou apagar os outros recursos de `vllms` (como o `Service` `vllm-llama31-8b`), nem
-  devolver o `vllm-server` ao administrador, sem o usuário pedir explicitamente.** Os antigos `vllm-deepseek-33b` (`v0.6.4`, AC-05,
+  devolver o `vllm-server` ao administrador, sem o usuário pedir explicitamente.** **2026-11-10: o administrador
+  liberou o estudo para mexer no ambiente sem restrição (usuário).** Mudança fora de `decisao=d-05` (Kong, `monitoring`,
+  GPU Operator, *releases* Helm do administrador) pode entrar em bloco executável, sempre com cópia antes, expectativa
+  escrita e desfazer, e com a autorização citada no bloco. Os antigos `vllm-deepseek-33b` (`v0.6.4`, AC-05,
   AC-06) e `vllm-llama31-8b` não existem mais. Com o `vllm-server` no ar, não há GPU livre: um teste que
   precise de uma GPU combina antes com o usuário tirar uma réplica (a aplicação fica com 2). Rode o Bloco 0 de
   [runbooks/teste-protocolo-modelos.md](runbooks/teste-protocolo-modelos.md) antes de usar uma GPU liberada.
