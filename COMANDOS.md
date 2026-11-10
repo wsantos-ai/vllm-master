@@ -760,6 +760,10 @@ ssh -N -L 3000:192.168.50.162:80 utec@192.168.50.151
 Usuário criado pela tela do Grafana some no próximo reinício do *pod* (Grafana sem disco, AC-41): para acesso pessoal
 que dure, o usuário entra pelos *values* do Helm ou o Grafana ganha disco.
 
+### Alertas como `PrometheusRule` (PD-38)
+
+Servidor `sabdiia01`, bash. Bloco A de [runbooks/observabilidade-d05.md](runbooks/observabilidade-d05.md): `ruleSelector` do objeto `Prometheus` por `jsonpath`; regras carregadas por `.../api/v1/rules`; *receivers* do Alertmanager por `.../alertmanager:9093/proxy/api/v2/status` (só os nomes). `[executado: 2026-11-10]` ([log](logs-analysis/d05-a-sabdiia01-2026-11-10-1749.log): 11 regras sem erro; Alertmanager só com `"null"`); A-confere `[executado: 2026-11-10]` ([log](logs-analysis/d05-a-confere-sabdiia01-2026-11-10-1754.log): 11 `ok`).
+
 ### Ver o Kong Manager (painel do administrador; só leitura)
 
 O painel (`kong-gateway-manager`, *NodePort* 32492/32616) abre, mas vem sem dados: o `kconfig.js` dele tem

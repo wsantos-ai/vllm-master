@@ -577,6 +577,119 @@ se vê na tela não é evidência; o log do G é.
 kubectl delete configmap -n vllms -l grafana_dashboard=1,decisao=d-05
 ```
 
+## Alertas (Bloco A, A-desfazer)
+
+Um `PrometheusRule` ([configs/d05-alertas.yaml](../configs/d05-alertas.yaml)) com 11 alertas em 3 grupos. Limiares
+tirados do estudo: fila, *KV cache*, preempções e latência do AC-31 (Nemo, 32 usuários por GPU: fila 0, *KV cache* máx.
+34 %, 0 preempções, p95 de 25 s por pergunta); *clock* e temperatura do AC-17 (estrangulamento: SM de 1560 para ~400 MHz,
+a partir de 82 °C). Os do Kong (5xx acima de 5 %, 429 por 10 min) são escolha de operação.
+
+| Grupo | Alerta | Dispara quando | Gravidade |
+|---|---|---|---|
+| vLLM | `D05VllmReplicaFora` | menos de 3 réplicas com `/metrics` de pé, por 3 min | critical |
+| | `D05VllmFila` | fila > 0 numa réplica por 5 min | warning |
+| | `D05VllmKvCacheAlto` | *KV cache* > 80 % por 5 min | warning |
+| | `D05VllmPreempcoes` | alguma preempção em 10 min | warning |
+| | `D05VllmLatenciaAlta` | p95 ponta a ponta > 25 s por 10 min | warning |
+| GPU | `D05GpuEstrangulada` | SM < 1000 MHz com uso > 50 %, por 2 min | critical |
+| | `D05GpuQuente` | > 80 °C por 5 min | warning |
+| | `D05GpuSemMetricas` | DCGM em menos de 3 nós, por 5 min | warning |
+| Kong | `D05KongErros5xx` | > 5 % de 5xx (com tráfego), por 5 min | critical |
+| | `D05KongLimiteDoAtor` | um ator com 429 por 10 min | warning |
+| | `D05KongSemMetricas` | Prometheus sem a porta 8100 do Kong, por 5 min | warning |
+
+Os alertas aparecem no Prometheus, no Alertmanager e no Grafana (*Alerting* → *Alert rules*, fonte Prometheus). **Ninguém
+é avisado por e-mail ou mensagem** enquanto o Alertmanager não tiver um *receiver* de verdade: o bloco mostra os que
+existem. Para mudar um limiar: edite o YAML e rode o A de novo.
+
+Envie o arquivo (notebook, PowerShell):
+
+```powershell
+$u = Read-Host "Usuário com que você entra no sabdiia01"
+scp C:\www\vllm-master\configs\d05-alertas.yaml "${u}@192.168.50.151:/home/utec/vllm-estudo/"
+```
+
+### Bloco A — Aplica os alertas (servidor `sabdiia01`, bash)
+
+**Expectativa (escrita antes):** `ruleSelector` do Prometheus = `release: monitoring`; o *webhook* do operador aceita as
+11 expressões no `--dry-run=server`; os 3 grupos `d05-*` carregados em até 5 min, as 11 regras com `health` `ok` e estado
+`inactive` (sem carga, nada dispara); o Alertmanager só com os *receivers* padrão do *chart* (`null`) `[hipótese]`.
+
+```bash
+mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
+{ echo "== $(hostname -s)  $(date -Is)  D-05 A: alertas (PD-38)"
+  [ "$(hostname -s)" = sabdiia01 ] || { echo "ABORTA: este bloco é para sabdiia01"; exit 1; }
+  command -v python3 >/dev/null || { echo "ABORTA: sem python3"; exit 1; }
+  NS=vllms; M=d05-alertas.yaml
+  [ -f $M ] || { echo "ABORTA: $M ausente; envie o arquivo"; exit 1; }
+  sha256sum $M
+  echo "### 0. que PrometheusRule o Prometheus carrega?   $(date +%T)"
+  RS=$(kubectl get prometheus -n monitoring -o jsonpath='{.items[0].spec.ruleSelector}')
+  echo "ruleSelector: $RS"
+  echo "ruleNamespaceSelector: $(kubectl get prometheus -n monitoring \
+    -o jsonpath='{.items[0].spec.ruleNamespaceSelector}')"
+  [ "$RS" = '{"matchLabels":{"release":"monitoring"}}' ] \
+    || { echo "ABORTA: seletor diferente do esperado; ajuste o rótulo do YAML"; exit 1; }
+
+  echo "### 1. validação (webhook do operador) e aplicação   $(date +%T)"
+  kubectl apply --dry-run=server -f $M || { echo "ABORTA: o cluster recusou as regras"; exit 1; }
+  kubectl apply -f $M
+  kubectl get prometheusrule -n $NS
+
+  echo "### 2. regras carregadas? (até 5 min)   $(date +%T)"
+  B="/api/v1/namespaces/monitoring/services/monitoring-kube-prometheus-prometheus:9090/proxy/api/v1"
+  for i in $(seq 1 20); do
+    kubectl get --raw "$B/rules" | grep -q '"name":"d05-kong"' && break; sleep 15; done
+  echo "esperou $((i*15)) s"
+  kubectl get --raw "$B/rules" > d05-regras.json
+  python3 -c 'import json
+for g in json.load(open("d05-regras.json"))["data"]["groups"]:
+    if not g["name"].startswith("d05"): continue
+    for r in g["rules"]:
+        print(g["name"], r["name"], r.get("health"), r.get("state"), r.get("lastError", ""))'
+
+  echo "### 3. Alertmanager: rotas e receivers (só nomes)   $(date +%T)"
+  A="/api/v1/namespaces/monitoring/services/monitoring-kube-prometheus-alertmanager:9093/proxy"
+  kubectl get --raw "$A/api/v2/status" | python3 -c 'import json,sys
+c = json.load(sys.stdin)["config"]["original"]
+for l in c.splitlines():
+    if l.strip().startswith(("receiver:", "- name:", "- receiver:")): print(l)'
+  echo "### 4. alertas d05 disparando agora"
+  kubectl get --raw "$B/alerts" | tr '{' '\n' | grep -o '"alertname":"D05[^"]*"' | sort | uniq -c
+  rm -f d05-regras.json
+} 2>&1 | tee d05-a-$(hostname -s)-$(date +%F-%H%M).log
+```
+
+**Resultado (2026-11-10 17:49, [log](../logs-analysis/d05-a-sabdiia01-2026-11-10-1749.log)):** `ruleSelector` `release: monitoring`; as 11 regras aceitas
+pelo *webhook* e carregadas em 60 s, nenhuma com erro; o grupo `d05-vllm` já avaliado (5 `ok`, `inactive`), `d05-gpu` e
+`d05-kong` ainda `unknown` (lidos antes da 1ª avaliação `[hipótese]`); nenhum alerta disparando. **Alertmanager só com o
+*receiver* `"null"`: os alertas não chegam a ninguém.**
+
+### A-confere — As 11 regras avaliadas (servidor `sabdiia01`, bash; só leitura)
+
+**Expectativa:** as 11 com `health` `ok`; estado `inactive`, salvo carga ou GPU quente no momento.
+
+**Resultado (2026-11-10 17:54, [log](../logs-analysis/d05-a-confere-sabdiia01-2026-11-10-1754.log)):** as 11 `ok`, `inactive`. O `unknown` do A era só a 1ª avaliação pendente.
+
+```bash
+mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
+{ echo "== $(hostname -s)  $(date -Is)  D-05 A-confere (só leitura)"
+  B="/api/v1/namespaces/monitoring/services/monitoring-kube-prometheus-prometheus:9090/proxy/api/v1"
+  kubectl get --raw "$B/rules" | python3 -c 'import json,sys
+for g in json.load(sys.stdin)["data"]["groups"]:
+    if g["name"].startswith("d05"):
+        print(g["name"], "avaliado em", g.get("lastEvaluation", "?"))
+        for r in g["rules"]:
+            print("  ", r["name"], r.get("health"), r.get("state"), r.get("lastError", ""))'
+} 2>&1 | tee d05-a-confere-$(hostname -s)-$(date +%F-%H%M).log
+```
+
+### A-desfazer — Tira os alertas (servidor `sabdiia01`, bash)
+
+```bash
+kubectl delete prometheusrule d05-alertas -n vllms
+```
+
 ## Trazer os logs (notebook, PowerShell)
 
 ```powershell
