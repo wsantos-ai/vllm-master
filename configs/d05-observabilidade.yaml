@@ -1,0 +1,64 @@
+# D-05 — Observabilidade do serviço no Prometheus do cluster (PD-38, AC-38). Autorizado pelo administrador em 2026-11-10.
+#
+# Ambiente: §2 do ESTUDO-DE-CASO.md. kube-prometheus-stack-91.3.0 (release "monitoring", operador v0.94.0), que só
+#   coleta ServiceMonitor/PodMonitor com o rótulo release: monitoring, de qualquer namespace (AC-38,
+#   logs-analysis/observabilidade2-sabdiia01-2026-11-10-1544.log). Kong 3.9.4 de código aberto, KIC 3.5.
+# Aplicado pelo Bloco O1 de runbooks/observabilidade-d05.md (o Kong fica em d05-observabilidade-kong.yaml, Bloco O2). Tudo em "vllms", com
+#   decisao=d-05; nada do administrador é editado. Desfazer: Bloco O-desfazer.
+#
+# Campos conferidos em 2026-11-10:
+#   - ServiceMonitor (endpoints[].port/path/interval, namespaceSelector.matchNames, selector.matchLabels): os
+#     ServiceMonitor que já existem no cluster (log acima);
+#   - Portas: DCGM "gpu-metrics" 9400 (Service nvidia-dcgm-exporter); vLLM "http" 8000 (Service vllm-server).
+#
+# Risco assumido: a NetworkPolicy d05-vllm-metricas abre a porta 8000 do vLLM a todo o namespace "monitoring"
+#   (Prometheus, Grafana, Alertmanager). Política de rede não filtra caminho: dali, POST /invocations gera texto sem
+#   chave (AC-32). Só o administrador tem pods nesse namespace.
+
+# --- O1: GPU (dcgm-exporter do GPU Operator) ---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: d05-gpu-dcgm
+  namespace: vllms
+  labels: {decisao: d-05, release: monitoring}
+spec:
+  namespaceSelector:
+    matchNames: [gpu-operator]
+  selector:
+    matchLabels: {app: nvidia-dcgm-exporter}
+  endpoints:
+  - {port: gpu-metrics, path: /metrics, interval: 15s}
+---
+# --- O1: vLLM (/metrics de cada réplica; sem chave na v0.19.1, AC-32) ---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: d05-vllm
+  namespace: vllms
+  labels: {decisao: d-05, release: monitoring}
+spec:
+  namespaceSelector:
+    matchNames: [vllms]
+  selector:
+    matchLabels: {app: vllm-server, decisao: d-05}
+  endpoints:
+  - {port: http, path: /metrics, interval: 15s}
+---
+# Soma-se a vllm-server-so-kong (políticas de entrada se somam): o Prometheus chega à porta 8000.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: d05-vllm-metricas
+  namespace: vllms
+  labels: {decisao: d-05}
+spec:
+  podSelector:
+    matchLabels: {app: vllm-server}
+  policyTypes: [Ingress]
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels: {kubernetes.io/metadata.name: monitoring}
+    ports:
+    - {protocol: TCP, port: 8000}

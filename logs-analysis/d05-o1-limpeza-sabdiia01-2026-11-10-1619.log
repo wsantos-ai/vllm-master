@@ -1,0 +1,21 @@
+== sabdiia01  2026-11-10T16:19:04-03:00  D-05 O1-limpeza: remove dcgm-exporter de default
+NAME                    	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART              	APP VERSION
+dcgm-exporter-1793243508	default  	1       	2026-10-29 00:11:48.808912897 -0300 -03	deployed	dcgm-exporter-2.4.0	2.4.0      
+### 1. cópia antes   16:19:04
+   1 dcgm-default-values-2026-11-10-1619.yaml
+ 178 dcgm-default-manifest-2026-11-10-1619.yaml
+ 179 total
+      1 kind: DaemonSet
+      1 kind: Service
+      1 kind: ServiceAccount
+      1 kind: ServiceMonitor
+### 2. desinstala   16:19:04
+release "dcgm-exporter-1793243508" uninstalled
+### 3. sobrou algo?   16:19:04
+No resources found in default namespace.
+### 4. a GPU segue coletada?   16:19:20
+NAME                         READY   STATUS    RESTARTS      AGE   IP               NODE        NOMINATED NODE   READINESS GATES
+nvidia-dcgm-exporter-2x9sr   1/1     Running   4 (13d ago)   54d   10.244.50.152    sabdiia03   <none>           <none>
+nvidia-dcgm-exporter-lfnzq   1/1     Running   6 (13d ago)   54d   10.244.182.137   sabdiia02   <none>           <none>
+nvidia-dcgm-exporter-xglh6   1/1     Running   7 (13d ago)   54d   10.244.179.99    sabdiia01   <none>           <none>
+},"value":[1794338360.228,"3"]}]}}

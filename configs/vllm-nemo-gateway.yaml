@@ -190,7 +190,8 @@ config:
 # Sem consumidor, nenhuma chave vale: até o Bloco C rodar, tudo dá 401. A lista de IPs não fica aqui:
 # fica em cada KongConsumer (Bloco C), para a chave de um ator não valer dos IPs de outro.
 # A anotação konghq.com/plugins abaixo é a do G1. O Bloco C a regrava, e acrescenta d05-ai-decorator e
-# d05-ai-guard (configs/d05-ia-kong.yaml, Bloco H, PD-37) se existirem: depois de um G1, rode o C.
+# d05-ai-guard (configs/d05-ia-kong.yaml, Bloco H, PD-37) e d05-prometheus (configs/d05-observabilidade-kong.yaml,
+# Bloco O2 de runbooks/observabilidade-d05.md, PD-38) se existirem: depois de um G1, rode o C.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

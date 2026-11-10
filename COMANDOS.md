@@ -619,6 +619,114 @@ mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
 } 2>&1 | tee kong-plugins-$(hostname -s)-$(date +%F-%H%M).log
 ```
 
+### Que observabilidade o *cluster* já tem? (PD-38)
+
+Servidor `sabdiia01` (ou `sabdiia02`; o `kubectl` falha em 03), bash com `kubectl`. Só lê, não muda nada. Confere o que
+está de pé em `monitoring` (kube-prometheus e Grafana, vistos em 2026-09-28 e 2026-10-27), o que o Prometheus escolhe
+coletar (seletores de `ServiceMonitor`/`PodMonitor`), os *jobs* que ele coleta hoje e se a GPU (DCGM) está entre eles,
+a porta de status do Kong e se ela já serve `/metrics`, e as `NetworkPolicy` de `vllms` e `monitoring`. As consultas ao
+Prometheus e ao Kong passam pelo *proxy* da API do Kubernetes (`kubectl get --raw`), porque as imagens não têm `curl`.
+`[executado: 2026-11-10]` ([log](logs-analysis/observabilidade-sabdiia01-2026-11-10-1537.log)): tudo `Running`, Grafana em `LoadBalancer` `192.168.50.162:80`, sem PVC em `monitoring`; **nenhum *job* de GPU, Kong ou vLLM** no Prometheus; a porta 8100 do Kong já serve `/metrics`. A etapa 4 saiu vazia (o `grep` procurava o recuo de um objeto, mas a saída é uma lista); está refeita na 2ª parte, abaixo.
+
+O que espero ver `[hipótese]`: Prometheus, Alertmanager e Grafana `Running`; `ServiceMonitor` do `dcgm-exporter` e
+*job* dele em `up`; nenhum *job* do vLLM (a `NetworkPolicy` `vllm-server-so-kong` só deixa entrar o `kong`); porta de
+status do Kong sem `/metrics` (404), porque não há *plugin* `prometheus`; seletor de `ServiceMonitor` exigindo o
+rótulo `release: monitoring` (padrão do *chart* kube-prometheus-stack).
+
+```bash
+mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
+{ echo "== $(hostname -s)  $(date -Is)  PD-38: inventário de observabilidade (só leitura)"
+  echo "--- 1. monitoring: pods, serviços, ingress, discos"
+  kubectl get pods,svc,ingress,pvc -n monitoring -o wide
+  echo "--- 2. releases helm"
+  helm list -A 2>&1 | grep -Ei '^NAME|monitor|prometheus|grafana|kong|gpu' || true
+  echo "--- 3. CRDs do Prometheus Operator e objetos de coleta"
+  kubectl get crd | grep monitoring.coreos.com
+  kubectl get servicemonitors,podmonitors -A
+  echo "--- 4. Prometheus: seletores, retenção, disco"
+  kubectl get prometheus -n monitoring -o yaml \
+    | grep -E -A3 '^  (serviceMonitor|podMonitor)(Namespace)?Selector:|^  retention|^  storage:'
+  echo "--- 5. o que o Prometheus coleta hoje (jobs em up) e se vê a GPU"
+  S=$(kubectl get svc -n monitoring -o name | grep -- '-prometheus$' | head -1 | cut -d/ -f2)
+  echo "svc: $S"
+  B="/api/v1/namespaces/monitoring/services/$S:9090/proxy/api/v1/query?query="
+  kubectl get --raw "${B}count%20by%20(job)%20(up)" | tr '{' '\n' | grep job
+  kubectl get --raw "${B}count(DCGM_FI_DEV_GPU_UTIL)" | tr '{' '\n' | grep value
+  echo "--- 6. dcgm-exporter"
+  kubectl get pods,svc -n gpu-operator -o wide | grep -Ei '^NAME|dcgm'
+  echo "--- 7. Kong: serviços, portas do proxy, status/tracing, plugins globais"
+  kubectl get svc -n kong
+  P=$(kubectl get pod -n kong -o name | grep gateway | head -1); echo "pod: $P"
+  kubectl get $P -n kong -o \
+    jsonpath='{range .spec.containers[?(@.name=="proxy")].ports[*]}{.name}={.containerPort} {end}'
+  echo
+  kubectl get $P -n kong \
+    -o jsonpath='{range .spec.containers[?(@.name=="proxy")].env[*]}{.name}={.value}{"\n"}{end}' \
+    | grep -E 'STATUS_LISTEN|TRACING' || echo "sem KONG_STATUS_LISTEN nem KONG_TRACING_*"
+  kubectl get kongclusterplugins -A 2>&1
+  SP=$(kubectl get $P -n kong -o \
+    jsonpath='{.spec.containers[?(@.name=="proxy")].ports[?(@.name=="status")].containerPort}')
+  echo "porta de status: ${SP:-nenhuma}"
+  [ -n "$SP" ] && kubectl get --raw \
+    "/api/v1/namespaces/kong/pods/${P#pod/}:$SP/proxy/metrics" 2>&1 | head -5
+  echo "--- 8. NetworkPolicy e serviços do vLLM"
+  kubectl get networkpolicy -n vllms; kubectl get networkpolicy -n monitoring
+  kubectl get svc -n vllms --show-labels
+} 2>&1 | tee observabilidade-$(hostname -s)-$(date +%F-%H%M).log
+```
+
+### Por que o Prometheus não coleta a GPU? (PD-38, 2ª parte)
+
+Servidor `sabdiia01`, bash com `kubectl`. Só lê. O 1º inventário ([log](logs-analysis/observabilidade-sabdiia01-2026-11-10-1537.log)) mostrou dois
+`ServiceMonitor` de GPU (`default/dcgm-exporter-1793243508`, de 12 dias, e `gpu-operator/gpu-operator`) e nenhum *job*
+de DCGM no Prometheus. Este confere os seletores do Prometheus, os rótulos dos dois `ServiceMonitor` e do `Service` do
+DCGM, os *jobs* da configuração gerada, os alvos com erro, se o *exporter* responde, os discos do Prometheus e do
+Grafana e os nomes das métricas que a porta de status do Kong já serve. `[executado: 2026-11-10]` ([log](logs-analysis/observabilidade2-sabdiia01-2026-11-10-1544.log): hipóteses confirmadas, AC-38; o Kong serve 8 métricas do nó)
+
+O que espero ver `[hipótese]`: `serviceMonitorSelector` exigindo `release: monitoring`, rótulo que os dois
+`ServiceMonitor` de GPU não têm; nenhum *job* de DCGM na configuração; o *exporter* respondendo `DCGM_FI_DEV_*`;
+Prometheus e Grafana em `emptyDir` (não há PVC em `monitoring`); no Kong, só métricas do nó, sem `kong_http_requests`.
+
+```bash
+mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
+{ echo "== $(hostname -s)  $(date -Is)  PD-38 (2): coleta da GPU e discos (só leitura)"
+  echo "--- 1. Prometheus: seletores, retenção, disco"
+  PR=$(kubectl get prometheus -n monitoring -o name | head -1); echo "$PR"
+  kubectl get $PR -n monitoring -o yaml | grep -E -A4 \
+    '^  (serviceMonitor|podMonitor)(Namespace)?Selector|^  retention|^  storage'
+  echo "--- 2. os dois ServiceMonitor de GPU"
+  kubectl get servicemonitor -n default dcgm-exporter-1793243508 -o yaml
+  kubectl get servicemonitor -n gpu-operator gpu-operator -o yaml
+  echo "--- 3. Service do DCGM (rótulos e porta)"
+  kubectl get svc -n gpu-operator nvidia-dcgm-exporter -o yaml | sed '/^status:/,$d'
+  echo "--- 4. jobs na configuração gerada e alvos com erro"
+  S=monitoring-kube-prometheus-prometheus
+  B="/api/v1/namespaces/monitoring/services/$S:9090/proxy/api/v1"
+  kubectl get --raw "$B/status/config" | tr '\\' '\n' | grep -o 'job_name: .*' | sort -u
+  kubectl get --raw "$B/targets?state=active" | tr ',' '\n' \
+    | grep -E '"(scrapePool|health)"' | paste - - | sort | uniq -c
+  echo "--- 5. o exporter responde?"
+  kubectl get --raw \
+    "/api/v1/namespaces/gpu-operator/services/nvidia-dcgm-exporter:9400/proxy/metrics" \
+    | grep -E '^DCGM_FI_DEV_(GPU_UTIL|SM_CLOCK|GPU_TEMP|POWER_USAGE)\{' | cut -c1-160
+  echo "--- 6. volumes do Prometheus e do Grafana"
+  J='{range .spec.template.spec.volumes[*]}{.name}: {.persistentVolumeClaim}{.emptyDir}{"\n"}{end}'
+  for O in $(kubectl get statefulset -n monitoring -o name | grep prometheus); do
+    echo "$O"; kubectl get $O -n monitoring -o jsonpath="$J"; done
+  kubectl get deploy -n monitoring monitoring-grafana -o jsonpath="$J"
+  echo "--- 7. métricas que a porta de status do Kong serve (só os nomes)"
+  P=$(kubectl get pod -n kong -o name | grep gateway | head -1)
+  kubectl get --raw "/api/v1/namespaces/kong/pods/${P#pod/}:8100/proxy/metrics" \
+    | grep '^# TYPE' | cut -d' ' -f3 | sort -u
+  echo "--- 8. NetworkPolicy no cluster inteiro"
+  kubectl get networkpolicy -A
+} 2>&1 | tee observabilidade2-$(hostname -s)-$(date +%F-%H%M).log
+```
+
+### Ligar GPU, vLLM e Kong ao Prometheus do *cluster* (PD-38)
+
+Servidor `sabdiia01`, bash. Blocos O1 (GPU e vLLM), O2 (Kong) e O-desfazer em [runbooks/observabilidade-d05.md](runbooks/observabilidade-d05.md). Comandos novos: `kubectl apply` de `ServiceMonitor`/`PodMonitor` com `release: monitoring` (AC-38); alvos do Prometheus por `kubectl get --raw .../api/v1/targets?state=active`; nomes de métricas por `.../api/v1/label/__name__/values`. O1 `[executado: 2026-11-10]` ([log](logs-analysis/d05-o1-sabdiia01-2026-11-10-1559.log): GPU sim, vLLM não); O1-diag e O1-limpeza `[executado: 2026-11-10]` (*job* do vLLM criado, conferência cedo demais; `dcgm-exporter` de `default` removido); O1-confere `[executado: 2026-11-10]` ([log](logs-analysis/d05-o1-confere-sabdiia01-2026-11-10-1630.log): vLLM com 3 alvos `up`, AC-39); O2 `[executado: 2026-11-10]` ([log](logs-analysis/d05-o2-sabdiia01-2026-11-10-1634.log): Kong `up`, métricas por requisição); *streaming* OK depois do O2 ([teste](logs-analysis/kong-ia-wsantosdell-2026-11-10-1639.log), AC-40). Disco local do Prometheus: P0 (pasta em 03, `chown 1000:2000`, `chcon -t container_file_t`) e P1 (PV `local` e `helm upgrade monitoring kube-prometheus-stack --version 91.3.0 --reuse-values -f ...`) `[executado: 2026-11-10]`: P0 OK, P1 falhou por conflito com o Freelens ([log](logs-analysis/d05-p1-sabdiia01-2026-11-10-1701.log)). P1-diag (`kubectl diff -f` do `helm get manifest --revision 1`, `--show-managed-fields`, `helm pull --untar`) `[executado: 2026-11-10]` ([log](logs-analysis/d05-p1-diag-sabdiia01-2026-11-10-1707.log), AC-41); P1b `[executado: 2026-11-10]` ([log](logs-analysis/d05-p1b-sabdiia01-2026-11-10-1713.log): revisão 3, disco local em uso).
+
 ### Ver o Kong Manager (painel do administrador; só leitura)
 
 O painel (`kong-gateway-manager`, *NodePort* 32492/32616) abre, mas vem sem dados: o `kconfig.js` dele tem

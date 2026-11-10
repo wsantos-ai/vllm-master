@@ -1,0 +1,100 @@
+== sabdiia01  2026-11-10T15:37:28-03:00  PD-38: inventário de observabilidade (só leitura)
+--- 1. monitoring: pods, serviços, ingress, discos
+NAME                                                         READY   STATUS    RESTARTS       AGE   IP               NODE        NOMINATED NODE   READINESS GATES
+pod/alertmanager-monitoring-kube-prometheus-alertmanager-0   2/2     Running   2 (13d ago)    14d   10.244.50.173    sabdiia03   <none>           <none>
+pod/monitoring-grafana-df5bc6c55-p9tk5                       3/3     Running   13 (13d ago)   14d   10.244.50.148    sabdiia03   <none>           <none>
+pod/monitoring-kube-prometheus-operator-6746f685b-zhx5t      1/1     Running   1 (13d ago)    14d   10.244.50.134    sabdiia03   <none>           <none>
+pod/monitoring-kube-state-metrics-78fd56fc4b-9lpmn           1/1     Running   8 (13d ago)    14d   10.244.50.180    sabdiia03   <none>           <none>
+pod/monitoring-prometheus-node-exporter-5glk4                1/1     Running   5 (13d ago)    14d   192.168.50.151   sabdiia01   <none>           <none>
+pod/monitoring-prometheus-node-exporter-5lthk                1/1     Running   1 (13d ago)    14d   192.168.50.150   sabdiia03   <none>           <none>
+pod/monitoring-prometheus-node-exporter-lpr4x                1/1     Running   3 (13d ago)    14d   192.168.50.152   sabdiia02   <none>           <none>
+pod/prometheus-monitoring-kube-prometheus-prometheus-0       2/2     Running   2 (13d ago)    14d   10.244.50.153    sabdiia03   <none>           <none>
+
+NAME                                              TYPE           CLUSTER-IP       EXTERNAL-IP      PORT(S)                      AGE   SELECTOR
+service/alertmanager-operated                     ClusterIP      None             <none>           9093/TCP,9094/TCP,9094/UDP   57d   app.kubernetes.io/name=alertmanager
+service/monitoring-grafana                        LoadBalancer   10.110.254.9     192.168.50.162   80:30351/TCP                 57d   app.kubernetes.io/instance=monitoring,app.kubernetes.io/name=grafana
+service/monitoring-kube-prometheus-alertmanager   ClusterIP      10.100.248.39    <none>           9093/TCP,8080/TCP            57d   alertmanager=monitoring-kube-prometheus-alertmanager,app.kubernetes.io/name=alertmanager
+service/monitoring-kube-prometheus-operator       ClusterIP      10.100.55.58     <none>           443/TCP                      57d   app=kube-prometheus-stack-operator,release=monitoring
+service/monitoring-kube-prometheus-prometheus     ClusterIP      10.107.158.112   <none>           9090/TCP,8080/TCP            57d   app.kubernetes.io/name=prometheus,operator.prometheus.io/name=monitoring-kube-prometheus-prometheus
+service/monitoring-kube-state-metrics             ClusterIP      10.99.59.31      <none>           8080/TCP                     57d   app.kubernetes.io/instance=monitoring,app.kubernetes.io/name=kube-state-metrics
+service/monitoring-prometheus-node-exporter       ClusterIP      10.100.160.52    <none>           9100/TCP                     57d   app.kubernetes.io/instance=monitoring,app.kubernetes.io/name=prometheus-node-exporter
+service/prometheus-operated                       ClusterIP      None             <none>           9090/TCP                     57d   app.kubernetes.io/name=prometheus
+--- 2. releases helm
+NAME                    	NAMESPACE   	REVISION	UPDATED                                	STATUS  	CHART                       	APP VERSION
+gpu-operator            	gpu-operator	1       	2026-09-17 16:00:02.360431523 -0300 -03	deployed	gpu-operator-v25.10.1       	v25.10.1   
+kong                    	kong        	2       	2026-11-07 21:02:54.712599448 -0300 -03	deployed	ingress-0.24.0              	3.9        
+monitoring              	monitoring  	1       	2026-09-14 14:37:01.258533662 -0300 -03	deployed	kube-prometheus-stack-91.3.0	v0.94.0    
+--- 3. CRDs do Prometheus Operator e objetos de coleta
+alertmanagerconfigs.monitoring.coreos.com                Namespaced   v1alpha1(storage)          2026-09-14T17:36:57Z
+alertmanagers.monitoring.coreos.com                      Namespaced   v1(storage)                2026-09-14T17:36:57Z
+podmonitors.monitoring.coreos.com                        Namespaced   v1(storage)                2026-09-14T17:36:58Z
+probes.monitoring.coreos.com                             Namespaced   v1(storage)                2026-09-14T17:36:58Z
+prometheusagents.monitoring.coreos.com                   Namespaced   v1alpha1(storage)          2026-09-14T17:36:58Z
+prometheuses.monitoring.coreos.com                       Namespaced   v1(storage)                2026-09-14T17:36:59Z
+prometheusrules.monitoring.coreos.com                    Namespaced   v1(storage)                2026-09-14T17:36:59Z
+scrapeconfigs.monitoring.coreos.com                      Namespaced   v1alpha1(storage)          2026-09-14T17:37:00Z
+servicemonitors.monitoring.coreos.com                    Namespaced   v1(storage)                2026-09-14T17:37:00Z
+thanosrulers.monitoring.coreos.com                       Namespaced   v1(storage)                2026-09-14T17:37:01Z
+NAMESPACE      NAME                                                                                      AGE
+default        servicemonitor.monitoring.coreos.com/dcgm-exporter-1793243508                             12d
+gpu-operator   servicemonitor.monitoring.coreos.com/gpu-operator                                         53d
+monitoring     servicemonitor.monitoring.coreos.com/monitoring-grafana                                   57d
+monitoring     servicemonitor.monitoring.coreos.com/monitoring-kube-prometheus-alertmanager              57d
+monitoring     servicemonitor.monitoring.coreos.com/monitoring-kube-prometheus-apiserver                 57d
+monitoring     servicemonitor.monitoring.coreos.com/monitoring-kube-prometheus-coredns                   57d
+monitoring     servicemonitor.monitoring.coreos.com/monitoring-kube-prometheus-kube-controller-manager   57d
+monitoring     servicemonitor.monitoring.coreos.com/monitoring-kube-prometheus-kube-etcd                 57d
+monitoring     servicemonitor.monitoring.coreos.com/monitoring-kube-prometheus-kube-proxy                57d
+monitoring     servicemonitor.monitoring.coreos.com/monitoring-kube-prometheus-kube-scheduler            57d
+monitoring     servicemonitor.monitoring.coreos.com/monitoring-kube-prometheus-kubelet                   57d
+monitoring     servicemonitor.monitoring.coreos.com/monitoring-kube-prometheus-operator                  57d
+monitoring     servicemonitor.monitoring.coreos.com/monitoring-kube-prometheus-prometheus                57d
+monitoring     servicemonitor.monitoring.coreos.com/monitoring-kube-state-metrics                        57d
+monitoring     servicemonitor.monitoring.coreos.com/monitoring-prometheus-node-exporter                  57d
+--- 4. Prometheus: seletores, retenção, disco
+--- 5. o que o Prometheus coleta hoje (jobs em up) e se vê a GPU
+svc: monitoring-kube-prometheus-prometheus
+"job":"kubelet"},"value":[1794335849.692,"9"]},
+"job":"apiserver"},"value":[1794335849.692,"3"]},
+"job":"kube-etcd"},"value":[1794335849.692,"3"]},
+"job":"node-exporter"},"value":[1794335849.692,"3"]},
+"job":"kube-controller-manager"},"value":[1794335849.692,"3"]},
+"job":"kube-scheduler"},"value":[1794335849.692,"3"]},
+"job":"kube-proxy"},"value":[1794335849.692,"3"]},
+"job":"monitoring-kube-prometheus-operator"},"value":[1794335849.692,"1"]},
+"job":"monitoring-kube-prometheus-alertmanager"},"value":[1794335849.692,"2"]},
+"job":"coredns"},"value":[1794335849.692,"2"]},
+"job":"monitoring-kube-prometheus-prometheus"},"value":[1794335849.692,"2"]},
+"job":"kube-state-metrics"},"value":[1794335849.692,"1"]},
+"job":"monitoring-grafana"},"value":[1794335849.692,"1"]}]}}
+--- 6. dcgm-exporter
+NAME                                                              READY   STATUS      RESTARTS        AGE   IP               NODE        NOMINATED NODE   READINESS GATES
+pod/nvidia-dcgm-exporter-2x9sr                                    1/1     Running     4 (13d ago)     53d   10.244.50.152    sabdiia03   <none>           <none>
+pod/nvidia-dcgm-exporter-lfnzq                                    1/1     Running     6 (13d ago)     53d   10.244.182.137   sabdiia02   <none>           <none>
+pod/nvidia-dcgm-exporter-xglh6                                    1/1     Running     7 (13d ago)     53d   10.244.179.99    sabdiia01   <none>           <none>
+NAME                           TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE   SELECTOR
+service/nvidia-dcgm-exporter   ClusterIP   10.110.84.149    <none>        9400/TCP   53d   app=nvidia-dcgm-exporter
+--- 7. Kong: serviços, portas do proxy, status/tracing, plugins globais
+NAME                                 TYPE           CLUSTER-IP       EXTERNAL-IP      PORT(S)                         AGE
+kong-controller-metrics              ClusterIP      10.108.204.104   <none>           10255/TCP,10254/TCP             57d
+kong-controller-validation-webhook   ClusterIP      10.100.45.254    <none>           443/TCP                         57d
+kong-gateway-admin                   ClusterIP      None             <none>           8444/TCP                        57d
+kong-gateway-manager                 NodePort       10.99.6.196      <none>           8002:32492/TCP,8445:32616/TCP   57d
+kong-gateway-proxy                   LoadBalancer   10.98.30.231     192.168.50.161   80:30791/TCP,443:30659/TCP      57d
+pod: pod/kong-gateway-5f88dd7bcd-mpmk8
+admin-tls=8444 proxy=8000 proxy-tls=8443 status=8100 
+KONG_STATUS_LISTEN=0.0.0.0:8100, [::]:8100
+No resources found
+porta de status: 8100
+# HELP kong_datastore_reachable Datastore reachable from Kong, 0 is unreachable
+# TYPE kong_datastore_reachable gauge
+kong_datastore_reachable 1
+# HELP kong_memory_lua_shared_dict_bytes Allocated slabs in bytes in a shared_dict
+# TYPE kong_memory_lua_shared_dict_bytes gauge
+--- 8. NetworkPolicy e serviços do vLLM
+NAME                  POD-SELECTOR      AGE
+vllm-server-so-kong   app=vllm-server   2d18h
+No resources found in monitoring namespace.
+NAME              TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE     LABELS
+vllm-llama31-8b   ClusterIP   10.104.155.104   <none>        8002/TCP   12d     <none>
+vllm-server       ClusterIP   10.106.142.203   <none>        8000/TCP   2d18h   app=vllm-server,decisao=d-05

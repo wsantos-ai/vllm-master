@@ -1,0 +1,59 @@
+== sabdiia01  2026-11-10T15:59:21-03:00  D-05 O1: GPU e vLLM no Prometheus (PD-38)
+dc84ea5ff961c4b97b92b362a7d5be75ebe29b6ee0de1f22bc87c709a8a59163  d05-observabilidade.yaml
+### 0. o chart dcgm-exporter de default tem pods?   15:59:21
+NAME                    	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART              	APP VERSION
+dcgm-exporter-1793243508	default  	1       	2026-10-29 00:11:48.808912897 -0300 -03	deployed	dcgm-exporter-2.4.0	2.4.0      
+NAME                                 READY   STATUS             RESTARTS           AGE   IP               NODE        NOMINATED NODE   READINESS GATES
+pod/dcgm-exporter-1793243508-mfkwc   0/1     CrashLoopBackOff   3526 (4m58s ago)   12d   10.244.50.157    sabdiia03   <none>           <none>
+pod/dcgm-exporter-1793243508-sfh9w   0/1     CrashLoopBackOff   3547 (2m48s ago)   12d   10.244.182.174   sabdiia02   <none>           <none>
+pod/dcgm-exporter-1793243508-zr4qn   0/1     CrashLoopBackOff   3545 (4m27s ago)   12d   10.244.179.65    sabdiia01   <none>           <none>
+
+NAME                               TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE   SELECTOR
+service/dcgm-exporter-1793243508   ClusterIP   10.108.1.223   <none>        9400/TCP   12d   app.kubernetes.io/instance=dcgm-exporter-1793243508,app.kubernetes.io/name=dcgm-exporter
+
+NAME                                      DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE   CONTAINERS   IMAGES                                                     SELECTOR
+daemonset.apps/dcgm-exporter-1793243508   3         3         0       3            0           <none>          12d   exporter     nvcr.io/nvidia/k8s/dcgm-exporter:2.2.9-2.4.0-ubuntu18.04   app.kubernetes.io/component=dcgm-exporter,app.kubernetes.io/instance=dcgm-exporter-1793243508,app.kubernetes.io/name=dcgm-exporter
+### 1. validação no servidor, sem aplicar   15:59:22
+servicemonitor.monitoring.coreos.com/d05-gpu-dcgm created (server dry run)
+servicemonitor.monitoring.coreos.com/d05-vllm created (server dry run)
+networkpolicy.networking.k8s.io/d05-vllm-metricas created (server dry run)
+### 2. aplica   15:59:22
+servicemonitor.monitoring.coreos.com/d05-gpu-dcgm created
+servicemonitor.monitoring.coreos.com/d05-vllm created
+networkpolicy.networking.k8s.io/d05-vllm-metricas created
+NAME                                                AGE
+servicemonitor.monitoring.coreos.com/d05-gpu-dcgm   0s
+servicemonitor.monitoring.coreos.com/d05-vllm       0s
+
+NAME                                                  POD-SELECTOR      AGE
+networkpolicy.networking.k8s.io/d05-vllm-metricas     app=vllm-server   0s
+networkpolicy.networking.k8s.io/vllm-server-so-kong   app=vllm-server   2d18h
+### 3. o Prometheus coleta? (espera 2 min pela recarga)   15:59:22
+      3 "scrapePool":"serviceMonitor/vllms/d05-gpu-dcgm/0"	"health":"up"
+      1 "lastError":"Get \"http://192.168.50.150:10249/metrics\": dial tcp 192.168.50.150:10249: connect: connection refused"
+      1 "lastError":"Get \"http://192.168.50.150:2381/metrics\": dial tcp 192.168.50.150:2381: connect: connection refused"
+      1 "lastError":"Get \"http://192.168.50.151:10249/metrics\": dial tcp 192.168.50.151:10249: connect: connection refused"
+      1 "lastError":"Get \"http://192.168.50.151:2381/metrics\": dial tcp 192.168.50.151:2381: connect: connection refused"
+      1 "lastError":"Get \"http://192.168.50.152:10249/metrics\": dial tcp 192.168.50.152:10249: connect: connection refused"
+},"value":[1794337282.926,"3"]}]}}
+--- nomes das métricas do vLLM e da GPU
+"DCGM_FI_DEV_DEC_UTIL"
+"DCGM_FI_DEV_ENC_UTIL"
+"DCGM_FI_DEV_FB_FREE"
+"DCGM_FI_DEV_FB_RESERVED"
+"DCGM_FI_DEV_FB_USED"
+"DCGM_FI_DEV_GPU_TEMP"
+"DCGM_FI_DEV_GPU_UTIL"
+"DCGM_FI_DEV_MEMORY_TEMP"
+"DCGM_FI_DEV_MEM_CLOCK"
+"DCGM_FI_DEV_MEM_COPY_UTIL"
+"DCGM_FI_DEV_PCIE_REPLAY_COUNTER"
+"DCGM_FI_DEV_POWER_USAGE"
+"DCGM_FI_DEV_SM_CLOCK"
+"DCGM_FI_DEV_TOTAL_ENERGY_CONSUMPTION"
+"DCGM_FI_DEV_VGPU_LICENSE_STATUS"
+"DCGM_FI_PROF_DRAM_ACTIVE"
+"DCGM_FI_PROF_GR_ENGINE_ACTIVE"
+"DCGM_FI_PROF_PCIE_RX_BYTES"
+"DCGM_FI_PROF_PCIE_TX_BYTES"
+"DCGM_FI_PROF_PIPE_TENSOR_ACTIVE"

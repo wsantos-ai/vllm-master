@@ -779,9 +779,9 @@ EOF
   done
 
   echo "### 3. a rota: chave e limite (a lista de IPs fica em cada consumidor)   $(date +%T)"
-  # os plugins de IA do Bloco H (PD-37) seguem na rota se existirem; sem isto, este bloco os tiraria
+  # os plugins do Bloco H (PD-37) e do O2 (PD-38) seguem na rota se existirem; sem isto, este bloco os tiraria
   PLUGS=d05-key-auth,d05-rate-limit
-  for PI in d05-ai-decorator d05-ai-guard; do
+  for PI in d05-ai-decorator d05-ai-guard d05-prometheus; do
     kubectl get kongplugin $PI -n $NS >/dev/null 2>&1 && PLUGS=$PLUGS,$PI
   done
   kubectl annotate ingress vllm-server -n $NS konghq.com/plugins=$PLUGS --overwrite

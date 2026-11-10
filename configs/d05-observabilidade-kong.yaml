@@ -1,0 +1,40 @@
+# D-05 — Kong no Prometheus do cluster (PD-38, AC-38). Autorizado pelo administrador em 2026-11-10.
+#
+# Aplicado pelo Bloco O2 de runbooks/observabilidade-d05.md, que liga d05-prometheus à rota (anotação
+#   konghq.com/plugins do Ingress vllm-server; o Bloco C o mantém). Vale para TODAS as aplicações e atores da rota.
+# O Prometheus só coleta PodMonitor com release: monitoring (AC-38). Kong 3.9.4 de código aberto, KIC 3.5.
+# Campos conferidos em 2026-11-10: PodMonitor (podMetricsEndpoints[].port) no exemplo do prometheus-operator
+#   v0.94.0 [F-050]; plugin prometheus no schema da tag 3.9.0 [F-049], todas as opções false por padrão.
+#   Porta "status" 8100 do contêiner proxy (KONG_STATUS_LISTEN) e rótulos do pod app.kubernetes.io/name=gateway,
+#   app.kubernetes.io/instance=kong (logs-analysis/observabilidade-sabdiia01-2026-11-10-1537.log e logs d05-*).
+# Sem o plugin, a porta 8100 já serve 8 métricas do nó (AC-38); com ele, requisições por ator, código e latência.
+# Desfazer: Bloco O-desfazer.
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: d05-kong
+  namespace: vllms
+  labels: {decisao: d-05, release: monitoring}
+spec:
+  namespaceSelector:
+    matchNames: [kong]
+  selector:
+    matchLabels: {app.kubernetes.io/name: gateway, app.kubernetes.io/instance: kong}
+  podMetricsEndpoints:
+  - {port: status, path: /metrics, interval: 15s}
+---
+# Roda depois da resposta (fase de log) e não mexe no corpo; mesmo assim, teste de streaming antes e depois (AC-37).
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: d05-prometheus
+  namespace: vllms
+  labels: {decisao: d-05}
+plugin: prometheus
+config:
+  per_consumer: true
+  status_code_metrics: true
+  latency_metrics: true
+  bandwidth_metrics: true
+  upstream_health_metrics: false
+  ai_metrics: false

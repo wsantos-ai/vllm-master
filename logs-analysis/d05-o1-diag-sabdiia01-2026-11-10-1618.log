@@ -1,0 +1,41 @@
+== sabdiia01  2026-11-10T16:18:13-03:00  D-05 O1-diag: vLLM fora do Prometheus (só leitura)
+### 1. o ServiceMonitor, com estado
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"monitoring.coreos.com/v1","kind":"ServiceMonitor","metadata":{"annotations":{},"labels":{"decisao":"d-05","release":"monitoring"},"name":"d05-vllm","namespace":"vllms"},"spec":{"endpoints":[{"interval":"15s","path":"/metrics","port":"http"}],"namespaceSelector":{"matchNames":["vllms"]},"selector":{"matchLabels":{"app":"vllm-server","decisao":"d-05"}}}}
+  creationTimestamp: "2026-11-10T18:59:22Z"
+  generation: 1
+  labels:
+    decisao: d-05
+    release: monitoring
+  name: d05-vllm
+  namespace: vllms
+  resourceVersion: "21406518"
+  uid: aa15f083-4e34-4ff7-a258-51205f90a97b
+spec:
+  endpoints:
+  - interval: 15s
+    path: /metrics
+    port: http
+  namespaceSelector:
+    matchNames:
+    - vllms
+  selector:
+    matchLabels:
+      app: vllm-server
+      decisao: d-05
+### 2. o job está na configuração?
+job_name: serviceMonitor/vllms/d05-gpu-dcgm/0
+job_name: serviceMonitor/vllms/d05-vllm/0
+### 3. alvos descartados do d05-vllm (quantos e por quê)
+1
+### 4. portas do Service e das EndpointSlice
+{"app":"vllm-server","decisao":"d-05"}
+[{"name":"http","port":8000,"protocol":"TCP","targetPort":8000}]
+vllm-server-ggf5b [{"name":"http","port":8000,"protocol":"TCP"}] ["10.244.179.112"] ["10.244.182.161"] ["10.244.50.168"]
+### 5. log do operador e do Prometheus (30 min)
+time=2026-11-10T19:00:18.336Z level=INFO source=kubernetes.go:323 msg="Using pod service account via in-cluster config" component="discovery manager scrape" discovery=kubernetes config=serviceMonitor/vllms/d05-gpu-dcgm/0
+time=2026-11-10T19:01:36.480Z level=INFO source=kubernetes.go:323 msg="Using pod service account via in-cluster config" component="discovery manager scrape" discovery=kubernetes config=serviceMonitor/vllms/d05-vllm/0

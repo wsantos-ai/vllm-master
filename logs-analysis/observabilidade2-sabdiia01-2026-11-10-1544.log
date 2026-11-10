@@ -1,0 +1,197 @@
+== sabdiia01  2026-11-10T15:44:05-03:00  PD-38 (2): coleta da GPU e discos (só leitura)
+--- 1. Prometheus: seletores, retenção, disco
+prometheus.monitoring.coreos.com/monitoring-kube-prometheus-prometheus
+  podMonitorNamespaceSelector: {}
+  podMonitorSelector:
+    matchLabels:
+      release: monitoring
+  portName: http-web
+  probeNamespaceSelector: {}
+--
+  retention: 10d
+  routePrefix: /
+  ruleNamespaceSelector: {}
+  ruleSelector:
+    matchLabels:
+--
+  serviceMonitorNamespaceSelector: {}
+  serviceMonitorSelector:
+    matchLabels:
+      release: monitoring
+  shards: 1
+  tsdb:
+--- 2. os dois ServiceMonitor de GPU
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  annotations:
+    meta.helm.sh/release-name: dcgm-exporter-1793243508
+    meta.helm.sh/release-namespace: default
+  creationTimestamp: "2026-10-29T03:11:49Z"
+  generation: 1
+  labels:
+    app.kubernetes.io/component: dcgm-exporter
+    app.kubernetes.io/instance: dcgm-exporter-1793243508
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: dcgm-exporter
+    app.kubernetes.io/version: 2.4.0
+    helm.sh/chart: dcgm-exporter-2.4.0
+  name: dcgm-exporter-1793243508
+  namespace: default
+  resourceVersion: "16599132"
+  uid: f1ae9fcd-5384-4071-b0a2-c80ad885aee8
+spec:
+  endpoints:
+  - interval: 15s
+    path: /metrics
+    port: metrics
+  namespaceSelector:
+    matchNames:
+    - default
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: dcgm-exporter
+      app.kubernetes.io/instance: dcgm-exporter-1793243508
+      app.kubernetes.io/name: dcgm-exporter
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  creationTimestamp: "2026-09-17T19:01:11Z"
+  generation: 1
+  labels:
+    app: gpu-operator
+  name: gpu-operator
+  namespace: gpu-operator
+  ownerReferences:
+  - apiVersion: nvidia.com/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: ClusterPolicy
+    name: cluster-policy
+    uid: 574419c9-cc5c-4584-b454-a16e8de39e11
+  resourceVersion: "974820"
+  uid: 2f179321-de97-404d-90b9-5d52f40489e6
+spec:
+  endpoints:
+  - path: /metrics
+    port: gpu-operator-metrics
+  jobLabel: operator
+  namespaceSelector:
+    matchNames:
+    - gpu-operator
+  selector:
+    matchLabels:
+      app: gpu-operator
+--- 3. Service do DCGM (rótulos e porta)
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/scrape: "true"
+  creationTimestamp: "2026-09-17T19:01:13Z"
+  labels:
+    app: nvidia-dcgm-exporter
+  name: nvidia-dcgm-exporter
+  namespace: gpu-operator
+  ownerReferences:
+  - apiVersion: nvidia.com/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: ClusterPolicy
+    name: cluster-policy
+    uid: 574419c9-cc5c-4584-b454-a16e8de39e11
+  resourceVersion: "974944"
+  uid: baed9fe0-adb8-49f7-acc9-7e6828b10470
+spec:
+  clusterIP: 10.110.84.149
+  clusterIPs:
+  - 10.110.84.149
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: gpu-metrics
+    port: 9400
+    protocol: TCP
+    targetPort: 9400
+  selector:
+    app: nvidia-dcgm-exporter
+  sessionAffinity: None
+  type: ClusterIP
+--- 4. jobs na configuração gerada e alvos com erro
+job_name: serviceMonitor/monitoring/monitoring-grafana/0
+job_name: serviceMonitor/monitoring/monitoring-kube-prometheus-alertmanager/0
+job_name: serviceMonitor/monitoring/monitoring-kube-prometheus-alertmanager/1
+job_name: serviceMonitor/monitoring/monitoring-kube-prometheus-apiserver/0
+job_name: serviceMonitor/monitoring/monitoring-kube-prometheus-coredns/0
+job_name: serviceMonitor/monitoring/monitoring-kube-prometheus-kube-controller-manager/0
+job_name: serviceMonitor/monitoring/monitoring-kube-prometheus-kube-etcd/0
+job_name: serviceMonitor/monitoring/monitoring-kube-prometheus-kubelet/0
+job_name: serviceMonitor/monitoring/monitoring-kube-prometheus-kubelet/1
+job_name: serviceMonitor/monitoring/monitoring-kube-prometheus-kubelet/2
+job_name: serviceMonitor/monitoring/monitoring-kube-prometheus-kube-proxy/0
+job_name: serviceMonitor/monitoring/monitoring-kube-prometheus-kube-scheduler/0
+job_name: serviceMonitor/monitoring/monitoring-kube-prometheus-operator/0
+job_name: serviceMonitor/monitoring/monitoring-kube-prometheus-prometheus/0
+job_name: serviceMonitor/monitoring/monitoring-kube-prometheus-prometheus/1
+job_name: serviceMonitor/monitoring/monitoring-kube-state-metrics/0
+job_name: serviceMonitor/monitoring/monitoring-prometheus-node-exporter/0
+      1 "scrapePool":"serviceMonitor/monitoring/monitoring-grafana/0"	"health":"up"
+      1 "scrapePool":"serviceMonitor/monitoring/monitoring-kube-prometheus-alertmanager/0"	"health":"up"
+      1 "scrapePool":"serviceMonitor/monitoring/monitoring-kube-prometheus-alertmanager/1"	"health":"up"
+      3 "scrapePool":"serviceMonitor/monitoring/monitoring-kube-prometheus-apiserver/0"	"health":"up"
+      2 "scrapePool":"serviceMonitor/monitoring/monitoring-kube-prometheus-coredns/0"	"health":"up"
+      3 "scrapePool":"serviceMonitor/monitoring/monitoring-kube-prometheus-kube-controller-manager/0"	"health":"down"
+      3 "scrapePool":"serviceMonitor/monitoring/monitoring-kube-prometheus-kube-etcd/0"	"health":"down"
+      3 "scrapePool":"serviceMonitor/monitoring/monitoring-kube-prometheus-kubelet/0"	"health":"up"
+      3 "scrapePool":"serviceMonitor/monitoring/monitoring-kube-prometheus-kubelet/1"	"health":"up"
+      3 "scrapePool":"serviceMonitor/monitoring/monitoring-kube-prometheus-kubelet/2"	"health":"up"
+      3 "scrapePool":"serviceMonitor/monitoring/monitoring-kube-prometheus-kube-proxy/0"	"health":"down"
+      3 "scrapePool":"serviceMonitor/monitoring/monitoring-kube-prometheus-kube-scheduler/0"	"health":"down"
+      1 "scrapePool":"serviceMonitor/monitoring/monitoring-kube-prometheus-operator/0"	"health":"up"
+      1 "scrapePool":"serviceMonitor/monitoring/monitoring-kube-prometheus-prometheus/0"	"health":"up"
+      1 "scrapePool":"serviceMonitor/monitoring/monitoring-kube-prometheus-prometheus/1"	"health":"up"
+      1 "scrapePool":"serviceMonitor/monitoring/monitoring-kube-state-metrics/0"	"health":"up"
+      3 "scrapePool":"serviceMonitor/monitoring/monitoring-prometheus-node-exporter/0"	"health":"up"
+--- 5. o exporter responde?
+DCGM_FI_DEV_SM_CLOCK{gpu="0",UUID="GPU-b0bc8fa9-5e1a-ca59-5daf-ad0e7f70dd3e",pci_bus_id="00000000:05:00.0",device="nvidia0",modelName="Tesla V100S-PCIE-32GB",Ho
+DCGM_FI_DEV_GPU_TEMP{gpu="0",UUID="GPU-b0bc8fa9-5e1a-ca59-5daf-ad0e7f70dd3e",pci_bus_id="00000000:05:00.0",device="nvidia0",modelName="Tesla V100S-PCIE-32GB",Ho
+DCGM_FI_DEV_POWER_USAGE{gpu="0",UUID="GPU-b0bc8fa9-5e1a-ca59-5daf-ad0e7f70dd3e",pci_bus_id="00000000:05:00.0",device="nvidia0",modelName="Tesla V100S-PCIE-32GB"
+DCGM_FI_DEV_GPU_UTIL{gpu="0",UUID="GPU-b0bc8fa9-5e1a-ca59-5daf-ad0e7f70dd3e",pci_bus_id="00000000:05:00.0",device="nvidia0",modelName="Tesla V100S-PCIE-32GB",Ho
+--- 6. volumes do Prometheus e do Grafana
+statefulset.apps/alertmanager-monitoring-kube-prometheus-alertmanager
+config-volume: 
+tls-assets: 
+config-out: {"medium":"Memory"}
+web-config: 
+cluster-tls-config: 
+alertmanager-monitoring-kube-prometheus-alertmanager-db: {}
+statefulset.apps/prometheus-monitoring-kube-prometheus-prometheus
+config: 
+tls-assets: 
+config-out: {"medium":"Memory"}
+prometheus-monitoring-kube-prometheus-prometheus-rulefiles-0: 
+prometheus-monitoring-kube-prometheus-prometheus-rulefiles-1: 
+prometheus-monitoring-kube-prometheus-prometheus-rulefiles-2: 
+web-config: 
+prometheus-monitoring-kube-prometheus-prometheus-db: {}
+tmp: {}
+config: 
+storage: {}
+search: {}
+sc-dashboard-volume: {}
+sc-dashboard-provider: 
+sc-datasources-volume: {}
+--- 7. métricas que a porta de status do Kong serve (só os nomes)
+kong_datastore_reachable
+kong_memory_lua_shared_dict_bytes
+kong_memory_lua_shared_dict_total_bytes
+kong_memory_workers_lua_vms_bytes
+kong_nginx_connections_total
+kong_nginx_requests_total
+kong_nginx_timers
+kong_node_info
+--- 8. NetworkPolicy no cluster inteiro
+NAMESPACE   NAME                  POD-SELECTOR      AGE
+vllms       vllm-server-so-kong   app=vllm-server   2d18h

@@ -277,6 +277,10 @@ Os logs de `kubectl logs` do deepseek começam em 09-27: o arranque foi perdido 
 | 2026-11-09 | Teste de *prompt injection* pelo Kong (22 casos × 3, 4 configurações): regras no `system` levam o "fora dos documentos" a 0/12 sem custo; instrução num documento passa em 9-12/12; "repita o que está acima" vaza a mensagem de sistema em todas. A 1ª rodada (14:58) não chegou ao modelo: o AI SDK 7 recusa `system` dentro de `messages` | AC-35 |
 | 2026-11-09 | Simulação do `ai-prompt-guard` (sem chamar o modelo) sobre o teste de injeção: 10 expressões bloqueiam os 12 ataques indiretos vistos, 1 de 12 reformulados e 3 de 15 perguntas legítimas. Kong do *cluster* conferido: `3.9.4` de código aberto, *plugins* `ai-*` presentes, `KONG_DATABASE=off` | AC-36 |
 | 2026-11-09 | Bloco H às 18:30: `ai-prompt-decorator` e `ai-prompt-guard` na rota do vLLM. Pela rota, o *guard* bloqueou o previsto pela simulação, mas a resposta com *streaming* veio 200 e vazia; desfeito às 18:45, o *streaming* voltou | AC-37 |
+| 2026-11-10 | Aberta a PD-38: observabilidade do serviço (vLLM, GPU e Kong) no kube-prometheus e no Grafana que o *cluster* já tem | PD-38 |
+| 2026-11-10 | Inventário de observabilidade: o Prometheus do *cluster* não coleta a GPU (falta o rótulo `release: monitoring` nos `ServiceMonitor` de DCGM) e não tem disco persistente | AC-38 |
+| 2026-11-10 | Bloco O1: a GPU e o vLLM entram no Prometheus do *cluster* (3 + 3 alvos); a 1ª conferência, cedo demais, não viu o vLLM | AC-39 |
+| 2026-11-10 | Bloco O2: *plugin* `prometheus` na rota e Kong no Prometheus; o *streaming* segue OK | AC-40 |
 
 ## 4. Achados
 
@@ -501,6 +505,104 @@ para pelo menos 20 min. Antes de servir a usuários, configure o *reasoning pars
 
 **Validade.** `v0.19.1`, `sabdiia01`, 2026-10-02, duas tentativas, uma geração. Não medido: carga
 concorrente, entrada de imagem, qualidade das respostas em 4 bits, contexto perto de 8192 *tokens*.
+
+### AC-40 — O *plugin* `prometheus` do Kong na rota do vLLM não quebra o *streaming* e dá requisições por ator, código HTTP e latência {#ac-40}
+
+**O que é.** Ao contrário dos `ai-*` (AC-37), o `prometheus` não lê nem reescreve o corpo: ele age no fim da requisição.
+Com ele na rota (Bloco O2: `d05-key-auth,d05-rate-limit,d05-prometheus`), a resposta com *streaming* chegou como sem ele,
+e as outras chamadas deram os mesmos códigos. O Prometheus coleta a porta de status 8100 do Kong pelo `PodMonitor`
+`d05-kong` (alvo `up` em 45 s). O *plugin* acrescenta `kong_http_requests_total`, `kong_request_latency_ms`,
+`kong_kong_latency_ms` e `kong_bandwidth_bytes` às 8 métricas do nó que a porta já servia (AC-38).
+
+**Evidência.** Mesmo teste, sem o *plugin* ([2026-11-09](logs-analysis/kong-ia-wsantosdell-2026-11-09-1846.log)) e com ele ([2026-11-10](logs-analysis/kong-ia-wsantosdell-2026-11-10-1639.log), [O2](logs-analysis/d05-o2-sabdiia01-2026-11-10-1634.log)):
+
+```
+18:46 (sem)  ### 4. streaming ... HTTP 200 em 4.160 s ... | OK
+             resposta: 1º pedaço 0.060 s, total 4.160 s, 122 linhas data:
+16:39 (com)  ### 4. streaming ... HTTP 200 em 3.486 s ... | OK
+             resposta: 1º pedaço 0.064 s, total 3.486 s, 102 linhas data:
+```
+
+Casos 1, 5 e 6 `200` nos dois; 2, 3 e 7 dão "FALHA" nos dois porque esperam os *plugins* de IA retirados no AC-37.
+
+**Regra prática.** *Plugin* que só observa (métricas, logs) pode ir na rota; *plugin* que lê ou muda o corpo (`ai-*`,
+transformadores) não, sem teste. Para qualquer *plugin* novo, o caso 4 de `teste-kong-ia.js` segue obrigatório. Desfazer:
+Bloco O-desfazer de [observabilidade-d05.md](runbooks/observabilidade-d05.md); o Bloco C mantém `d05-prometheus` na rota.
+
+**Validade.** Kong 3.9.4 de código aberto, sem banco, KIC 3.5; `v0.19.1`, Mistral-Nemo 12B; 2026-11-10, do notebook.
+Um teste de cada lado, sem carga: o custo de latência do *plugin* `[não medido]`. Rótulo `consumer` nas métricas
+`[não verificado]`.
+
+### AC-39 — Com dois `ServiceMonitor` do estudo, o Prometheus do *cluster* coleta as 3 GPUs e as 3 réplicas do vLLM a cada 15 s; a `v0.19.1` expõe fila, *KV cache*, TTFT, ITL e preempções {#ac-39}
+
+**O que é.** `d05-gpu-dcgm` (aponta para o DCGM do GPU Operator) e `d05-vllm` (aponta para o `Service` `vllm-server`),
+ambos com `release: monitoring` (AC-38), mais a `NetworkPolicy` `d05-vllm-metricas`, que abre a porta 8000 ao *namespace*
+`monitoring`. Nenhum *pod* reiniciou. A `v0.19.1` expõe, por réplica: requisições rodando e em fila
+(`vllm:num_requests_running`, `vllm:num_requests_waiting`), ocupação do *KV cache* (`vllm:kv_cache_usage_perc`),
+histogramas de tempo até o 1º *token*, entre *tokens*, fila, *prefill* e *decode*, *tokens* de entrada e saída,
+preempções e acertos de *prefix cache*. A GPU traz 20 métricas `DCGM_*` (*clock*, temperatura, potência, memória, uso),
+sem motivo de queda de *clock*. O operador levou até 2 min 14 s para pôr cada objeto novo na configuração (§9).
+
+**Evidência.** ([O1](logs-analysis/d05-o1-sabdiia01-2026-11-10-1559.log), [O1-diag](logs-analysis/d05-o1-diag-sabdiia01-2026-11-10-1618.log), [O1-confere](logs-analysis/d05-o1-confere-sabdiia01-2026-11-10-1630.log))
+
+```
+      3 "scrapePool":"serviceMonitor/vllms/d05-gpu-dcgm/0"	"health":"up"
+      3 "scrapePool":"serviceMonitor/vllms/d05-vllm/0"	"health":"up"
+"scrapeUrl":"http://10.244.179.112:8000/metrics"	"lastError":""
+...
+"vllm:kv_cache_usage_perc"
+"vllm:num_preemptions_total"
+"vllm:num_requests_running"
+"vllm:num_requests_waiting"
+...
+"vllm:time_to_first_token_seconds_bucket"
+```
+
+**Regra prática.** Painel do vLLM usa os nomes desta lista, conferidos na `v0.19.1`. Painel pronto da comunidade pode
+usar nomes de outra versão: `vllm:gpu_cache_usage_perc` não está na lista. Para saber se a réplica está saturada, olhe
+`vllm:num_requests_waiting` > 0 e `vllm:kv_cache_usage_perc` perto de 1 junto com `vllm:num_preemptions_total` subindo.
+Depois de aplicar um `ServiceMonitor`, espere o *job* aparecer (até 5 min) antes de concluir que falhou.
+
+**Validade.** `v0.19.1`, Mistral-Nemo 12B FP16, 3 réplicas; kube-prometheus-stack-91.3.0, GPU Operator `v25.10.1`;
+2026-11-10. Desde 2026-11-10 17:03, o Prometheus grava em disco local (AC-41). Painéis "D-05 — vLLM e GPU" e "D-05 — Kong" em `configs/grafana/`, com as 30 consultas conferidas no Prometheus ([G](logs-analysis/d05-g-sabdiia01-2026-11-10-1724.log)).
+
+### AC-38 — O Prometheus do *cluster* só coleta `ServiceMonitor` com o rótulo `release: monitoring`; os dois de GPU não têm, e a GPU fica de fora. Nada do Prometheus nem do Grafana tem disco persistente {#ac-38}
+
+**O que é.** O `kube-prometheus-stack-91.3.0` (*release* `monitoring`) escolhe `ServiceMonitor` e `PodMonitor` de qualquer
+*namespace*, mas só os que têm `release: monitoring`. Os dois de GPU não têm: `gpu-operator/gpu-operator` (do GPU Operator,
+coleta o próprio operador, não o DCGM) e `default/dcgm-exporter-1793243508` (*chart* `dcgm-exporter-2.4.0`, criado em
+2026-10-29, procura um `Service` em `default`). O `dcgm-exporter` do GPU Operator responde na porta 9400 (`gpu-metrics`) e
+ninguém o coleta. O banco do Prometheus, o do Alertmanager e o armazenamento do Grafana são `emptyDir`: a retenção de 10 dias
+vale só enquanto o *pod* vive (o do Prometheus reiniciou há 13 dias). O Grafana carrega painéis e *datasources* por
+*sidecar* (`sc-dashboard-volume`, `sc-datasources-volume`) `[hipótese: de ConfigMaps com rótulo]`.
+
+**Evidência.** ([1º inventário](logs-analysis/observabilidade-sabdiia01-2026-11-10-1537.log), [2ª parte](logs-analysis/observabilidade2-sabdiia01-2026-11-10-1544.log))
+
+```
+  serviceMonitorNamespaceSelector: {}
+  serviceMonitorSelector:
+    matchLabels:
+      release: monitoring
+...
+  labels:
+    app: gpu-operator                                  <- ServiceMonitor gpu-operator/gpu-operator
+...
+DCGM_FI_DEV_SM_CLOCK{gpu="0",UUID="GPU-b0bc8fa9-...",modelName="Tesla V100S-PCIE-32GB",...   <- exporter responde
+...
+prometheus-monitoring-kube-prometheus-prometheus-db: {}
+storage: {}                                            <- Grafana
+```
+
+`count(DCGM_FI_DEV_GPU_UTIL)` voltou vazio; os 17 *jobs* da configuração gerada são todos `serviceMonitor/monitoring/...`.
+
+**Regra prática.** `ServiceMonitor` ou `PodMonitor` para este Prometheus leva `release: monitoring`, ou não é coletado.
+Para a GPU: um `ServiceMonitor` com esse rótulo apontando para `gpu-operator/nvidia-dcgm-exporter`, porta `gpu-metrics`.
+Painel do Grafana mora em arquivo versionado (`ConfigMap`), não só na tela. Série longa (*clock* em medição, AC-17) não
+pode depender deste Prometheus enquanto ele não tiver disco: o critério das medições continua sendo o `nvidia-smi` gravado.
+
+**Validade.** `kube-prometheus-stack-91.3.0` (operador `v0.94.0`), GPU Operator `v25.10.1`; 2026-11-10. Não verificado: se
+o `dcgm-exporter-2.4.0` de `default` tem *pods* rodando (outro DCGM nas mesmas GPUs) e o campo do GPU Operator que cria o
+`ServiceMonitor` do DCGM.
 
 ### AC-37 — No Kong 3.9.4, `ai-prompt-decorator` e `ai-prompt-guard` sem `ai-proxy` quebram o *streaming*: a resposta vem 200 e vazia {#ac-37}
 
@@ -1827,6 +1929,7 @@ Alavancas **candidatas**, a medir contra a linha de base de AC-05:
 
 | ID | Pergunta | Que decisão destrava | Como fechar |
 |---|---|---|---|
+| PD-38 | **2026-11-10, inventário em duas partes ([1](logs-analysis/observabilidade-sabdiia01-2026-11-10-1537.log), [2](logs-analysis/observabilidade2-sabdiia01-2026-11-10-1544.log)) → AC-38: Prometheus e Grafana de pé, sem disco persistente; coletam só o Kubernetes. A GPU fica de fora porque os `ServiceMonitor` de DCGM não têm o rótulo `release: monitoring`; o Kong serve na porta 8100 só métricas do nó (`kong_nginx_requests_total`, `kong_node_info`...), sem `ServiceMonitor`; o vLLM está fechado pela `NetworkPolicy` do estudo, a única do *cluster*. **Autorizado pelo administrador em 2026-11-10:** [runbook](runbooks/observabilidade-d05.md), O1 (GPU e vLLM: `ServiceMonitor` e `NetworkPolicy` do estudo) **rodado às 15:59 ([log](logs-analysis/d05-o1-sabdiia01-2026-11-10-1559.log)): GPU coletada (3 alvos `up`, 20 métricas `DCGM_*`, nenhuma de motivo de queda de *clock*); vLLM com 3 alvos `up` às 16:30 ([O1-confere](logs-analysis/d05-o1-confere-sabdiia01-2026-11-10-1630.log)) → AC-39; a 1ª conferência foi cedo demais (§9)**; O2 (Kong: `PodMonitor` e *plugin* `prometheus` na rota) **rodado às 16:34 ([log](logs-analysis/d05-o2-sabdiia01-2026-11-10-1634.log)): rota com `d05-key-auth,d05-rate-limit,d05-prometheus`, `401` sem chave, alvo do Kong `up` em 45 s, e já aparecem `kong_http_requests_total`, `kong_request_latency_ms`, `kong_kong_latency_ms` e `kong_bandwidth_bytes`; *streaming* `OK` depois do O2 ([teste](logs-analysis/kong-ia-wsantosdell-2026-11-10-1639.log)) → AC-40**. **Falta:** disco local para o Prometheus (NFS não é suportado, F-051; P0 OK; **P1 falhou no `helm upgrade`: o `type: LoadBalancer` do `Service` do Grafana foi posto à mão pelo Freelens, e o Helm recusa mudar campo de outro dono** ([log](logs-analysis/d05-p1-sabdiia01-2026-11-10-1701.log)); **mas o resto foi aplicado: o Prometheus já roda com o disco local** ([P1-diag](logs-analysis/d05-p1-diag-sabdiia01-2026-11-10-1707.log), AC-41); P1b às 17:13 ([log](logs-analysis/d05-p1b-sabdiia01-2026-11-10-1713.log)): revisão 3 `deployed` com o `LoadBalancer` do Grafana nos *values*, sem novo reinício, alvos `d05-*` `up`; disco resolvido), métrica de motivo de queda de *clock* no DCGM e painéis do Grafana versionados (2 painéis em `configs/grafana/`, aplicados pelo Bloco G às 17:24, [log](logs-analysis/d05-g-sabdiia01-2026-11-10-1724.log): as 30 consultas devolvem séries, o *sidecar* gravou os dois arquivos). Alertas: `PrometheusRule` `d05-alertas` com 11 regras, limiares de AC-31 e AC-17 (Bloco A às 17:49, [log](logs-analysis/d05-a-sabdiia01-2026-11-10-1749.log): 11 regras carregadas sem erro, nenhuma disparando; GPU e Kong ainda sem a 1ª avaliação na leitura; às 17:54 as 11 `ok`/`inactive`, [A-confere](logs-analysis/d05-a-confere-sabdiia01-2026-11-10-1754.log)); **o Alertmanager só tem o *receiver* `"null"`: ninguém é avisado**. O *chart* `dcgm-exporter-2.4.0` de `default` (AC-38) está em `CrashLoopBackOff` nos 3 nós há 12 dias (~3.500 reinícios cada): removido pelo O1-limpeza às 16:19 ([log](logs-analysis/d05-o1-limpeza-sabdiia01-2026-11-10-1619.log)), com a GPU ainda coletada (o administrador liberou o estudo para mexer no ambiente em 2026-11-10). Disco do Prometheus em aberto: NFS não é suportado pelo Prometheus [F-051]; a alternativa é volume local em `sabdiia03`.** Que observabilidade o serviço precisa, e onde ela mora? O *cluster* já tem kube-prometheus (Prometheus, Alertmanager) e Grafana em `monitoring` e o `dcgm-exporter` do GPU Operator (§2; o Grafana estava em falha em 2026-10-27, com o `/` cheio, AC-20). Três fontes possíveis: o `/metrics` do vLLM (fila, tempo até o 1º *token*, *tokens*/s, *KV cache*), hoje fora do alcance do Prometheus (a `NetworkPolicy` `vllm-server-so-kong` só deixa entrar o `kong`, de propósito: AC-32); a GPU pelo DCGM (*clock*, temperatura, potência: o critério de *clock* das medições); e o *plugin* `prometheus` do Kong, por ator e código HTTP, todas as opções desligadas por padrão [F-049]. O `opentelemetry` do Kong exporta rastros e logs, não métricas [F-049] | se o estudo cria um `ServiceMonitor` para o vLLM e abre a `NetworkPolicy` ao Prometheus (recursos `decisao=d-05`); se pede ao administrador o *plugin* `prometheus` na rota (com o caso 4 de `teste-kong-ia.js`, o *streaming*, antes e depois, regra do AC-37); que painéis e alertas a operação ganha | inventário só de leitura ("Que observabilidade o *cluster* já tem?" do COMANDOS.md): o que está de pé, os seletores do Prometheus e os *jobs* coletados hoje; depois, vLLM primeiro (é dele a fila e o *KV cache*), Kong por ator em seguida, rastros só com necessidade concreta |
 | PD-37 | **Encerrada em 2026-11-09 → AC-35, AC-36, AC-37: o Kong fica sem *plugins* de IA. Aplicados às 18:30, quebraram o *streaming* e saíram às 18:45 ([H-desfazer](logs-analysis/d05-h-desfazer-sabdiia01-2026-11-09-1845.log)); a proteção contra *prompt injection* fica na aplicação (regras no `system`, origem dos documentos, conferência da saída). Classificador de injeção não testado.** Histórico: decidido no mesmo dia (usuário, autorizado pelo administrador): na rota do vLLM, `ai-prompt-decorator` com as regras de segurança, sem a regra "só com base nos documentos" (ela recusaria perguntas gerais de quem não usa RAG e fica no `system` da aplicação de RAG), e `ai-prompt-guard` com as 3 expressões de G1, `max_request_body_size` 131072 nos dois ([configs/d05-ia-kong.yaml](configs/d05-ia-kong.yaml), Bloco H do [runbook](runbooks/acesso-aplicacoes-d05.md)). **Aplicado em 2026-11-09 às 18:30** ([H](logs-analysis/d05-h-sabdiia01-2026-11-09-1830.log)): validação no servidor aceita, rota com `d05-key-auth,d05-rate-limit,d05-ai-decorator,d05-ai-guard`, nenhum erro do *controller*, `401` sem chave. Falta: rodar `teste-kong-ia.js` e repetir a configuração C pela rota. A defesa contra documento envenenado fica na aplicação. Classificador de injeção não testado.** Antes, respondido em parte → AC-35: regras no `system` fecham o "fora dos documentos" (12/12 → 0/12) sem custo nas perguntas legítimas; a instrução escondida num documento passa em 9-12/12 com qualquer *prompt*; a 2ª mensagem de sistema (como o `ai-prompt-decorator`) é aceita pelo Nemo e corta à metade os ataques diretos. Os *plugins* estão no Kong instalado: `3.9.4` de código aberto, `ai-prompt-decorator` e `ai-prompt-guard` presentes, `KONG_PLUGINS` não definido ([log](logs-analysis/kong-plugins-sabdiia01-2026-11-09-1803.log)). Falta: o `ai-prompt-guard` contra os casos indiretos.** **O que o serviço de IA acrescenta contra *prompt injection*, além da aplicação web?** Aberta em 2026-11-09 a pedido do usuário: a aplicação já filtra, mas o vLLM aceita qualquer mensagem de quem tem chave, e para o modelo instrução e dado são o mesmo texto. Duas camadas possíveis no serviço: (a) **no Kong**, *plugins* que a 3.9 de código aberto traz [F-049]: `ai-prompt-decorator` (mensagem de sistema imposta a toda chamada), `ai-prompt-guard` (bloqueio por expressão, só mensagens `user` por padrão: pega o ataque óbvio, não o reformulado `[hipótese]`) e `request-size-limiting`; os dois de IA leem só até `max_request_body_size` (padrão 8 KiB), e um corpo maior seria recusado com `400` (leitura do código, `[não testado]`), o que um contexto de RAG ultrapassa fácil; (b) **um classificador de injeção** antes do Nemo, sem GPU livre (CPU sem AVX2) `[não medido]`. O Nemo segue a mensagem de sistema (AC-34), mas resistir a ataque é outra pergunta | se o serviço impõe uma mensagem de sistema no Kong (com o administrador, dono do Kong), se entra o `ai-prompt-guard` e com que expressões, se vale um classificador; e que regras a aplicação precisa ter de qualquer jeito (permissão antes da busca, recusa quando a busca não acha nada) | `test/teste-injecao.js` (repositório `vllm-app`): 22 casos (6 diretos, 4 de vazamento do identificador, 4 fora dos documentos, 4 indiretos em documento, 4 de controle) × N=3 em 4 configurações, uma variável por vez: A sem regras; B regras no `system`; C documentos delimitados; D mensagem de sistema extra no início, como o `ai-prompt-decorator` (confere também se o *template* do Nemo aceita duas). Fecha com a taxa de ataques que passam por configuração e o custo em perguntas legítimas; o `ai-prompt-guard` entra num segundo teste, com as expressões que o primeiro mostrar úteis `[não executado]` |
 | PD-33 | **Encerrada em 2026-11-07: o Ray foi eliminado (D-07); a pergunta não destrava mais decisão (§9).** **Por que o vLLM dividido pelo Ray responde sem sentido a *prompts* longos (AC-27)?** A pergunta curta sai certa; a de ~1.400 *tokens* com ferramenta, não, no 7B e no 14B | se o Ray (PP entre nós) volta a ser opção para modelos maiores que 32 GB (PD-31) e se as vazões de AC-23 e AC-26 valem | em 01 + 02, com o 7B, uma variável por vez, conferindo a resposta: (1) *prompts* sem ferramenta de ~100, 500, 1.000 e 1.500 *tokens*, para achar onde quebra; (2) `--enforce-eager`; (3) `--no-enable-prefix-caching`; (4) sem rebaixar o `cupy-cuda12x` (fica o 14.0.1 da imagem); (5) controle: 1 GPU com o `cupy` rebaixado. Procurar *issue* da `v0.19.1` sobre *pipeline parallel* com saída errada. Exige a GPU de 01 e de 02 (pausa de `vllms`, com o acordo do administrador) `[não executado]` |
 | PD-31 | **Encerrada em 2026-11-07: o Ray foi eliminado (D-07); modelo maior que 32 GB fica fora do caso (§9).** **Dividir um modelo entre dois nós vale a pena nesta rede?** Proposta do administrador: com Ray, dividir entre 2 nós um modelo que não cabe numa V100S. A divisão soma memória (64 GB), mas cada *token* passa pela rede de 1 GbE (AC-08), e o custo disso nunca foi medido aqui. Um modelo de 60 GB não carrega nem nas duas: 0,90 × 64 GB = 57,6 GB `[cálculo]` | se um modelo maior que 32 GB entra pelo multinó (Ray), por 2 GPUs no mesmo nó (PD-22) ou por *quantization*/MoE numa GPU (PD-19) | ~~(0) RTT~~ feito em 2026-10-27: 0,247 ms → *tensor parallel* entre nós descartado por cálculo (AC-21). (0b) **Rede nova (2026-10-28):** o `bond1` de 4 × 10 GbE não leva tráfego de *pod* (AC-08); RTT medido pelo `bond1` × `bond0`: 03 → 02, 0,311 × 0,348 ms; 01 → 02, 0,236 × 0,319 ms (56 trocas × 0,236 ms ≥ 13,2 ms por *token* `[cálculo]`, contra 20,3 ms de TPOT com 1 GPU). **Pôr os *pods* no `bond1` não salva o *tensor parallel*** (AC-21): a latência, não a banda, é o custo dominante; para *pipeline parallel* a banda maior ajuda pouco, porque o tráfego já é pequeno `[hipótese]`. (0c) **2026-10-28: o administrador já roda o arranjo, e ele é candidato ao MVP** (AC-19: Llama-3.1-8B, `--pipeline-parallel-size 3`, `v0.5.4`): medir como está, com a carga da B-001c, pelo [runbook B-003](runbooks/medicao-ray-pp3.md) `[não executado]`. Não é uma variável por vez (modelo, versão, nº de GPUs e `--enforce-eager` mudam juntos). ~~(1) Qwen2.5-7B com `--pipeline-parallel-size 2` entre 01 e 02 contra 1 GPU~~ **feito em 2026-10-29 (AC-23): perde 22-25 % de vazão; para modelo que cabe em 32 GB, a resposta é não.** Falta, para modelos maiores (P-05 a P-11 do plano de testes, [F-040]): (2) o custo num modelo que precise das 2 GPUs, contra 2 GPUs no mesmo nó (PD-22) e *quantization*/MoE numa GPU (PD-19); (3) 2 réplicas de 1 GPU medidas, se a D-04 precisar do número (hoje ~1.360 *tok*/s é cálculo). `--tensor-parallel-size 2` só se for preciso confirmar o AC-21 com número. **2026-11-04: o arranjo PP 2 responde sem sentido a *prompts* longos (AC-27); antes de (2) e (3), a PD-33** |
@@ -1926,6 +2029,7 @@ Alavancas **candidatas**, a medir contra a linha de base de AC-05:
 | 2026-09-29 | "imagem de vLLM ocupa ~15-20 G em disco" → ~3 a 3,5× o tamanho comprimido; `v0.19.1` ≈ 27-32 G (AC-09) | estimativa por diferença entre dois nós que ignorou as camadas comprimidas que o containerd também guarda |
 | 2026-09-29 | Regra "remova a `v0.6.4` com `ctr images rm`" → não libera espaço e deixa camadas órfãs (AC-09) | comando do containerd recomendado sem conferir como o CRI e o GC tratam a remoção |
 | 2026-09-29 | Bloco 3 do runbook: 3 execuções com `InvalidImageName` → bloco refeito com imagem fixa `nvidia/cuda:12.4.1-base-ubuntu22.04` ([F-001](FONTES.md)) | o bloco trazia um *placeholder* (`PREENCHA-...<tag-base>`) que colado vira nome inválido, e o log só gravava a última etapa, escondendo a causa |
+| 2026-11-10 | Blocos O1 e O2 de [observabilidade-d05.md](runbooks/observabilidade-d05.md): a conferência espera o *job* aparecer (até 5 min) em vez de `sleep 120`. O O1 de 15:59 ([log](logs-analysis/d05-o1-sabdiia01-2026-11-10-1559.log)) deu "vLLM fora do Prometheus" com o *job* já criado | o operador recarrega a configuração a cada objeto: o 1º `ServiceMonitor` entrou antes de 2 min, o 2º 2 min 14 s depois do `apply` ([O1-diag](logs-analysis/d05-o1-diag-sabdiia01-2026-11-10-1618.log)); tempo fixo, sem conferir a condição |
 
 ---
 
@@ -1936,6 +2040,14 @@ Alavancas **candidatas**, a medir contra a linha de base de AC-05:
 | [d05-e1-estacao-wsantosdell-2026-11-07-2311.log](logs-analysis/d05-e1-estacao-wsantosdell-2026-11-07-2311.log) | E1 do notebook (consumidor `wsantos`): `401` sem chave, só com a do Kong (vindo do vLLM, `{"error":"Unauthorized"}`) e só com a do vLLM; `200` com as duas; `403 IP address not allowed: 172.16.254.143` com a chave do `dev-1`; SSE com 1º *byte* em 0,077 s e total 5,76 s (167 linhas `data:`); `404 no Route matched` em `GET` na rota, `/vllm/v1/models`, `/vllm/metrics` e `/invocations`; `426 Please use HTTPS protocol`; certificado `CN=localhost, O=Kong` autoassinado até 2046; 117 × `400` e 8 × `429` em 125 requisições |
 | [kong-tls-node-wsantosdell-2026-11-09-0941.log](logs-analysis/kong-tls-node-wsantosdell-2026-11-09-0941.log) | Notebook (Git Bash), PD-34: certificado do Kong (`CN=localhost`, sem `subjectAltName`, `notBefore` 2026-10-26 20:27 GMT); Node 22.22.2 + `@ai-sdk/openai` 4.0.111 recusa com `self-signed certificate` e, com `NODE_EXTRA_CA_CERTS=kong.pem`, com `Hostname/IP does not match certificate's altnames` |
 | [idioma-nemo-wsantosdell-2026-11-09-1129.log](logs-analysis/idioma-nemo-wsantosdell-2026-11-09-1129.log) | Notebook, Nemo pelo Kong, "Quem é Demis Hassabis?" 10 vezes em 4 configurações: respostas inteiras, palavras suspeitas com contexto e tempos; inglês em A 6/10, B 8/10, C 0/10, D 3/10 pela contagem automática (4, 7, 0 e 4 corrigido à mão) (AC-34) |
+| [kong-ia-wsantosdell-2026-11-10-1639.log](logs-analysis/kong-ia-wsantosdell-2026-11-10-1639.log) | `teste-kong-ia.js` com `d05-prometheus` na rota (AC-40): *streaming* OK (1º pedaço 0,064 s, 102 linhas `data:`); casos 1, 5, 6 `200`; 2, 3, 7 "FALHA" por esperarem os *plugins* de IA retirados (AC-37) |
+| [d05-o2-sabdiia01-2026-11-10-1634.log](logs-analysis/d05-o2-sabdiia01-2026-11-10-1634.log) | Bloco O2 (PD-38): `d05-kong` e `d05-prometheus` aplicados; rota com 3 *plugins*; `401` sem chave; `podMonitor/vllms/d05-kong/0` `up` em 45 s; 17 métricas `kong_`, entre elas `kong_http_requests_total` e `kong_request_latency_ms` (sem `kong_upstream_latency_ms` até então); erros de TLS do *controller* com `10.244.182.128` já antes do `apply` |
+| [d05-o1-confere-sabdiia01-2026-11-10-1630.log](logs-analysis/d05-o1-confere-sabdiia01-2026-11-10-1630.log) | O1-confere (AC-39): `d05-gpu-dcgm` e `d05-vllm` com 3 alvos `up` cada, `lastError` vazio; 97 métricas `vllm:` da `v0.19.1` (fila, *KV cache*, TTFT, ITL, preempções, *prefix cache*) |
+| [d05-o1-limpeza-sabdiia01-2026-11-10-1619.log](logs-analysis/d05-o1-limpeza-sabdiia01-2026-11-10-1619.log) | O1-limpeza: *release* `dcgm-exporter-1793243508` desinstalado de `default` (DaemonSet, Service, ServiceAccount, ServiceMonitor), nada sobrou; `count(DCGM_FI_DEV_GPU_UTIL)` segue 3 |
+| [d05-o1-diag-sabdiia01-2026-11-10-1618.log](logs-analysis/d05-o1-diag-sabdiia01-2026-11-10-1618.log) | O1-diag: `d05-vllm` aceito e na configuração; `Service` e `EndpointSlice` com a porta `http` e os 3 *pods*; descoberta do *job* às 19:01:36 UTC (16:01:36), 2 min 14 s depois do `apply` |
+| [d05-o1-sabdiia01-2026-11-10-1559.log](logs-analysis/d05-o1-sabdiia01-2026-11-10-1559.log) | Bloco O1 (PD-38): `d05-gpu-dcgm` com 3 alvos `up` e `count(DCGM_FI_DEV_GPU_UTIL)` = 3; 20 métricas `DCGM_*` (sem motivo de queda de *clock*); `d05-vllm` sem alvo e sem métrica `vllm:`; *chart* `dcgm-exporter-1793243508` de `default` (imagem `2.2.9-2.4.0-ubuntu18.04`) em `CrashLoopBackOff` nos 3 nós, ~3.500 reinícios em 12 dias |
+| [observabilidade2-sabdiia01-2026-11-10-1544.log](logs-analysis/observabilidade2-sabdiia01-2026-11-10-1544.log) | PD-38, 2ª parte (AC-38): seletor do Prometheus `release: monitoring` em todos os *namespaces*; os 2 `ServiceMonitor` de GPU sem esse rótulo; `dcgm-exporter` responde `DCGM_FI_DEV_*` na 9400; banco do Prometheus, Alertmanager e Grafana em `emptyDir`, retenção 10d; 17 *jobs*, 4 `down` (`kube-controller-manager`, `kube-etcd`, `kube-proxy`, `kube-scheduler`); Kong 8100 só com 8 métricas do nó |
+| [observabilidade-sabdiia01-2026-11-10-1537.log](logs-analysis/observabilidade-sabdiia01-2026-11-10-1537.log) | PD-38, 1º inventário: `kube-prometheus-stack-91.3.0` e Grafana `Running` (Grafana em `LoadBalancer` `192.168.50.162`), sem PVC; Prometheus coleta 13 *jobs*, nenhum de GPU, Kong ou vLLM; `ServiceMonitor` `default/dcgm-exporter-1793243508` e `gpu-operator/gpu-operator` existem; Kong com `KONG_STATUS_LISTEN` `:8100` servindo `/metrics`; única `NetworkPolicy` em `vllms` é a do estudo |
 | [kong-ia-wsantosdell-2026-11-09-1846.log](logs-analysis/kong-ia-wsantosdell-2026-11-09-1846.log) | `teste-kong-ia.js` sem os *plugins* de IA: *streaming* OK (1º pedaço 0,060 s, 122 linhas `data:`); ataque e mensagem em partes voltam a dar `200` (sem bloqueio); corpo de 19 KB e conversa com ferramenta `200` |
 | [d05-h-desfazer-sabdiia01-2026-11-09-1845.log](logs-analysis/d05-h-desfazer-sabdiia01-2026-11-09-1845.log) | H-desfazer: rota de volta a `d05-key-auth,d05-rate-limit`; `d05-ai-decorator` e `d05-ai-guard` apagados |
 | [injecao-nemo-wsantosdell-2026-11-09-1834.log](logs-analysis/injecao-nemo-wsantosdell-2026-11-09-1834.log) | Configuração C do teste de injeção pela rota com os *plugins*: 15 requisições bloqueadas (`dir1`, `dir4`, `ind1`, `ind3`, `vaz1`), as mesmas da simulação (AC-37) |
