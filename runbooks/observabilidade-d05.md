@@ -495,6 +495,88 @@ mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
 } 2>&1 | tee d05-p-desfazer-$(hostname -s)-$(date +%F-%H%M).log
 ```
 
+## Painéis do Grafana (Bloco G, G-desfazer)
+
+Dois painéis em JSON versionado, em [configs/grafana/](../configs/grafana/):
+
+| Arquivo | Painel no Grafana | O que mostra |
+|---|---|---|
+| `d05-painel-vllm-gpu.json` | **D-05 — vLLM e GPU** | por réplica: rodando e na fila, *KV cache*, preempções, TTFT e ITL (p50/p95), fila/*prefill*/*decode* (p95), *tokens*/s, concluídas/min, *prefix cache*; por nó: *clock*, temperatura, potência, uso, *tensor cores*, memória |
+| `d05-painel-kong.json` | **D-05 — Kong (rota do vLLM)** | requisições/min por código HTTP e por ator, erros por ator, latência p95 (total, vLLM, Kong), banda por ator |
+
+Nomes de métricas tirados dos logs (AC-39, AC-40) e do código do Kong 3.9.0 [F-049]: `kong_http_requests_total` e
+`kong_bandwidth_bytes` têm o rótulo `consumer`; os histogramas de latência, não (latência só por rota). Cada arquivo vira
+um `ConfigMap` em `vllms` com o rótulo `grafana_dashboard: "1"`, que o *sidecar* do Grafana procura em todos os
+*namespaces* (`searchNamespace: ALL`, *chart* 91.3.0 [F-053]); a fonte de dados é escolhida no topo do painel (padrão
+`Prometheus`, `uid: prometheus`). **Editar no Grafana não persiste** (`allowUiUpdates: false` [F-053], e o Grafana está
+sem disco): mude o JSON no repositório e rode o G de novo.
+
+Envie os arquivos (notebook, PowerShell):
+
+```powershell
+$u = Read-Host "Usuário com que você entra no sabdiia01"
+$g = "C:\www\vllm-master\configs\grafana"
+scp "$g\d05-painel-vllm-gpu.json" "$g\d05-painel-kong.json" "${u}@192.168.50.151:/home/utec/vllm-estudo/"
+```
+
+### Bloco G — Aplica os painéis e confere cada consulta (servidor `sabdiia01`, bash)
+
+**Expectativa (escrita antes):** dois `ConfigMap` `d05-painel-*` criados; o *sidecar* registra os dois arquivos em até
+1 min; cada uma das 30 consultas devolve ao menos 1 série, menos as que dependem de tráfego desde 17:03 (reinício do
+Prometheus): `histogram_quantile` sem requisição na janela devolve série com `NaN`, que conta como série.
+
+```bash
+mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
+{ echo "== $(hostname -s)  $(date -Is)  D-05 G: painéis do Grafana (PD-38)"
+  [ "$(hostname -s)" = sabdiia01 ] || { echo "ABORTA: este bloco é para sabdiia01"; exit 1; }
+  NS=vllms
+  command -v python3 >/dev/null || { echo "ABORTA: sem python3"; exit 1; }
+  for N in vllm-gpu kong; do
+    F=d05-painel-$N.json
+    [ -f $F ] || { echo "ABORTA: $F ausente; envie os arquivos"; exit 1; }
+    python3 -m json.tool $F >/dev/null || { echo "ABORTA: $F não é JSON válido"; exit 1; }
+    sha256sum $F
+  done
+
+  echo "### 1. ConfigMaps   $(date +%T)"
+  for N in vllm-gpu kong; do
+    kubectl create configmap d05-painel-$N -n $NS --from-file=d05-painel-$N.json \
+      --dry-run=client -o yaml \
+      | kubectl label --local -f - grafana_dashboard=1 decisao=d-05 -o yaml \
+      | kubectl apply --server-side --field-manager=d05 -f -
+  done
+  kubectl get configmap -n $NS -l grafana_dashboard=1 --show-labels
+
+  echo "### 2. cada consulta no Prometheus (nº de séries | consulta)   $(date +%T)"
+  B="/api/v1/namespaces/monitoring/services/monitoring-kube-prometheus-prometheus:9090/proxy/api/v1"
+  for N in vllm-gpu kong; do
+    python3 -c 'import json,sys,urllib.parse as u
+for p in json.load(open(sys.argv[1]))["panels"]:
+    for t in p.get("targets", []): print(u.quote(t["expr"], safe=""))' d05-painel-$N.json
+  done | while read -r E; do
+    S=$(kubectl get --raw "$B/query?query=$E" | grep -o '"metric"' | wc -l)
+    D=$(python3 -c 'import sys,urllib.parse as u; print(u.unquote(sys.argv[1]))' "$E")
+    printf '%3s | %s\n' "$S" "$(echo "$D" | cut -c1-90)"
+  done
+
+  echo "### 3. o sidecar do Grafana pegou?   $(date +%T)"
+  sleep 60
+  kubectl logs -n monitoring deploy/monitoring-grafana --all-containers --since=3m 2>&1 \
+    | grep -i 'd05' | tail -6 | cut -c1-200
+} 2>&1 | tee d05-g-$(hostname -s)-$(date +%F-%H%M).log
+```
+
+**Resultado (2026-11-10 17:24, [log](../logs-analysis/d05-g-sabdiia01-2026-11-10-1724.log)):** os dois `ConfigMap` aplicados; as 30 consultas devolvem 1 a 4 séries; o *sidecar* gravou os dois painéis em `/tmp/dashboards/` 1 s depois.
+
+Depois, abra `http://192.168.50.162` → *Dashboards* → **D-05 — vLLM e GPU** e **D-05 — Kong (rota do vLLM)**. O que
+se vê na tela não é evidência; o log do G é.
+
+### G-desfazer — Tira os painéis (servidor `sabdiia01`, bash)
+
+```bash
+kubectl delete configmap -n vllms -l grafana_dashboard=1,decisao=d-05
+```
+
 ## Trazer os logs (notebook, PowerShell)
 
 ```powershell

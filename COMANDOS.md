@@ -727,6 +727,39 @@ mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
 
 Servidor `sabdiia01`, bash. Blocos O1 (GPU e vLLM), O2 (Kong) e O-desfazer em [runbooks/observabilidade-d05.md](runbooks/observabilidade-d05.md). Comandos novos: `kubectl apply` de `ServiceMonitor`/`PodMonitor` com `release: monitoring` (AC-38); alvos do Prometheus por `kubectl get --raw .../api/v1/targets?state=active`; nomes de métricas por `.../api/v1/label/__name__/values`. O1 `[executado: 2026-11-10]` ([log](logs-analysis/d05-o1-sabdiia01-2026-11-10-1559.log): GPU sim, vLLM não); O1-diag e O1-limpeza `[executado: 2026-11-10]` (*job* do vLLM criado, conferência cedo demais; `dcgm-exporter` de `default` removido); O1-confere `[executado: 2026-11-10]` ([log](logs-analysis/d05-o1-confere-sabdiia01-2026-11-10-1630.log): vLLM com 3 alvos `up`, AC-39); O2 `[executado: 2026-11-10]` ([log](logs-analysis/d05-o2-sabdiia01-2026-11-10-1634.log): Kong `up`, métricas por requisição); *streaming* OK depois do O2 ([teste](logs-analysis/kong-ia-wsantosdell-2026-11-10-1639.log), AC-40). Disco local do Prometheus: P0 (pasta em 03, `chown 1000:2000`, `chcon -t container_file_t`) e P1 (PV `local` e `helm upgrade monitoring kube-prometheus-stack --version 91.3.0 --reuse-values -f ...`) `[executado: 2026-11-10]`: P0 OK, P1 falhou por conflito com o Freelens ([log](logs-analysis/d05-p1-sabdiia01-2026-11-10-1701.log)). P1-diag (`kubectl diff -f` do `helm get manifest --revision 1`, `--show-managed-fields`, `helm pull --untar`) `[executado: 2026-11-10]` ([log](logs-analysis/d05-p1-diag-sabdiia01-2026-11-10-1707.log), AC-41); P1b `[executado: 2026-11-10]` ([log](logs-analysis/d05-p1b-sabdiia01-2026-11-10-1713.log): revisão 3, disco local em uso).
 
+### Painéis do Grafana como `ConfigMap` (PD-38)
+
+Servidor `sabdiia01`, bash. Bloco G de [runbooks/observabilidade-d05.md](runbooks/observabilidade-d05.md): `kubectl create configmap --from-file --dry-run=client -o yaml | kubectl label --local -f - grafana_dashboard=1 ... | kubectl apply --server-side -f -` (sem o limite de tamanho da anotação do `apply` comum); cada consulta conferida em `.../api/v1/query?query=` com a expressão codificada por `python3 urllib.parse.quote`. `[executado: 2026-11-10]` ([log](logs-analysis/d05-g-sabdiia01-2026-11-10-1724.log): 30 de 30 consultas com séries).
+
+### Entrar no Grafana (PD-38)
+
+Endereço: `http://192.168.50.162` (`LoadBalancer` do *release* `monitoring`, AC-41). Usuário `admin`; a senha foi gerada
+ao acaso na instalação (2026-09-14, `randAlphaNum 40`, [F-054]) e fica no secret `monitoring-grafana`. **Leia a senha
+no terminal, nunca dentro de um bloco com `tee`, e não a grave no repositório.** `[não executado]`
+
+1. A rede chega? Estação (notebook), PowerShell:
+
+```powershell
+Test-NetConnection 192.168.50.162 -Port 80
+```
+
+2. A senha. Servidor `sabdiia01`, bash (só mostra na tela):
+
+```bash
+kubectl get secret monitoring-grafana -n monitoring \
+  -o jsonpath='{.data.admin-password}' | base64 -d; echo
+```
+
+3. Se o passo 1 der `TcpTestSucceeded : False`, túnel pelo `sabdiia01` (notebook, PowerShell, deixe aberto) e abra
+`http://localhost:3000`:
+
+```powershell
+ssh -N -L 3000:192.168.50.162:80 utec@192.168.50.151
+```
+
+Usuário criado pela tela do Grafana some no próximo reinício do *pod* (Grafana sem disco, AC-41): para acesso pessoal
+que dure, o usuário entra pelos *values* do Helm ou o Grafana ganha disco.
+
 ### Ver o Kong Manager (painel do administrador; só leitura)
 
 O painel (`kong-gateway-manager`, *NodePort* 32492/32616) abre, mas vem sem dados: o `kconfig.js` dele tem
