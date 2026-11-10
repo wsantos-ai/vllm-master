@@ -1,0 +1,42 @@
+# D-05 — Disco local para o Prometheus do cluster (PD-38, AC-38). Autorizado pelo administrador em 2026-11-10
+#   (liberou o estudo para mexer no ambiente).
+#
+# Por quê: o banco do Prometheus está em emptyDir e some quando o pod reinicia (AC-38); o único armazenamento do
+#   cluster é NFS, que a doc do Prometheus diz não suportar ("NFS filesystems ... are not supported", F-051).
+# O quê: uma pasta em / de sabdiia03 (534 G livres em 2026-10-28; §2), onde o Prometheus já roda, servida como
+#   PersistentVolume "local". O PV prende o Prometheus a 03: se 03 cair, o Prometheus fica parado até 03 voltar.
+# Aplicado pelo Bloco P1 de runbooks/observabilidade-d05.md, depois do P0 (cria a pasta em 03). O Prometheus passa a
+#   pedir o disco pelo values configs/d05-prometheus-disco-values.yaml (helm upgrade do release "monitoring").
+#
+# Campos conferidos em 2026-11-10 na doc do Kubernetes (versão 1.37, a do cluster) [F-052]: volume local só como PV
+#   estático, nodeAffinity obrigatório, StorageClass com provisioner kubernetes.io/no-provisioner e
+#   volumeBindingMode WaitForFirstConsumer.
+# Retain: apagar o PVC não apaga os dados; a pasta em 03 sai à mão (Bloco P-desfazer).
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: d05-local-prometheus
+  labels: {decisao: d-05}
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Retain
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: d05-prometheus-sabdiia03
+  labels: {decisao: d-05}
+spec:
+  capacity:
+    storage: 50Gi
+  volumeMode: Filesystem
+  accessModes: [ReadWriteOnce]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: d05-local-prometheus
+  local:
+    path: /var/lib/d05-prometheus
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - {key: kubernetes.io/hostname, operator: In, values: [sabdiia03]}

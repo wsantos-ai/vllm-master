@@ -266,6 +266,235 @@ mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
 } 2>&1 | tee d05-o-desfazer-$(hostname -s)-$(date +%F-%H%M).log
 ```
 
+## Disco local do Prometheus (Blocos P0, P1, P-desfazer)
+
+**Autorizado pelo administrador em 2026-11-10** (liberou o estudo para mexer no ambiente). O banco do Prometheus está em
+`emptyDir` e some quando o *pod* reinicia (AC-38); NFS, o único armazenamento do *cluster*, não é suportado pelo
+Prometheus [F-051]. Estes blocos dão a ele uma pasta em `/` de `sabdiia03` (534 G livres em 2026-10-28), servida como
+`PersistentVolume` `local` [F-052], e pedem o disco pelo Helm, para um `helm upgrade` futuro não desfazer:
+
+- [d05-prometheus-disco.yaml](../configs/d05-prometheus-disco.yaml): `StorageClass` `d05-local-prometheus` e PV
+  `d05-prometheus-sabdiia03` (50 Gi, `/var/lib/d05-prometheus`, só em 03, `Retain`);
+- [d05-prometheus-disco-values.yaml](../configs/d05-prometheus-disco-values.yaml): `storageSpec` com esse PV e
+  `retentionSize: 40GiB` [F-053]; a retenção de 10 dias não muda.
+
+Custos: **o histórico atual (desde o último reinício) se perde**, porque o *pod* do Prometheus é recriado com o disco
+novo; e o Prometheus fica **preso a `sabdiia03`**: se 03 cair, ele para até 03 voltar. Grafana e Alertmanager ficam como
+estão (os painéis vão em `ConfigMap`, PD-38).
+
+### P0 — Cria a pasta em `sabdiia03` (servidor `sabdiia03`, bash como `root`, depois de `sudo -i`; sem `kubectl`)
+
+O Prometheus roda como usuário 1000, grupo 2000 (padrão do *chart*, [F-053]). Com SELinux ativo, a pasta recebe o tipo
+`container_file_t`, ou o contêiner não escreve nela `[hipótese: containerd com SELinux]`.
+
+**Expectativa (escrita antes):** pasta criada, dono `1000:2000`, modo `drwxrwx---`; `/` com mais de 500 G livres.
+
+```bash
+mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
+{ echo "== $(hostname -s)  $(date -Is)  D-05 P0: pasta do Prometheus"
+  [ "$(hostname -s)" = sabdiia03 ] || { echo "ABORTA: este bloco é para sabdiia03"; exit 1; }
+  [ "$(id -u)" = 0 ] || { echo "ABORTA: rode como root (sudo -i)"; exit 1; }
+  D=/var/lib/d05-prometheus
+  [ -d $D ] && echo "AVISO: $D já existe; conteúdo:" && ls -la $D | head
+  mkdir -p $D && chown 1000:2000 $D && chmod 0770 $D
+  S=$(getenforce 2>/dev/null || echo ausente); echo "SELinux: $S"
+  [ "$S" = Enforcing ] || [ "$S" = Permissive ] && chcon -t container_file_t $D
+  ls -ldZ $D; df -h /
+} 2>&1 | tee d05-p0-$(hostname -s)-$(date +%F-%H%M).log
+```
+
+### P1 — PV e `helm upgrade` do *release* `monitoring` (servidor `sabdiia01`, bash)
+
+Mesmo jeito do K2 (`acesso-aplicacoes-d05.md`): mesma versão do *chart*, `--reuse-values`, só os campos do arquivo de
+*values*. Antes, guarda os *values* atuais (podem ter a senha do Grafana: o arquivo fica com modo `600`, fora do log) e o
+objeto `Prometheus`.
+
+**Expectativa (escrita antes):** *release* `monitoring` revisão 1 → 2; o operador recria o *StatefulSet* do Prometheus
+(o `volumeClaimTemplates` de um *StatefulSet* não muda no lugar) `[hipótese]`; PVC
+`prometheus-monitoring-kube-prometheus-prometheus-db-prometheus-monitoring-kube-prometheus-prometheus-0` `Bound` ao PV
+`d05-prometheus-sabdiia03`; *pod* `2/2` em `sabdiia03` em até 5 min; os mesmos alvos `up` de antes (GPU, vLLM, Kong);
+Grafana e Alertmanager sem reinício.
+
+```bash
+mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
+{ echo "== $(hostname -s)  $(date -Is)  D-05 P1: disco local do Prometheus (PD-38)"
+  [ "$(hostname -s)" = sabdiia01 ] || { echo "ABORTA: este bloco é para sabdiia01"; exit 1; }
+  NS=monitoring; REL=monitoring; TS=$(date +%F-%H%M)
+  M=d05-prometheus-disco.yaml; V=d05-prometheus-disco-values.yaml
+  for F in $M $V; do [ -f $F ] || { echo "ABORTA: $F ausente; envie os manifestos"; exit 1; }; done
+  sha256sum $M $V
+  CH=$(helm list -n $NS -o json | grep -o '"chart":"kube-prometheus-stack-[0-9.]*"' | cut -d'"' -f4)
+  echo "chart: $CH"
+  [ "$CH" = kube-prometheus-stack-91.3.0 ] || { echo "ABORTA: chart inesperado"; exit 1; }
+  helm history $REL -n $NS | tail -3
+  echo "### 1. cópia antes   $(date +%T)"
+  ( umask 077; helm get values $REL -n $NS -o yaml > monitoring-values-antes-$TS.yaml )
+  kubectl get prometheus -n $NS -o yaml > monitoring-prometheus-cr-antes-$TS.yaml
+  ls -l monitoring-*-antes-$TS.yaml
+  kubectl get pods -n $NS -o wide
+
+  echo "### 2. StorageClass e PV   $(date +%T)"
+  kubectl apply --dry-run=server -f $M || { echo "ABORTA: o cluster recusou o manifesto"; exit 1; }
+  kubectl apply -f $M
+  kubectl get storageclass d05-local-prometheus; kubectl get pv d05-prometheus-sabdiia03
+
+  echo "### 3. helm upgrade (mesma versão, --reuse-values)   $(date +%T)"
+  REPO=https://prometheus-community.github.io/helm-charts
+  helm upgrade $REL kube-prometheus-stack --repo $REPO \
+    --version 91.3.0 -n $NS --reuse-values -f $V --wait --timeout 10m \
+    || { echo "FALHOU o helm upgrade; traga o log (desfazer: P-desfazer)"; exit 1; }
+  helm history $REL -n $NS | tail -2
+
+  echo "### 4. o Prometheus subiu com o disco?   $(date +%T)"
+  for i in $(seq 1 30); do
+    kubectl get pvc -n $NS 2>/dev/null | grep -q 'd05-local-prometheus' && break; sleep 10; done
+  kubectl rollout status statefulset/prometheus-monitoring-kube-prometheus-prometheus -n $NS \
+    --timeout=5m
+  kubectl get pvc -n $NS; kubectl get pv d05-prometheus-sabdiia03
+  kubectl get pods -n $NS -o wide
+  kubectl get prometheus -n $NS -o yaml | grep -E '^    (retention|retentionSize):'
+  kubectl get events -n $NS --sort-by=.lastTimestamp | tail -8 | cut -c1-200
+
+  echo "### 5. coleta de volta? (espera os alvos, até 5 min)   $(date +%T)"
+  B="/api/v1/namespaces/monitoring/services/monitoring-kube-prometheus-prometheus:9090/proxy/api/v1"
+  for i in $(seq 1 20); do
+    kubectl get --raw "$B/targets?state=active" 2>/dev/null | grep -q 'd05-kong' && break
+    sleep 15; done; echo "esperou $((i*15)) s"
+  kubectl get --raw "$B/targets?state=active" | tr ',' '\n' \
+    | grep -E '"(scrapePool|health)"' | paste - - | grep d05 | sort | uniq -c
+  kubectl get --raw "$B/status/tsdb" | tr ',' '\n' | grep -E 'numSeries|headStats' | head -3
+} 2>&1 | tee d05-p1-$(hostname -s)-$(date +%F-%H%M).log
+```
+
+Depois, no `sabdiia03` (como `root`), confira que o banco está na pasta: `ls -la /var/lib/d05-prometheus` (espera-se
+`prometheus-db/` com `wal/` dentro) `[não executado]`.
+
+**Resultado (2026-11-10):** P0 OK às 16:58 ([log](../logs-analysis/d05-p0-sabdiia03-2026-11-10-1658.log)): pasta
+`1000:2000` (o 1000 é o `utec` do *host*), SELinux `Disabled`, `/` com 445 G livres. **P1 falhou às 17:01**
+([log](../logs-analysis/d05-p1-sabdiia01-2026-11-10-1701.log)): `StorageClass` e PV criados (PV `Available`), mas o
+`helm upgrade` parou em `conflict with "Freelens" using v1: .spec.type` no `Service` `monitoring-grafana`. O
+`LoadBalancer` do Grafana (`192.168.50.162`) foi posto à mão pelo Freelens, não pelo Helm: os *values* do *release* têm
+5 bytes (`null` `[hipótese]`, *chart* com os padrões, `ClusterIP`). O Helm aplica pelo servidor (*server-side apply*) e
+recusa mudar um campo de outro dono. Forçar voltaria o Grafana a `ClusterIP` e tiraria o IP externo.
+
+### P1-diag — Estado do *release* e o que foi editado à mão (servidor `sabdiia01`, bash; só leitura)
+
+Confere: versão do Helm e as opções de conflito do `upgrade`; se a falha deixou revisão nova e se o objeto `Prometheus`
+mudou; a diferença entre o manifesto do Helm (revisão 1) e o que está no *cluster* (`kubectl diff`), que mostra toda
+edição feita fora do Helm; os donos dos campos do `Service` do Grafana; e o padrão do `service` no *subchart* do Grafana.
+
+**Expectativa (escrita antes) `[hipótese]`:** Helm 4; revisão 2 `failed`; objeto `Prometheus` sem `storage`; a única
+diferença relevante é `type: LoadBalancer` no `Service` do Grafana; padrão do *subchart* `service.type: ClusterIP`.
+
+```bash
+mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
+{ echo "== $(hostname -s)  $(date -Is)  D-05 P1-diag: release monitoring (só leitura)"
+  NS=monitoring; REL=monitoring
+  echo "### 1. Helm e opções de conflito"
+  helm version --short
+  helm upgrade --help | grep -iE 'server-side|force|conflict' | cut -c1-160
+  echo "### 2. revisões, objeto Prometheus, pods, PV"
+  helm history $REL -n $NS | tail -3
+  kubectl get prometheus -n $NS -o yaml | grep -E '^    (retention|retentionSize|storage):' -A3
+  kubectl get pods -n $NS -o wide | cut -c1-120
+  kubectl get pv d05-prometheus-sabdiia03
+  echo "### 3. o que difere do manifesto do Helm (revisão 1): edições fora do Helm"
+  helm get manifest $REL -n $NS --revision 1 > monitoring-manifest-rev1.yaml
+  kubectl diff -f monitoring-manifest-rev1.yaml 2>&1 | grep -E '^(diff|[-+] )' \
+    | grep -vE 'generation:|resourceVersion|creationTimestamp|^\+\+\+|^---' | head -80
+  echo "### 4. donos dos campos do Service do Grafana"
+  kubectl get svc monitoring-grafana -n $NS --show-managed-fields -o yaml \
+    | grep -E 'manager:|operation:|f:type|f:loadBalancer|f:ports|f:annotations' | head -30
+  echo "### 5. padrão do service no subchart do Grafana (91.3.0)"
+  T=$(mktemp -d); REPO=https://prometheus-community.github.io/helm-charts
+  helm pull kube-prometheus-stack --repo $REPO --version 91.3.0 --untar -d $T >/dev/null
+  grep -n -A6 '^service:' $T/kube-prometheus-stack/charts/grafana/values.yaml | head -12
+  grep -n '^version:' $T/kube-prometheus-stack/charts/grafana/Chart.yaml; rm -rf $T
+} 2>&1 | tee d05-p1-diag-$(hostname -s)-$(date +%F-%H%M).log
+```
+
+**Resultado (2026-11-10 17:07, [log](../logs-analysis/d05-p1-diag-sabdiia01-2026-11-10-1707.log)):** Helm `v4.1.1`.
+**A revisão 2 ficou `failed`, mas o upgrade aplicou o resto antes de parar** (AC-41): o objeto `Prometheus` já tem
+`retentionSize: 40GiB` e o `storage`, o *pod* do Prometheus foi recriado (~17:03) com o PV `Bound`, e o Grafana também
+(~17:01, agora em `sabdiia02`), porque o *checksum* do secret no *Deployment* mudou. A única edição fora do Helm é o
+`type: LoadBalancer` do `Service` do Grafana (dono `Freelens`, `Update`). Padrão do *subchart* `grafana` `13.2.4`:
+`service.type: ClusterIP`. A senha do Grafana vem do secret existente, se houver (`lookup`), senão é gerada ao acaso
+(`randAlphaNum 40`, *template* `grafana.password` do *chart* `grafana-13.2.4` [F-054]).
+
+### P1b — Completa o *upgrade* com o `LoadBalancer` do Grafana no Helm (servidor `sabdiia01`, bash)
+
+Os *values* passam a declarar `grafana.service.type: LoadBalancer`, o mesmo valor que já está no *cluster*: o Helm não
+muda o campo e não há conflito `[hipótese: server-side apply só acusa conflito quando o valor muda]`. O bloco mostra antes
+quando o secret do Grafana foi gravado (sem o conteúdo), para saber se a senha mudou às 17:01.
+
+**Expectativa (escrita antes):** revisão 3 `deployed`; o `Service` do Grafana segue `LoadBalancer` `192.168.50.162`;
+Prometheus e Grafana **sem** novo reinício (`AGE` maior que antes); PVC `Bound`; alvos `d05-*` `up`.
+
+```bash
+mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
+{ echo "== $(hostname -s)  $(date -Is)  D-05 P1b: upgrade com o LoadBalancer do Grafana"
+  [ "$(hostname -s)" = sabdiia01 ] || { echo "ABORTA: este bloco é para sabdiia01"; exit 1; }
+  NS=monitoring; REL=monitoring; V=d05-prometheus-disco-values.yaml
+  [ -f $V ] || { echo "ABORTA: $V ausente; envie os manifestos"; exit 1; }
+  sha256sum $V
+  grep -q 'type: LoadBalancer' $V || { echo "ABORTA: $V antigo; envie o novo"; exit 1; }
+  echo "### 1. antes: secret do Grafana (quem gravou e quando, sem o conteúdo), pods, serviço"
+  kubectl get secret monitoring-grafana -n $NS -o \
+    jsonpath='{range .metadata.managedFields[*]}{.manager} {.operation} {.time}{"\n"}{end}'
+  kubectl get pods -n $NS -o wide | cut -c1-120
+  kubectl get svc monitoring-grafana -n $NS
+  echo "### 2. helm upgrade   $(date +%T)"
+  REPO=https://prometheus-community.github.io/helm-charts
+  helm upgrade $REL kube-prometheus-stack --repo $REPO \
+    --version 91.3.0 -n $NS --reuse-values -f $V --wait --timeout 10m \
+    || { echo "FALHOU o helm upgrade; traga o log"; exit 1; }
+  helm history $REL -n $NS | tail -3 | cut -c1-120
+  echo "### 3. depois   $(date +%T)"
+  sleep 20
+  kubectl get pods -n $NS -o wide | cut -c1-120
+  kubectl get svc monitoring-grafana -n $NS
+  kubectl get pvc -n $NS
+  kubectl get secret monitoring-grafana -n $NS -o \
+    jsonpath='{range .metadata.managedFields[*]}{.manager} {.operation} {.time}{"\n"}{end}'
+  echo "### 4. coleta e banco   $(date +%T)"
+  B="/api/v1/namespaces/monitoring/services/monitoring-kube-prometheus-prometheus:9090/proxy/api/v1"
+  kubectl get --raw "$B/targets?state=active" | tr ',' '\n' \
+    | grep -E '"(scrapePool|health)"' | paste - - | grep d05 | sort | uniq -c
+  for Q in prometheus_tsdb_head_series prometheus_tsdb_wal_storage_size_bytes; do
+    echo "$Q: $(kubectl get --raw "$B/query?query=$Q" | grep -oE '"[0-9.e+]+"\]' | head -1)"
+  done
+} 2>&1 | tee d05-p1b-$(hostname -s)-$(date +%F-%H%M).log
+```
+
+**Resultado (2026-11-10 17:13, [log](../logs-analysis/d05-p1b-sabdiia01-2026-11-10-1713.log)):** revisão 3 `deployed`, sem conflito; Grafana segue em `192.168.50.162`; nenhum *pod* reiniciou; PVC `Bound`; alvos `d05-*` `up`; secret do Grafana gravado só em 2026-09-14 (a senha não mudou). Disco resolvido.
+
+Se a senha do Grafana parar de funcionar, o secret foi regravado às 17:01 e o banco do Grafana, sem disco, começou do
+zero com ela. Quem tem acesso lê a senha nova direto no servidor, **fora de qualquer log**:
+`kubectl get secret monitoring-grafana -n monitoring -o jsonpath='{.data.admin-password}' | base64 -d; echo`.
+
+### P-desfazer — Volta o Prometheus ao `emptyDir` (servidor `sabdiia01`, bash)
+
+`helm rollback` para a revisão anterior ao P1 e apaga PVC, PV e `StorageClass`. Os dados ficam em
+`/var/lib/d05-prometheus` de 03 (`Retain`); apague à mão se não forem servir.
+
+```bash
+mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
+{ echo "== $(hostname -s)  $(date -Is)  D-05 P-desfazer"
+  NS=monitoring; REL=monitoring
+  helm history $REL -n $NS | tail -3
+  ULT=$(helm history $REL -n $NS -o json | grep -o '"revision":[0-9]*' | tail -1 | cut -d: -f2)
+  ANT=$((ULT - 1))
+  echo "rollback para a revisão $ANT"
+  helm rollback $REL $ANT -n $NS --wait --timeout 10m || { echo "FALHOU o rollback"; exit 1; }
+  kubectl rollout status statefulset/prometheus-monitoring-kube-prometheus-prometheus -n $NS \
+    --timeout=5m
+  kubectl get pvc -n $NS -o name | grep prometheus-db | xargs -r kubectl delete -n $NS
+  kubectl delete pv d05-prometheus-sabdiia03 --ignore-not-found
+  kubectl delete storageclass d05-local-prometheus --ignore-not-found
+  kubectl get pods,pvc -n $NS -o wide
+} 2>&1 | tee d05-p-desfazer-$(hostname -s)-$(date +%F-%H%M).log
+```
+
 ## Trazer os logs (notebook, PowerShell)
 
 ```powershell

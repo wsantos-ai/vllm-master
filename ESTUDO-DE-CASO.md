@@ -104,7 +104,7 @@ do Bloco 2:
 | Armazenamento | só `nfs-storage` (`nfs.csi.k8s.io`, `Retain`, RWX). Servidor `[2801:80:f8c:302::aa]:/SABDIIAK8S_NFS01` (IPv6), NFS 4.1, `rsize=wsize=65536`, sem `nconnect`. Exportação de 500 G com **17 G usados** (todos os PVCs somados) | `get storageclass`, `get pv`; `findmnt`, `df` (Bloco 2) |
 | Rede | **Dois *bonds* desde 2026-10-28**, ambos 802.3ad com `Transmit Hash Policy: layer2`. **`bond0`** (6 × 1 GbE): VLAN `bond0.500`, IP do nó (`192.168.50.150/151/152`), rota *default* e **IP que o Calico usa para os *pods***; em `sabdiia01`, `enp65s0f1` segue a 100 Mbps fora do agregado (5 portas ativas, `speed=5000`). **`bond1`** (novo, 4 × 10 GbE, placas BCM57810 e Intel 82599ES): só a VLAN `bond1.302`, **só IPv6** (`2801:80:f8c:302::/64`, mesma rede do servidor NFS); `speed=40000` em 01 e 02, **`20000` em 03** (duas portas em outro agregador). MTU 1500, exceto **`bond0`/`bond0.500` de 03 com 9000 e o Calico de 03 com 8980**. **17:12: nova VLAN `bond1.20` nos 3 nós, `UP`, sem nenhum endereço** (nem IPv4, nem IPv6 de *link*), MTU 1500; as portas físicas do `bond1` estão com 9000 e o `bond1` com 1500. RTT 03 → 02: 0,311 ms (`bond1`) × 0,348 ms (`bond0`) | `/proc/net/bonding/*`, `ip -br addr`, `ip route`, anotação `projectcalico.org/IPv4Address` (2026-10-28) — AC-08 |
 | Rede / borda | Calico; MetalLB (pool `pool-publico`); Kong no *namespace* `kong` | *pods* e anotações |
-| Observabilidade | kube-prometheus (Prometheus, Alertmanager), `dcgm-exporter`, `metrics-server` | *pods* em `monitoring` e `gpu-operator` |
+| Observabilidade | **2026-11-10:** `kube-prometheus-stack-91.3.0` (*release* `monitoring`, revisão 3, operador `v0.94.0`; Helm `v4.1.1`). **Prometheus** em `sabdiia03`, em disco local (PV `d05-prometheus-sabdiia03`, 50 Gi em `/var/lib/d05-prometheus`, `retentionSize` 40 GiB, retenção 10d; preso a 03). **Grafana** `LoadBalancer` `192.168.50.162:80` (posto à mão pelo Freelens, nos *values* desde a revisão 3, AC-41), em `emptyDir`; Alertmanager em `emptyDir`. Coleta, além do Kubernetes: GPU pelo `dcgm-exporter` do GPU Operator (porta 9400), as 3 réplicas do vLLM e o Kong (porta de status 8100, *plugin* `prometheus` na rota), pelos `ServiceMonitor`/`PodMonitor` `d05-*` com `release: monitoring` (AC-38, AC-39, AC-40). `metrics-server` | [inventário](logs-analysis/observabilidade-sabdiia01-2026-11-10-1537.log), [O1-confere](logs-analysis/d05-o1-confere-sabdiia01-2026-11-10-1630.log), [P1b](logs-analysis/d05-p1b-sabdiia01-2026-11-10-1713.log) |
 
 ### Ocupação das GPUs e o *namespace* `vllms` (2026-10-27)
 
@@ -281,6 +281,8 @@ Os logs de `kubectl logs` do deepseek começam em 09-27: o arranque foi perdido 
 | 2026-11-10 | Inventário de observabilidade: o Prometheus do *cluster* não coleta a GPU (falta o rótulo `release: monitoring` nos `ServiceMonitor` de DCGM) e não tem disco persistente | AC-38 |
 | 2026-11-10 | Bloco O1: a GPU e o vLLM entram no Prometheus do *cluster* (3 + 3 alvos); a 1ª conferência, cedo demais, não viu o vLLM | AC-39 |
 | 2026-11-10 | Bloco O2: *plugin* `prometheus` na rota e Kong no Prometheus; o *streaming* segue OK | AC-40 |
+| 2026-11-10 | Bloco P1: o `helm upgrade` do Prometheus falha por conflito com uma edição do Freelens no Grafana, mas aplica o resto; o Prometheus passa ao disco local | AC-41 |
+| 2026-11-10 | Bloco P1b: `LoadBalancer` do Grafana nos *values*; revisão 3 `deployed`, Prometheus em disco local coletando GPU, vLLM e Kong | AC-41 |
 
 ## 4. Achados
 
@@ -505,6 +507,41 @@ para pelo menos 20 min. Antes de servir a usuários, configure o *reasoning pars
 
 **Validade.** `v0.19.1`, `sabdiia01`, 2026-10-02, duas tentativas, uma geração. Não medido: carga
 concorrente, entrada de imagem, qualidade das respostas em 4 bits, contexto perto de 8192 *tokens*.
+
+### AC-41 — No Helm 4, um `helm upgrade` que falha por conflito com uma edição manual deixa o resto aplicado: revisão `failed`, *pods* recriados {#ac-41}
+
+**O que é.** O Helm `v4.1.1` aplica os objetos pelo servidor (*server-side apply*) e recusa mudar campo de outro dono.
+No *release* `monitoring`, o `type: LoadBalancer` do `Service` do Grafana foi posto à mão pelo Freelens; os *values* do
+*release* estão vazios (padrão `ClusterIP`). O `upgrade` do Bloco P1 falhou nesse campo, mas os demais objetos já tinham
+sido aplicados: o objeto `Prometheus` ganhou o disco e o `retentionSize`, o operador recriou o *pod* do Prometheus, e o
+*Deployment* do Grafana mudou e recriou o *pod* dele. O Helm marcou a revisão 2 como `failed` e manteve a 1 como a última
+`deployed`, que não descreve mais o *cluster*. `--force-conflicts` teria tomado o campo e voltado o Grafana a `ClusterIP`.
+
+**Evidência.** ([P1](logs-analysis/d05-p1-sabdiia01-2026-11-10-1701.log), [P1-diag](logs-analysis/d05-p1-diag-sabdiia01-2026-11-10-1707.log))
+
+```
+17:01  Error: UPGRADE FAILED: conflict occurred while applying object monitoring/monitoring-grafana /v1,
+       Kind=Service: Apply failed with 1 conflict: conflict with "Freelens" using v1: .spec.type
+17:07  2  Tue Nov 10 17:01:10 2026  failed  kube-prometheus-stack-91.3.0 ...
+           retentionSize: 40GiB
+           storage:
+             volumeClaimTemplate:
+       monitoring-grafana-768ddfc4d-vg78g                   3/3  Running  0  5m24s ...
+       prometheus-monitoring-kube-prometheus-prometheus-0   2/2  Running  0  3m43s ...
+       d05-prometheus-sabdiia03  50Gi  RWO  Retain  Bound  monitoring/prometheus-...-db-...-0
+       -  type: LoadBalancer        (vivo)        +  type: ClusterIP   (manifesto do Helm)
+           manager: Freelens / operation: Update  (dono de f:type)
+```
+
+**Regra prática.** Antes de um `helm upgrade` num *release* que outros mexeram, rode `kubectl diff -f` com o
+`helm get manifest --revision <última deployed>`: cada diferença é edição manual que o *upgrade* vai desfazer ou travar.
+Leve cada uma para os *values*, com o mesmo valor do *cluster*. Depois de uma falha, não leia "nada foi feito": confira
+`helm history` e os objetos. Não use `--force-conflicts` sem saber de quem é o campo.
+
+**Validade.** Helm `v4.1.1`, `kube-prometheus-stack-91.3.0`, Kubernetes 1.37; 2026-11-10. Com o `LoadBalancer` nos
+*values*, o *upgrade* seguinte passou sem conflito e sem reinício (revisão 3, [P1b](logs-analysis/d05-p1b-sabdiia01-2026-11-10-1713.log)). O secret do Grafana
+não foi regravado (só `helm Apply 2026-09-14`): a senha não mudou; por que o *checksum* mudou `[não verificado]`. O
+Grafana, sem disco, perdeu o que tinha sido criado à mão nele. A ordem em que o Helm aplica os objetos `[não verificado]`.
 
 ### AC-40 — O *plugin* `prometheus` do Kong na rota do vLLM não quebra o *streaming* e dá requisições por ator, código HTTP e latência {#ac-40}
 
@@ -2040,6 +2077,10 @@ Alavancas **candidatas**, a medir contra a linha de base de AC-05:
 | [d05-e1-estacao-wsantosdell-2026-11-07-2311.log](logs-analysis/d05-e1-estacao-wsantosdell-2026-11-07-2311.log) | E1 do notebook (consumidor `wsantos`): `401` sem chave, só com a do Kong (vindo do vLLM, `{"error":"Unauthorized"}`) e só com a do vLLM; `200` com as duas; `403 IP address not allowed: 172.16.254.143` com a chave do `dev-1`; SSE com 1º *byte* em 0,077 s e total 5,76 s (167 linhas `data:`); `404 no Route matched` em `GET` na rota, `/vllm/v1/models`, `/vllm/metrics` e `/invocations`; `426 Please use HTTPS protocol`; certificado `CN=localhost, O=Kong` autoassinado até 2046; 117 × `400` e 8 × `429` em 125 requisições |
 | [kong-tls-node-wsantosdell-2026-11-09-0941.log](logs-analysis/kong-tls-node-wsantosdell-2026-11-09-0941.log) | Notebook (Git Bash), PD-34: certificado do Kong (`CN=localhost`, sem `subjectAltName`, `notBefore` 2026-10-26 20:27 GMT); Node 22.22.2 + `@ai-sdk/openai` 4.0.111 recusa com `self-signed certificate` e, com `NODE_EXTRA_CA_CERTS=kong.pem`, com `Hostname/IP does not match certificate's altnames` |
 | [idioma-nemo-wsantosdell-2026-11-09-1129.log](logs-analysis/idioma-nemo-wsantosdell-2026-11-09-1129.log) | Notebook, Nemo pelo Kong, "Quem é Demis Hassabis?" 10 vezes em 4 configurações: respostas inteiras, palavras suspeitas com contexto e tempos; inglês em A 6/10, B 8/10, C 0/10, D 3/10 pela contagem automática (4, 7, 0 e 4 corrigido à mão) (AC-34) |
+| [d05-p1b-sabdiia01-2026-11-10-1713.log](logs-analysis/d05-p1b-sabdiia01-2026-11-10-1713.log) | P1b: revisão 3 `deployed`; Grafana segue `LoadBalancer` `192.168.50.162`; Prometheus (11 min) e Grafana (13 min) sem novo reinício; PVC `Bound` a `d05-prometheus-sabdiia03`; secret do Grafana gravado só em 2026-09-14 (senha não mudou); alvos `d05-*` `up` (1 + 3 + 3); 156.685 séries, WAL 26,7 MB |
+| [d05-p1-diag-sabdiia01-2026-11-10-1707.log](logs-analysis/d05-p1-diag-sabdiia01-2026-11-10-1707.log) | P1-diag (AC-41): Helm `v4.1.1` (`--force-conflicts`, `--server-side`); revisão 2 `failed`; objeto `Prometheus` com `retentionSize: 40GiB` e `storage`; *pods* do Prometheus e do Grafana recriados; PV `Bound`; `kubectl diff` do manifesto da revisão 1: só o `type: LoadBalancer` do Grafana (dono `Freelens`) e o *checksum* do secret; *subchart* `grafana` `13.2.4`, `service.type: ClusterIP` |
+| [d05-p1-sabdiia01-2026-11-10-1701.log](logs-analysis/d05-p1-sabdiia01-2026-11-10-1701.log) | Bloco P1 (PD-38): *chart* `kube-prometheus-stack-91.3.0`, revisão 1 (2026-09-14), *values* do *release* com 5 bytes; `StorageClass` e PV criados (`Available`); `helm upgrade` falhou: `conflict with "Freelens" using v1: .spec.type` no `Service` `monitoring-grafana` |
+| [d05-p0-sabdiia03-2026-11-10-1658.log](logs-analysis/d05-p0-sabdiia03-2026-11-10-1658.log) | Bloco P0: `/var/lib/d05-prometheus` com dono `1000:2000` (`utec` no *host*), SELinux `Disabled`; `/` de 03 com 445 G livres |
 | [kong-ia-wsantosdell-2026-11-10-1639.log](logs-analysis/kong-ia-wsantosdell-2026-11-10-1639.log) | `teste-kong-ia.js` com `d05-prometheus` na rota (AC-40): *streaming* OK (1º pedaço 0,064 s, 102 linhas `data:`); casos 1, 5, 6 `200`; 2, 3, 7 "FALHA" por esperarem os *plugins* de IA retirados (AC-37) |
 | [d05-o2-sabdiia01-2026-11-10-1634.log](logs-analysis/d05-o2-sabdiia01-2026-11-10-1634.log) | Bloco O2 (PD-38): `d05-kong` e `d05-prometheus` aplicados; rota com 3 *plugins*; `401` sem chave; `podMonitor/vllms/d05-kong/0` `up` em 45 s; 17 métricas `kong_`, entre elas `kong_http_requests_total` e `kong_request_latency_ms` (sem `kong_upstream_latency_ms` até então); erros de TLS do *controller* com `10.244.182.128` já antes do `apply` |
 | [d05-o1-confere-sabdiia01-2026-11-10-1630.log](logs-analysis/d05-o1-confere-sabdiia01-2026-11-10-1630.log) | O1-confere (AC-39): `d05-gpu-dcgm` e `d05-vllm` com 3 alvos `up` cada, `lastError` vazio; 97 métricas `vllm:` da `v0.19.1` (fila, *KV cache*, TTFT, ITL, preempções, *prefix cache*) |

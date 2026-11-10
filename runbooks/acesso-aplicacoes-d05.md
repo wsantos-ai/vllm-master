@@ -242,7 +242,7 @@ mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
   echo "### 3. mudança   $(date +%T)"
   if [ $H = 1 ]; then
     echo "helm upgrade $REL $NOME --repo https://charts.konghq.com --version $VER -n $NS --reuse-values --set $KEY=Local"
-    helm upgrade "$REL" "$NOME" --repo https://charts.konghq.com --version "$VER" -n $NS --reuse-values --set "$KEY=Local" --wait --timeout 5m || { echo "FALHOU o helm upgrade: nada mais foi feito; traga o log"; exit 1; }
+    helm upgrade "$REL" "$NOME" --repo https://charts.konghq.com --version "$VER" -n $NS --reuse-values --set "$KEY=Local" --wait --timeout 5m || { echo "FALHOU o helm upgrade; o Helm 4 pode ter aplicado parte (AC-41): traga o log"; exit 1; }
     helm history "$REL" -n $NS | tail -3
   else
     echo "AVISO: sem Helm, kubectl patch; um helm upgrade futuro volta a Cluster (avise o administrador)"

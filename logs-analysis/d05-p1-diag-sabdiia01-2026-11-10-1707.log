@@ -1,0 +1,69 @@
+== sabdiia01  2026-11-10T17:07:00-03:00  D-05 P1-diag: release monitoring (só leitura)
+### 1. Helm e opções de conflito
+v4.1.1+g5caf004
+or use the '--set' flag and pass configuration from the command line, to force string
+      --force-conflicts                            if set server-side apply will force changes against conflicts
+      --force-replace                              force resource updates by replacement
+      --server-side string                         must be "true", "false" or "auto". Object updates run in the server instead of the client ("auto" defaults th
+### 2. revisões, objeto Prometheus, pods, PV
+REVISION	UPDATED                 	STATUS  	CHART                       	APP VERSION	DESCRIPTION                                                                                                                                                                                      
+1       	Mon Sep 14 14:37:01 2026	deployed	kube-prometheus-stack-91.3.0	v0.94.0    	Install complete                                                                                                                                                                                 
+2       	Tue Nov 10 17:01:10 2026	failed  	kube-prometheus-stack-91.3.0	v0.94.0    	Upgrade "monitoring" failed: conflict occurred while applying object monitoring/monitoring-grafana /v1, Kind=Service: Apply failed with 1 conflict: conflict with "Freelens" using v1: .spec.type
+    retention: 10d
+    retentionSize: 40GiB
+    routePrefix: /
+    ruleNamespaceSelector: {}
+    ruleSelector:
+--
+    storage:
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+NAME                                                     READY   STATUS    RESTARTS      AGE     IP               NODE  
+alertmanager-monitoring-kube-prometheus-alertmanager-0   2/2     Running   2 (13d ago)   15d     10.244.50.173    sabdii
+monitoring-grafana-768ddfc4d-vg78g                       3/3     Running   0             5m24s   10.244.182.133   sabdii
+monitoring-kube-prometheus-operator-6746f685b-zhx5t      1/1     Running   1 (13d ago)   15d     10.244.50.134    sabdii
+monitoring-kube-state-metrics-78fd56fc4b-9lpmn           1/1     Running   8 (13d ago)   15d     10.244.50.180    sabdii
+monitoring-prometheus-node-exporter-5glk4                1/1     Running   5 (13d ago)   14d     192.168.50.151   sabdii
+monitoring-prometheus-node-exporter-5lthk                1/1     Running   1 (13d ago)   15d     192.168.50.150   sabdii
+monitoring-prometheus-node-exporter-lpr4x                1/1     Running   3 (13d ago)   14d     192.168.50.152   sabdii
+prometheus-monitoring-kube-prometheus-prometheus-0       2/2     Running   0             3m43s   10.244.50.166    sabdii
+NAME                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                                                                                                               STORAGECLASS           VOLUMEATTRIBUTESCLASS   REASON   AGE
+d05-prometheus-sabdiia03   50Gi       RWO            Retain           Bound    monitoring/prometheus-monitoring-kube-prometheus-prometheus-db-prometheus-monitoring-kube-prometheus-prometheus-0   d05-local-prometheus   <unset>                          5m53s
+### 3. o que difere do manifesto do Helm (revisão 1): edições fora do Helm
+diff -u -N /tmp/LIVE-4094715760/apps.v1.Deployment.monitoring.monitoring-grafana /tmp/MERGED-1374741931/apps.v1.Deployment.monitoring.monitoring-grafana
+-        checksum/secret: 73f86cd4070c8d5e882f0bb8ef4ae0403e92de1a0691dff7b702286eb09b6b7f
++        checksum/secret: fd13c8f5aae50055d6dc4571f625ef8eb3655111f3c06ce737efc1337b7ec0cf
+diff -u -N /tmp/LIVE-4094715760/v1.Service.monitoring.monitoring-grafana /tmp/MERGED-1374741931/v1.Service.monitoring.monitoring-grafana
+-  allocateLoadBalancerNodePorts: true
+-  externalTrafficPolicy: Cluster
+-    nodePort: 30351
+-  type: LoadBalancer
++  type: ClusterIP
+-  loadBalancer:
+-    ingress:
+-    - ip: 192.168.50.162
+-      ipMode: VIP
++  loadBalancer: {}
+### 4. donos dos campos do Service do Grafana
+        f:annotations:
+        f:ports:
+    manager: helm
+    operation: Apply
+        f:annotations:
+        f:type: {}
+    manager: Freelens
+    operation: Update
+        f:annotations:
+        f:loadBalancer:
+    manager: controller
+    operation: Update
+### 5. padrão do service no subchart do Grafana (91.3.0)
+252:service:
+253-  enabled: true
+254-  type: ClusterIP
+255-  # Set the ip family policy to configure dual-stack see [Configure dual-stack](https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services)
+256-  ipFamilyPolicy: ""
+257-  # Sets the families that should be supported and the order in which they should be applied to ClusterIP as well. Can be IPv4 and/or IPv6.
+258-  ipFamilies: []
+29:version: 13.2.4

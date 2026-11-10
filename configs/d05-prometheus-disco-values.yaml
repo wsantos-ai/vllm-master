@@ -1,0 +1,24 @@
+# D-05 — Values acrescentados ao release "monitoring" (kube-prometheus-stack-91.3.0) pelo Bloco P1 de
+#   runbooks/observabilidade-d05.md (helm upgrade --reuse-values, mesma versão do chart). PD-38, AC-38.
+# Campos conferidos no values.yaml da tag kube-prometheus-stack-91.3.0 em 2026-11-10 [F-053]:
+#   prometheus.prometheusSpec.storageSpec.volumeClaimTemplate (exemplo comentado do chart) e retentionSize
+#   ("Unit format should be in the form of \"50GiB\""; padrão "", sem limite). A retenção por tempo (10d) não muda.
+# retentionSize 40GiB: o PV tem 50Gi (configs/d05-prometheus-disco.yaml); a folga evita encher o volume.
+# grafana.service.type LoadBalancer (2026-11-10, P1b): o IP 192.168.50.162 do Grafana foi posto à mão pelo Freelens;
+#   sem esta linha o helm upgrade para em conflito (logs-analysis/d05-p1-sabdiia01-2026-11-10-1701.log) ou, forçado,
+#   volta o Grafana a ClusterIP. Campo conferido no subchart grafana 13.2.4 do 91.3.0 (service.type, padrão ClusterIP;
+#   logs-analysis/d05-p1-diag-sabdiia01-2026-11-10-1707.log).
+grafana:
+  service:
+    type: LoadBalancer
+prometheus:
+  prometheusSpec:
+    retentionSize: 40GiB
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: d05-local-prometheus
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 50Gi

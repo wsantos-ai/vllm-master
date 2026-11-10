@@ -1,0 +1,5 @@
+== sabdiia03  2026-11-10T16:58:09-03:00  D-05 P0: pasta do Prometheus
+SELinux: Disabled
+drwxrwx--- 2 utec 2000 ? 6 Nov 10 16:58 /var/lib/d05-prometheus
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/ol-root  631G  187G  445G  30% /

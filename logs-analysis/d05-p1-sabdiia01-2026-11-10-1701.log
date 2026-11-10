@@ -1,0 +1,31 @@
+== sabdiia01  2026-11-10T17:01:06-03:00  D-05 P1: disco local do Prometheus (PD-38)
+d23c8effff30c3e3707f90d3be0701b2bf7b01f506a058c03ec854851062d529  d05-prometheus-disco.yaml
+68439b96a3c89cba1b4e7d254c9ae444b502749af23fa0b90e83a44d84d8299f  d05-prometheus-disco-values.yaml
+chart: kube-prometheus-stack-91.3.0
+REVISION	UPDATED                 	STATUS  	CHART                       	APP VERSION	DESCRIPTION     
+1       	Mon Sep 14 14:37:01 2026	deployed	kube-prometheus-stack-91.3.0	v0.94.0    	Install complete
+### 1. cópia antes   17:01:06
+-rw-r--r-- 1 root root 3751 Nov 10 17:01 monitoring-prometheus-cr-antes-2026-11-10-1701.yaml
+-rw------- 1 root root    5 Nov 10 17:01 monitoring-values-antes-2026-11-10-1701.yaml
+NAME                                                     READY   STATUS    RESTARTS       AGE   IP               NODE        NOMINATED NODE   READINESS GATES
+alertmanager-monitoring-kube-prometheus-alertmanager-0   2/2     Running   2 (13d ago)    15d   10.244.50.173    sabdiia03   <none>           <none>
+monitoring-grafana-df5bc6c55-p9tk5                       3/3     Running   13 (13d ago)   15d   10.244.50.148    sabdiia03   <none>           <none>
+monitoring-kube-prometheus-operator-6746f685b-zhx5t      1/1     Running   1 (13d ago)    15d   10.244.50.134    sabdiia03   <none>           <none>
+monitoring-kube-state-metrics-78fd56fc4b-9lpmn           1/1     Running   8 (13d ago)    15d   10.244.50.180    sabdiia03   <none>           <none>
+monitoring-prometheus-node-exporter-5glk4                1/1     Running   5 (13d ago)    14d   192.168.50.151   sabdiia01   <none>           <none>
+monitoring-prometheus-node-exporter-5lthk                1/1     Running   1 (13d ago)    15d   192.168.50.150   sabdiia03   <none>           <none>
+monitoring-prometheus-node-exporter-lpr4x                1/1     Running   3 (13d ago)    14d   192.168.50.152   sabdiia02   <none>           <none>
+prometheus-monitoring-kube-prometheus-prometheus-0       2/2     Running   2 (13d ago)    15d   10.244.50.153    sabdiia03   <none>           <none>
+### 2. StorageClass e PV   17:01:07
+storageclass.storage.k8s.io/d05-local-prometheus created (server dry run)
+persistentvolume/d05-prometheus-sabdiia03 created (server dry run)
+storageclass.storage.k8s.io/d05-local-prometheus created
+persistentvolume/d05-prometheus-sabdiia03 created
+NAME                   PROVISIONER                    RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+d05-local-prometheus   kubernetes.io/no-provisioner   Retain          WaitForFirstConsumer   false                  0s
+NAME                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM   STORAGECLASS           VOLUMEATTRIBUTESCLASS   REASON   AGE
+d05-prometheus-sabdiia03   50Gi       RWO            Retain           Available           d05-local-prometheus   <unset>                          0s
+### 3. helm upgrade (mesma versão, --reuse-values)   17:01:07
+level=WARN msg="upgrade failed" name=monitoring error="conflict occurred while applying object monitoring/monitoring-grafana /v1, Kind=Service: Apply failed with 1 conflict: conflict with \"Freelens\" using v1: .spec.type"
+Error: UPGRADE FAILED: conflict occurred while applying object monitoring/monitoring-grafana /v1, Kind=Service: Apply failed with 1 conflict: conflict with "Freelens" using v1: .spec.type
+FALHOU o helm upgrade; traga o log (desfazer: P-desfazer)

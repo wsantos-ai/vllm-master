@@ -1,0 +1,67 @@
+== sabdiia01  2026-11-10T17:13:55-03:00  D-05 P1b: upgrade com o LoadBalancer do Grafana
+714499813aa17847b78e256b59ffc378d8fb2579cc2e679704ef063c0349aad7  d05-prometheus-disco-values.yaml
+### 1. antes: secret do Grafana (quem gravou e quando, sem o conteúdo), pods, serviço
+helm Apply 2026-09-14T17:37:14Z
+NAME                                                     READY   STATUS    RESTARTS      AGE   IP               NODE    
+alertmanager-monitoring-kube-prometheus-alertmanager-0   2/2     Running   2 (13d ago)   15d   10.244.50.173    sabdiia0
+monitoring-grafana-768ddfc4d-vg78g                       3/3     Running   0             12m   10.244.182.133   sabdiia0
+monitoring-kube-prometheus-operator-6746f685b-zhx5t      1/1     Running   1 (13d ago)   15d   10.244.50.134    sabdiia0
+monitoring-kube-state-metrics-78fd56fc4b-9lpmn           1/1     Running   8 (13d ago)   15d   10.244.50.180    sabdiia0
+monitoring-prometheus-node-exporter-5glk4                1/1     Running   5 (13d ago)   14d   192.168.50.151   sabdiia0
+monitoring-prometheus-node-exporter-5lthk                1/1     Running   1 (13d ago)   15d   192.168.50.150   sabdiia0
+monitoring-prometheus-node-exporter-lpr4x                1/1     Running   3 (13d ago)   14d   192.168.50.152   sabdiia0
+prometheus-monitoring-kube-prometheus-prometheus-0       2/2     Running   0             10m   10.244.50.166    sabdiia0
+NAME                 TYPE           CLUSTER-IP     EXTERNAL-IP      PORT(S)        AGE
+monitoring-grafana   LoadBalancer   10.110.254.9   192.168.50.162   80:30351/TCP   57d
+### 2. helm upgrade   17:13:55
+Release "monitoring" has been upgraded. Happy Helming!
+NAME: monitoring
+LAST DEPLOYED: Tue Nov 10 17:13:58 2026
+NAMESPACE: monitoring
+STATUS: deployed
+REVISION: 3
+DESCRIPTION: Upgrade complete
+TEST SUITE: None
+NOTES:
+kube-prometheus-stack has been installed. Check its status by running:
+  kubectl --namespace monitoring get pods -l "release=monitoring"
+
+Get Grafana 'admin' user password by running:
+
+  kubectl --namespace monitoring get secrets monitoring-grafana -o jsonpath="{.data.admin-password}" | base64 -d ; echo
+
+Access Grafana local instance:
+
+  export POD_NAME=$(kubectl --namespace monitoring get pod -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance=monitoring" -oname)
+  kubectl --namespace monitoring port-forward $POD_NAME 3000
+
+Get your grafana admin user password by running:
+
+  kubectl get secret --namespace monitoring -l app.kubernetes.io/component=admin-secret -o jsonpath="{.items[0].data.admin-password}" | base64 --decode ; echo
+
+
+Visit https://github.com/prometheus-operator/kube-prometheus for instructions on how to create & configure Alertmanager and Prometheus instances using the Operator.
+1       	Mon Sep 14 14:37:01 2026	superseded	kube-prometheus-stack-91.3.0	v0.94.0    	Install complete                  
+2       	Tue Nov 10 17:01:10 2026	failed    	kube-prometheus-stack-91.3.0	v0.94.0    	Upgrade "monitoring" failed: confl
+3       	Tue Nov 10 17:13:58 2026	deployed  	kube-prometheus-stack-91.3.0	v0.94.0    	Upgrade complete                  
+### 3. depois   17:14:46
+NAME                                                     READY   STATUS    RESTARTS      AGE   IP               NODE    
+alertmanager-monitoring-kube-prometheus-alertmanager-0   2/2     Running   2 (13d ago)   15d   10.244.50.173    sabdiia0
+monitoring-grafana-768ddfc4d-vg78g                       3/3     Running   0             13m   10.244.182.133   sabdiia0
+monitoring-kube-prometheus-operator-6746f685b-zhx5t      1/1     Running   1 (13d ago)   15d   10.244.50.134    sabdiia0
+monitoring-kube-state-metrics-78fd56fc4b-9lpmn           1/1     Running   8 (13d ago)   15d   10.244.50.180    sabdiia0
+monitoring-prometheus-node-exporter-5glk4                1/1     Running   5 (13d ago)   14d   192.168.50.151   sabdiia0
+monitoring-prometheus-node-exporter-5lthk                1/1     Running   1 (13d ago)   15d   192.168.50.150   sabdiia0
+monitoring-prometheus-node-exporter-lpr4x                1/1     Running   3 (13d ago)   14d   192.168.50.152   sabdiia0
+prometheus-monitoring-kube-prometheus-prometheus-0       2/2     Running   0             11m   10.244.50.166    sabdiia0
+NAME                 TYPE           CLUSTER-IP     EXTERNAL-IP      PORT(S)        AGE
+monitoring-grafana   LoadBalancer   10.110.254.9   192.168.50.162   80:30351/TCP   57d
+NAME                                                                                                     STATUS   VOLUME                     CAPACITY   ACCESS MODES   STORAGECLASS           VOLUMEATTRIBUTESCLASS   AGE
+prometheus-monitoring-kube-prometheus-prometheus-db-prometheus-monitoring-kube-prometheus-prometheus-0   Bound    d05-prometheus-sabdiia03   50Gi       RWO            d05-local-prometheus   <unset>                 11m
+helm Apply 2026-09-14T17:37:14Z
+### 4. coleta e banco   17:15:07
+      1 "scrapePool":"podMonitor/vllms/d05-kong/0"	"health":"up"
+      3 "scrapePool":"serviceMonitor/vllms/d05-gpu-dcgm/0"	"health":"up"
+      3 "scrapePool":"serviceMonitor/vllms/d05-vllm/0"	"health":"up"
+prometheus_tsdb_head_series: "156685"]
+prometheus_tsdb_wal_storage_size_bytes: "26738100"]
