@@ -1,9 +1,8 @@
 {
  "uid": "d05-vllm-gpu",
- "title": "D-05 — vLLM e GPU",
+ "title": "vLLM e GPU",
  "description": "Estudo de caso vLLM/V100S (PD-38). Gerado no repositório vllm-master: configs/grafana/. Editar no Grafana não persiste; mude o JSON e reaplique (Bloco G de runbooks/observabilidade-d05.md).",
  "tags": [
-  "d-05",
   "vllm",
   "gpu"
  ],
@@ -97,8 +96,8 @@
       "type": "prometheus",
       "uid": "${datasource}"
      },
-     "expr": "sum by (pod) (vllm:num_requests_running{namespace=\"vllms\"})",
-     "legendFormat": "rodando {{pod}}",
+     "expr": "sum by (node) (vllm:num_requests_running{namespace=\"vllms\"} * on (namespace, pod) group_left (node) max by (namespace, pod, node) (kube_pod_info{namespace=\"vllms\"}))",
+     "legendFormat": "rodando {{node}}",
      "range": true
     },
     {
@@ -107,8 +106,8 @@
       "type": "prometheus",
       "uid": "${datasource}"
      },
-     "expr": "sum by (pod) (vllm:num_requests_waiting{namespace=\"vllms\"})",
-     "legendFormat": "fila {{pod}}",
+     "expr": "sum by (node) (vllm:num_requests_waiting{namespace=\"vllms\"} * on (namespace, pod) group_left (node) max by (namespace, pod, node) (kube_pod_info{namespace=\"vllms\"}))",
+     "legendFormat": "fila {{node}}",
      "range": true
     }
    ]
@@ -162,8 +161,8 @@
       "type": "prometheus",
       "uid": "${datasource}"
      },
-     "expr": "max by (pod) (vllm:kv_cache_usage_perc{namespace=\"vllms\"})",
-     "legendFormat": "{{pod}}",
+     "expr": "max by (node) (vllm:kv_cache_usage_perc{namespace=\"vllms\"} * on (namespace, pod) group_left (node) max by (namespace, pod, node) (kube_pod_info{namespace=\"vllms\"}))",
+     "legendFormat": "{{node}}",
      "range": true
     }
    ]
@@ -216,8 +215,8 @@
       "type": "prometheus",
       "uid": "${datasource}"
      },
-     "expr": "sum by (pod) (rate(vllm:num_preemptions_total{namespace=\"vllms\"}[5m])) * 60",
-     "legendFormat": "{{pod}}",
+     "expr": "sum by (node) (rate(vllm:num_preemptions_total{namespace=\"vllms\"}[5m]) * on (namespace, pod) group_left (node) max by (namespace, pod, node) (kube_pod_info{namespace=\"vllms\"})) * 60",
+     "legendFormat": "{{node}}",
      "range": true
     }
    ]
@@ -482,8 +481,8 @@
       "type": "prometheus",
       "uid": "${datasource}"
      },
-     "expr": "sum by (pod) (rate(vllm:generation_tokens_total{namespace=\"vllms\"}[1m]))",
-     "legendFormat": "gerados {{pod}}",
+     "expr": "sum by (node) (rate(vllm:generation_tokens_total{namespace=\"vllms\"}[1m]) * on (namespace, pod) group_left (node) max by (namespace, pod, node) (kube_pod_info{namespace=\"vllms\"}))",
+     "legendFormat": "gerados {{node}}",
      "range": true
     },
     {
@@ -492,8 +491,8 @@
       "type": "prometheus",
       "uid": "${datasource}"
      },
-     "expr": "sum by (pod) (rate(vllm:prompt_tokens_total{namespace=\"vllms\"}[1m]))",
-     "legendFormat": "entrada {{pod}}",
+     "expr": "sum by (node) (rate(vllm:prompt_tokens_total{namespace=\"vllms\"}[1m]) * on (namespace, pod) group_left (node) max by (namespace, pod, node) (kube_pod_info{namespace=\"vllms\"}))",
+     "legendFormat": "entrada {{node}}",
      "range": true
     }
    ]
@@ -546,8 +545,8 @@
       "type": "prometheus",
       "uid": "${datasource}"
      },
-     "expr": "sum by (pod) (rate(vllm:request_success_total{namespace=\"vllms\"}[5m])) * 60",
-     "legendFormat": "{{pod}}",
+     "expr": "sum by (node) (rate(vllm:request_success_total{namespace=\"vllms\"}[5m]) * on (namespace, pod) group_left (node) max by (namespace, pod, node) (kube_pod_info{namespace=\"vllms\"})) * 60",
+     "legendFormat": "{{node}}",
      "range": true
     }
    ]
@@ -601,8 +600,8 @@
       "type": "prometheus",
       "uid": "${datasource}"
      },
-     "expr": "sum by (pod) (rate(vllm:prefix_cache_hits_total{namespace=\"vllms\"}[5m])) / sum by (pod) (rate(vllm:prefix_cache_queries_total{namespace=\"vllms\"}[5m]))",
-     "legendFormat": "{{pod}}",
+     "expr": "sum by (node) (rate(vllm:prefix_cache_hits_total{namespace=\"vllms\"}[5m]) * on (namespace, pod) group_left (node) max by (namespace, pod, node) (kube_pod_info{namespace=\"vllms\"})) / sum by (node) (rate(vllm:prefix_cache_queries_total{namespace=\"vllms\"}[5m]) * on (namespace, pod) group_left (node) max by (namespace, pod, node) (kube_pod_info{namespace=\"vllms\"}))",
+     "legendFormat": "{{node}}",
      "range": true
     }
    ]

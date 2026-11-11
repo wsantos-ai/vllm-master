@@ -1,0 +1,30 @@
+== sabdiia01  2026-11-11T10:48:01-03:00  D-05 A: alertas (PD-38)
+6fe11e2dbf6361bca4768f1955eecbf4689fe4f0911c56db2b2725e7953acf7c  d05-alertas.yaml
+### 0. que PrometheusRule o Prometheus carrega?   10:48:01
+ruleSelector: {"matchLabels":{"release":"monitoring"}}
+ruleNamespaceSelector: {}
+### 1. validação (webhook do operador) e aplicação   10:48:01
+prometheusrule.monitoring.coreos.com/d05-alertas configured (server dry run)
+prometheusrule.monitoring.coreos.com/d05-alertas configured
+NAME          AGE
+d05-alertas   16h
+### 2. regras carregadas? (até 5 min)   10:48:03
+esperou 15 s
+d05-gpu D05GpuEstrangulada ok inactive 
+d05-gpu D05GpuQuente ok inactive 
+d05-gpu D05GpuSemMetricas ok inactive 
+d05-kong D05KongErros5xx ok inactive 
+d05-kong D05KongLimiteDoAtor ok inactive 
+d05-kong D05KongSemMetricas ok inactive 
+d05-vllm D05VllmReplicaFora ok inactive 
+d05-vllm D05VllmFila ok inactive 
+d05-vllm D05VllmKvCacheAlto ok inactive 
+d05-vllm D05VllmPreempcoes ok inactive 
+d05-vllm D05VllmLatenciaAlta ok inactive 
+### 3. Alertmanager: rotas e receivers (só nomes)   10:48:03
+  receiver: "null"
+  - receiver: "null"
+  - receiver: d05-email
+- name: "null"
+- name: d05-email
+### 4. alertas d05 disparando agora

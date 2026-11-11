@@ -1,9 +1,9 @@
 {
  "uid": "d05-kong",
- "title": "D-05 — Kong (rota do vLLM)",
+ "title": "vLLM Route",
  "description": "Estudo de caso vLLM/V100S (PD-38). Gerado no repositório vllm-master: configs/grafana/. Editar no Grafana não persiste; mude o JSON e reaplique (Bloco G de runbooks/observabilidade-d05.md).",
  "tags": [
-  "d-05",
+  "vllm",
   "kong"
  ],
  "timezone": "browser",

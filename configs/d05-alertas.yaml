@@ -4,8 +4,8 @@
 # Aplicado pelo Bloco A de runbooks/observabilidade-d05.md. O Prometheus só carrega PrometheusRule com o rótulo que o
 #   ruleSelector dele pede (o bloco confere antes; padrão do kube-prometheus-stack: release: monitoring, como os
 #   ServiceMonitor, AC-38). Métricas e rótulos conferidos no Prometheus em 2026-11-10 (AC-39, AC-40; Bloco G).
-# Os alertas aparecem no Prometheus (/alerts), no Alertmanager e no Grafana (Alerting). Mandar e-mail ou mensagem
-#   depende de um receiver no Alertmanager, que hoje não está configurado pelo estudo.
+# Os alertas aparecem no Prometheus (/alerts), no Alertmanager e no Grafana (Alerting). Desde 2026-11-10 o Alertmanager
+#   manda por e-mail tudo o que tem decisao: d-05 (configs/d05-alertmanager-email-values.yaml, Bloco M).
 #
 # De onde vêm os limiares (mude aqui e reaplique; cada um é ponto de partida, não medida de falha):
 #   - fila, KV cache, preempções, latência: AC-31 (Nemo, 1 GPU, 32 usuários simultâneos com as perguntas reais):
@@ -29,27 +29,35 @@ spec:
       annotations:
         summary: "vLLM com menos de 3 réplicas respondendo ao Prometheus"
         description: "{{ $value }} de 3 réplicas do vllm-server com /metrics de pé. Veja kubectl get pods -n vllms."
+    # As 3 regras por réplica cruzam com kube_pod_info para ter o nó (o /metrics do vLLM só tem "pod", cujo nome muda
+    #   a cada rollout); "pod" fica no alerta para o kubectl. Mesmo cruzamento dos painéis (Bloco G, 2026-11-11).
     - alert: D05VllmFila
-      expr: max by (pod) (vllm:num_requests_waiting{namespace="vllms"}) > 0
+      expr: >-
+        max by (node, pod) (vllm:num_requests_waiting{namespace="vllms"}
+        * on (namespace, pod) group_left (node) max by (namespace, pod, node) (kube_pod_info{namespace="vllms"})) > 0
       for: 5m
       labels: {severity: warning, decisao: d-05}
       annotations:
-        summary: "Réplica {{ $labels.pod }} com requisições na fila há 5 min"
-        description: "Na fila agora: {{ $value }}. Com 32 usuários por GPU a fila ficou em 0 (AC-31): a carga passou disso."
+        summary: "Réplica de {{ $labels.node }} com requisições na fila há 5 min"
+        description: "Na fila agora: {{ $value }} (pod {{ $labels.pod }}). Com 32 usuários por GPU a fila ficou em 0 (AC-31): a carga passou disso."
     - alert: D05VllmKvCacheAlto
-      expr: max by (pod) (vllm:kv_cache_usage_perc{namespace="vllms"}) > 0.8
+      expr: >-
+        max by (node, pod) (vllm:kv_cache_usage_perc{namespace="vllms"}
+        * on (namespace, pod) group_left (node) max by (namespace, pod, node) (kube_pod_info{namespace="vllms"})) > 0.8
       for: 5m
       labels: {severity: warning, decisao: d-05}
       annotations:
-        summary: "KV cache de {{ $labels.pod }} acima de 80% há 5 min"
-        description: "Ocupação {{ $value | humanizePercentage }}; com 32 usuários o máximo foi 34% (AC-31)."
+        summary: "KV cache da réplica de {{ $labels.node }} acima de 80% há 5 min"
+        description: "Ocupação {{ $value | humanizePercentage }} (pod {{ $labels.pod }}); com 32 usuários o máximo foi 34% (AC-31)."
     - alert: D05VllmPreempcoes
-      expr: sum by (pod) (increase(vllm:num_preemptions_total{namespace="vllms"}[10m])) > 0
+      expr: >-
+        sum by (node, pod) (increase(vllm:num_preemptions_total{namespace="vllms"}[10m])
+        * on (namespace, pod) group_left (node) max by (namespace, pod, node) (kube_pod_info{namespace="vllms"})) > 0
       for: 0m
       labels: {severity: warning, decisao: d-05}
       annotations:
-        summary: "Réplica {{ $labels.pod }} tirou requisições da GPU por falta de KV cache"
-        description: "{{ $value }} preempções em 10 min; com 32 usuários foram 0 (AC-31). As requisições ficam mais lentas."
+        summary: "Réplica de {{ $labels.node }} tirou requisições da GPU por falta de KV cache"
+        description: "{{ $value }} preempções em 10 min (pod {{ $labels.pod }}); com 32 usuários foram 0 (AC-31). As requisições ficam mais lentas."
     - alert: D05VllmLatenciaAlta
       expr: >-
         histogram_quantile(0.95, sum by (le) (rate(vllm:e2e_request_latency_seconds_bucket{namespace="vllms"}[10m])))

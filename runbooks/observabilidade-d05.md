@@ -501,8 +501,8 @@ Dois painéis em JSON versionado, em [configs/grafana/](../configs/grafana/):
 
 | Arquivo | Painel no Grafana | O que mostra |
 |---|---|---|
-| `d05-painel-vllm-gpu.json` | **D-05 — vLLM e GPU** | por réplica: rodando e na fila, *KV cache*, preempções, TTFT e ITL (p50/p95), fila/*prefill*/*decode* (p95), *tokens*/s, concluídas/min, *prefix cache*; por nó: *clock*, temperatura, potência, uso, *tensor cores*, memória |
-| `d05-painel-kong.json` | **D-05 — Kong (rota do vLLM)** | requisições/min por código HTTP e por ator, erros por ator, latência p95 (total, vLLM, Kong), banda por ator |
+| `d05-painel-vllm-gpu.json` | **vLLM e GPU** | por réplica: rodando e na fila, *KV cache*, preempções, TTFT e ITL (p50/p95), fila/*prefill*/*decode* (p95), *tokens*/s, concluídas/min, *prefix cache*; por nó: *clock*, temperatura, potência, uso, *tensor cores*, memória |
+| `d05-painel-kong.json` | **vLLM Route** | requisições/min por código HTTP e por ator, erros por ator, latência p95 (total, vLLM, Kong), banda por ator |
 
 Nomes de métricas tirados dos logs (AC-39, AC-40) e do código do Kong 3.9.0 [F-049]: `kong_http_requests_total` e
 `kong_bandwidth_bytes` têm o rótulo `consumer`; os histogramas de latência, não (latência só por rota). Cada arquivo vira
@@ -568,8 +568,41 @@ for p in json.load(open(sys.argv[1]))["panels"]:
 
 **Resultado (2026-11-10 17:24, [log](../logs-analysis/d05-g-sabdiia01-2026-11-10-1724.log)):** os dois `ConfigMap` aplicados; as 30 consultas devolvem 1 a 4 séries; o *sidecar* gravou os dois painéis em `/tmp/dashboards/` 1 s depois.
 
-Depois, abra `http://192.168.50.162` → *Dashboards* → **D-05 — vLLM e GPU** e **D-05 — Kong (rota do vLLM)**. O que
-se vê na tela não é evidência; o log do G é.
+Depois, abra `http://192.168.50.162` → *Dashboards* → **vLLM e GPU** e **vLLM Route** (até 2026-11-11, "D-05 — vLLM
+e GPU" e "D-05 — Kong (rota do vLLM)"). O que se vê na tela não é evidência; o log do G é.
+
+**Renomear um painel:** troque o `"title"` no JSON e rode de novo o envio e o Bloco G. O `uid` (`d05-vllm-gpu`,
+`d05-kong`) não muda, então o Grafana substitui o painel em vez de criar um segundo. O nome do arquivo, do `ConfigMap`
+e do `uid` continuam com `d05`, porque o G e o G-desfazer os encontram por esse nome e pelo rótulo `decisao=d-05`.
+
+**Resultado da troca de nomes (2026-11-11 10:04, [log](../logs-analysis/d05-g-sabdiia01-2026-11-11-1004.log)):** os
+`sha256` batem com os JSON renomeados do repositório. Os dois `ConfigMap` foram atualizados no lugar (idade de 16 h, sem
+recriar) e o *sidecar* regravou os dois arquivos no mesmo segundo. As 30 consultas devolveram 1 a 4 séries, agora com
+tráfego no Kong (2 códigos HTTP, 1 série de erro 4xx/5xx).
+
+**Etiquetas (2026-11-11):** sem `d-05` nos dois painéis; "vLLM e GPU" fica com `vllm` e `gpu`, "vLLM Route" com `vllm` e
+`kong`. Pelo filtro `vllm`, a lista de *Dashboards* do Grafana mostra os dois. Aplicado pelo G às 10:12
+([log](../logs-analysis/d05-g-sabdiia01-2026-11-11-1012.log)): `sha256` iguais aos JSON do repositório, *sidecar*
+regravou os dois em 13:12:16 UTC, 30 consultas com ao menos 1 série.
+
+**Réplicas pelo nome do nó (2026-11-11):** o `/metrics` do vLLM só traz o rótulo `pod` (o nome muda a cada
+*rollout*, ex. `vllm-server-58699c67bf-4sn8m`); o painel "vLLM e GPU" agora cruza cada série com
+`kube_pod_info` (do *kube-state-metrics* do *chart*, que liga *pod* a `node`) e agrega por `node`:
+
+```promql
+sum by (node) (vllm:num_requests_running{namespace="vllms"}
+  * on (namespace, pod) group_left (node) max by (namespace, pod, node) (kube_pod_info{namespace="vllms"}))
+```
+
+O mesmo vale para as 9 agregações por réplica, com a legenda `{{node}}`. O cruzamento funciona também para o histórico,
+porque o `kube_pod_info` já é coletado. Durante um *rollout*, o *pod* velho e o novo do mesmo nó somam numa linha só.
+**Expectativa do G:** as 9 consultas trocadas devolvem 3 séries (uma por nó); 0 séries indicaria `kube_pod_info` sem os
+rótulos `namespace`/`pod` do *pod* `[hipótese: não conferido no log]`.
+
+**Resultado (2026-11-11 10:38, [log](../logs-analysis/d05-g-sabdiia01-2026-11-11-1038.log)):** `sha256` do painel novo
+igual ao do repositório; as 9 consultas cruzadas com `kube_pod_info` devolvem **3 séries** cada; as outras 21, o mesmo de
+antes. O *sidecar* regravou só o painel do vLLM, porque o do Kong não mudou. O log conta as séries, mas não mostra os
+valores de `node` (`sabdiia01..03` só na tela `[não verificado no log]`).
 
 ### G-desfazer — Tira os painéis (servidor `sabdiia01`, bash)
 
@@ -621,7 +654,9 @@ mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
   [ "$(hostname -s)" = sabdiia01 ] || { echo "ABORTA: este bloco é para sabdiia01"; exit 1; }
   command -v python3 >/dev/null || { echo "ABORTA: sem python3"; exit 1; }
   NS=vllms; M=d05-alertas.yaml
+  NOVO='kube_pod_info'   # texto que só a versão nova das regras tem; o passo 2 espera o Prometheus carregá-la
   [ -f $M ] || { echo "ABORTA: $M ausente; envie o arquivo"; exit 1; }
+  grep -q "$NOVO" $M || { echo "ABORTA: $M antigo"; exit 1; }
   sha256sum $M
   echo "### 0. que PrometheusRule o Prometheus carrega?   $(date +%T)"
   RS=$(kubectl get prometheus -n monitoring -o jsonpath='{.items[0].spec.ruleSelector}')
@@ -639,7 +674,8 @@ mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
   echo "### 2. regras carregadas? (até 5 min)   $(date +%T)"
   B="/api/v1/namespaces/monitoring/services/monitoring-kube-prometheus-prometheus:9090/proxy/api/v1"
   for i in $(seq 1 20); do
-    kubectl get --raw "$B/rules" | grep -q '"name":"d05-kong"' && break; sleep 15; done
+    R=$(kubectl get --raw "$B/rules")
+    echo "$R" | grep -q '"name":"d05-kong"' && echo "$R" | grep -q "$NOVO" && break; sleep 15; done
   echo "esperou $((i*15)) s"
   kubectl get --raw "$B/rules" > d05-regras.json
   python3 -c 'import json
@@ -664,6 +700,17 @@ for l in c.splitlines():
 pelo *webhook* e carregadas em 60 s, nenhuma com erro; o grupo `d05-vllm` já avaliado (5 `ok`, `inactive`), `d05-gpu` e
 `d05-kong` ainda `unknown` (lidos antes da 1ª avaliação `[hipótese]`); nenhum alerta disparando. **Alertmanager só com o
 *receiver* `"null"`: os alertas não chegam a ninguém.**
+
+**Alertas pelo nome do nó (2026-11-11):** `D05VllmFila`, `D05VllmKvCacheAlto` e `D05VllmPreempcoes` passam a agregar
+por `node, pod` com o mesmo cruzamento com `kube_pod_info` dos painéis; o assunto do e-mail diz o nó (ex. "Réplica de
+sabdiia02 …") e a descrição mantém o *pod* para o `kubectl`. O passo 2 do A agora espera o texto `kube_pod_info` nas
+regras carregadas: só o nome do grupo não distinguia a versão nova da velha. **Expectativa do A rodado de novo:** *webhook*
+aceita; `prometheusrule ... configured`; as 11 regras `ok` e `inactive` em até ~2 min; o Alertmanager com `d05-email`.
+
+**Resultado (2026-11-11 10:48, [log](../logs-analysis/d05-a-sabdiia01-2026-11-11-1048.log)):** `sha256` igual ao do
+repositório; *webhook* aceitou e `d05-alertas configured`. As regras novas (com `kube_pod_info`) já estavam carregadas na
+1ª leitura, 2 s depois do `apply`: o "esperou 15 s" do log conta a volta do laço, não espera real. As 11 regras estão `ok`
+e `inactive`. O Alertmanager está com a rota e o *receiver* `d05-email`, e nenhum alerta `D05` está disparando.
 
 ### A-confere — As 11 regras avaliadas (servidor `sabdiia01`, bash; só leitura)
 

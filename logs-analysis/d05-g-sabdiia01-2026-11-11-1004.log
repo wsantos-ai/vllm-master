@@ -1,0 +1,43 @@
+== sabdiia01  2026-11-11T10:04:17-03:00  D-05 G: painéis do Grafana (PD-38)
+3e5dedfad07209e842dd4e07715443d2d52f19d8b0280abce94634df31b09cff  d05-painel-vllm-gpu.json
+b5aa7db9e3e8ff73abc28d7928588e8d08328a77945d487d942ff7108d4c5487  d05-painel-kong.json
+### 1. ConfigMaps   10:04:17
+configmap/d05-painel-vllm-gpu serverside-applied
+configmap/d05-painel-kong serverside-applied
+NAME                  DATA   AGE   LABELS
+d05-painel-kong       1      16h   decisao=d-05,grafana_dashboard=1
+d05-painel-vllm-gpu   1      16h   decisao=d-05,grafana_dashboard=1
+### 2. cada consulta no Prometheus (nº de séries | consulta)   10:04:17
+  3 | sum by (pod) (vllm:num_requests_running{namespace="vllms"})
+  3 | sum by (pod) (vllm:num_requests_waiting{namespace="vllms"})
+  3 | max by (pod) (vllm:kv_cache_usage_perc{namespace="vllms"})
+  3 | sum by (pod) (rate(vllm:num_preemptions_total{namespace="vllms"}[5m])) * 60
+  1 | histogram_quantile(0.5, sum by (le) (rate(vllm:time_to_first_token_seconds_bucket{namespac
+  1 | histogram_quantile(0.95, sum by (le) (rate(vllm:time_to_first_token_seconds_bucket{namespa
+  1 | histogram_quantile(0.5, sum by (le) (rate(vllm:inter_token_latency_seconds_bucket{namespac
+  1 | histogram_quantile(0.95, sum by (le) (rate(vllm:inter_token_latency_seconds_bucket{namespa
+  1 | histogram_quantile(0.95, sum by (le) (rate(vllm:request_queue_time_seconds_bucket{namespac
+  1 | histogram_quantile(0.95, sum by (le) (rate(vllm:request_prefill_time_seconds_bucket{namesp
+  1 | histogram_quantile(0.95, sum by (le) (rate(vllm:request_decode_time_seconds_bucket{namespa
+  1 | histogram_quantile(0.95, sum by (le) (rate(vllm:e2e_request_latency_seconds_bucket{namespa
+  3 | sum by (pod) (rate(vllm:generation_tokens_total{namespace="vllms"}[1m]))
+  3 | sum by (pod) (rate(vllm:prompt_tokens_total{namespace="vllms"}[1m]))
+  3 | sum by (pod) (rate(vllm:request_success_total{namespace="vllms"}[5m])) * 60
+  3 | sum by (pod) (rate(vllm:prefix_cache_hits_total{namespace="vllms"}[5m])) / sum by (pod) (r
+  3 | DCGM_FI_DEV_SM_CLOCK{namespace="gpu-operator"} * 1e6
+  3 | DCGM_FI_DEV_GPU_TEMP{namespace="gpu-operator"}
+  3 | DCGM_FI_DEV_MEMORY_TEMP{namespace="gpu-operator"}
+  3 | DCGM_FI_DEV_POWER_USAGE{namespace="gpu-operator"}
+  3 | DCGM_FI_DEV_GPU_UTIL{namespace="gpu-operator"}
+  3 | DCGM_FI_PROF_PIPE_TENSOR_ACTIVE{namespace="gpu-operator"}
+  3 | DCGM_FI_DEV_FB_USED{namespace="gpu-operator"} * 1048576
+  2 | sum by (code) (rate(kong_http_requests_total[5m])) * 60
+  2 | sum by (consumer) (rate(kong_http_requests_total[5m])) * 60
+  1 | sum by (consumer, code) (rate(kong_http_requests_total{code=~"4..|5.."}[5m])) * 60
+  1 | histogram_quantile(0.95, sum by (le) (rate(kong_request_latency_ms_bucket[5m])))
+  1 | histogram_quantile(0.95, sum by (le) (rate(kong_upstream_latency_ms_bucket[5m])))
+  1 | histogram_quantile(0.95, sum by (le) (rate(kong_kong_latency_ms_bucket[5m])))
+  4 | sum by (consumer, direction) (rate(kong_bandwidth_bytes[5m]))
+### 3. o sidecar do Grafana pegou?   10:04:20
+{"time": "2026-11-11T13:04:17.652908+00:00", "level": "INFO", "msg": "Writing /tmp/dashboards/d05-painel-vllm-gpu.json (ascii)"}
+{"time": "2026-11-11T13:04:17.887229+00:00", "level": "INFO", "msg": "Writing /tmp/dashboards/d05-painel-kong.json (ascii)"}
