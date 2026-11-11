@@ -1,7 +1,7 @@
 {
  "uid": "d05-kong",
  "title": "vLLM Route",
- "description": "Estudo de caso vLLM/V100S (PD-38). Gerado no repositório vllm-master: configs/grafana/. Editar no Grafana não persiste; mude o JSON e reaplique (Bloco G de runbooks/observabilidade-d05.md).",
+ "description": "Mantido em arquivo (repositório vllm-master, configs/grafana/). Editar no Grafana não persiste: mude o JSON e reaplique.",
  "tags": [
   "vllm",
   "kong"
@@ -38,7 +38,7 @@
   {
    "id": 1,
    "type": "row",
-   "title": "Rota do vLLM no Kong (plugin prometheus, AC-40)",
+   "title": "Rota do vLLM no Kong (plugin prometheus)",
    "collapsed": false,
    "gridPos": {
     "h": 1,
@@ -214,7 +214,7 @@
    "id": 5,
    "type": "timeseries",
    "title": "Latência p95 (ms)",
-   "description": "Por rota, não por ator (o histograma não tem o rótulo consumer, F-049). Com streaming, o total inclui a resposta inteira.",
+   "description": "Por rota, não por ator (o histograma do Kong não tem o rótulo consumer). Com streaming, o total inclui a resposta inteira.",
    "datasource": {
     "type": "prometheus",
     "uid": "${datasource}"

@@ -1,0 +1,15 @@
+== sabdiia01  2026-11-11T11:33:51-03:00  D-05 G-alertas (só leitura)
+### 1. versão
+{
+  "database": "ok",
+  "version": "13.2.1",
+  "commit": "56cd3e9288d8255fecebe5d05b48d191f50674b5"
+}
+### 2. fontes de dados
+Alertmanager alertmanager alertmanager manageAlerts= (padrão)
+Prometheus prometheus prometheus manageAlerts= (padrão)
+### 3. regras do Prometheus vistas pelo Grafana
+status success | grupos 38 | erro 
+d05-gpu ['GpuEstrangulada', 'GpuQuente', 'GpuSemMetricas']
+d05-kong ['KongErros5xx', 'KongLimiteDoAtor', 'KongSemMetricas']
+d05-vllm ['VllmReplicaFora', 'VllmFila', 'VllmKvCacheAlto', 'VllmPreempcoes', 'VllmLatenciaAlta']

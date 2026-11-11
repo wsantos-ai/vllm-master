@@ -1,0 +1,73 @@
+== sabdiia01  2026-11-11T11:10:22-03:00  D-05 N: e-mails sem D05 (PD-38)
+1b060a896828e3d6c9db2ac62e09a82c8be1bdcbed736420684c9d997fc0092e  d05-alertmanager-email-values.yaml
+e21c17554e344053ff4652580aa6ce541ec6d7699a351010ff43b179c64fde35  d05-alertas.yaml
+c4fc5b3ce8c84f33535f163ac221e611124f52b6d95c85352817e9819093d760  d05-alerta-teste.yaml
+### 0. cópias e contadores antes   11:10:22
+alertmanager_notification_requests_failed_total  6
+alertmanager_notification_requests_total  12
+alertmanager_notifications_total  6
+### 1. edições fora do Helm? (AC-41)   11:10:23
+revisão 6: nenhuma diferença
+### 2. Alertmanager: rota servico=vllm   11:10:33
+Release "monitoring" has been upgraded. Happy Helming!
+NAME: monitoring
+LAST DEPLOYED: Wed Nov 11 11:10:37 2026
+NAMESPACE: monitoring
+STATUS: deployed
+REVISION: 7
+DESCRIPTION: Upgrade complete
+TEST SUITE: None
+NOTES:
+kube-prometheus-stack has been installed. Check its status by running:
+  kubectl --namespace monitoring get pods -l "release=monitoring"
+
+Get Grafana 'admin' user password by running:
+
+  kubectl --namespace monitoring get secrets monitoring-grafana -o jsonpath="{.data.admin-password}" | base64 -d ; echo
+
+Access Grafana local instance:
+
+  export POD_NAME=$(kubectl --namespace monitoring get pod -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance=monitoring" -oname)
+  kubectl --namespace monitoring port-forward $POD_NAME 3000
+
+Get your grafana admin user password by running:
+
+  kubectl get secret --namespace monitoring -l app.kubernetes.io/component=admin-secret -o jsonpath="{.items[0].data.admin-password}" | base64 --decode ; echo
+
+
+Visit https://github.com/prometheus-operator/kube-prometheus for instructions on how to create & configure Alertmanager and Prometheus instances using the Operator.
+6       	Wed Nov 11 09:43:44 2026	superseded	kube-prometheus-stack-91.3.0	v0.94.0    	Upgrade comple
+7       	Wed Nov 11 11:10:37 2026	deployed  	kube-prometheus-stack-91.3.0	v0.94.0    	Upgrade comple
+configuração nova após 60 s
+NAME                                                     READY   STATUS    RESTARTS   AGE   IP               NODE        NOMINATED NODE   READINESS GATES
+alertmanager-monitoring-kube-prometheus-alertmanager-0   2/2     Running   0          16h   10.244.182.138   sabdiia02   <none>           <none>
+  - receiver: "null"
+    matchers:
+  - receiver: vllm-email
+    matchers:
+    - servico="vllm"
+- name: "null"
+- name: vllm-email
+### 3. regras sem D05   11:12:04
+prometheusrule.monitoring.coreos.com/d05-alertas configured (server dry run)
+prometheusrule.monitoring.coreos.com/d05-alertas configured
+regras novas após 45 s
+d05-gpu GpuEstrangulada unknown unknown {'servico': 'vllm', 'severity': 'critical'}
+d05-gpu GpuQuente unknown unknown {'servico': 'vllm', 'severity': 'warning'}
+d05-gpu GpuSemMetricas unknown unknown {'servico': 'vllm', 'severity': 'warning'}
+d05-kong KongErros5xx unknown unknown {'servico': 'vllm', 'severity': 'critical'}
+d05-kong KongLimiteDoAtor unknown unknown {'servico': 'vllm', 'severity': 'warning'}
+d05-kong KongSemMetricas unknown unknown {'servico': 'vllm', 'severity': 'warning'}
+d05-vllm VllmReplicaFora unknown unknown {'servico': 'vllm', 'severity': 'critical'}
+d05-vllm VllmFila unknown unknown {'servico': 'vllm', 'severity': 'warning'}
+d05-vllm VllmKvCacheAlto unknown unknown {'servico': 'vllm', 'severity': 'warning'}
+d05-vllm VllmPreempcoes unknown unknown {'servico': 'vllm', 'severity': 'warning'}
+d05-vllm VllmLatenciaAlta unknown unknown {'servico': 'vllm', 'severity': 'warning'}
+### 4. teste   11:12:51 = 14:12:51 UTC
+prometheusrule.monitoring.coreos.com/d05-alerta-teste created
+ativo às 14:14:06 UTC
+prometheusrule.monitoring.coreos.com "d05-alerta-teste" deleted from vllms namespace
+### 5. contadores depois   11:16:07
+alertmanager_notification_requests_failed_total  6
+alertmanager_notification_requests_total  13
+alertmanager_notifications_total  7

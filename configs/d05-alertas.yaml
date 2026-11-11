@@ -4,8 +4,13 @@
 # Aplicado pelo Bloco A de runbooks/observabilidade-d05.md. O Prometheus só carrega PrometheusRule com o rótulo que o
 #   ruleSelector dele pede (o bloco confere antes; padrão do kube-prometheus-stack: release: monitoring, como os
 #   ServiceMonitor, AC-38). Métricas e rótulos conferidos no Prometheus em 2026-11-10 (AC-39, AC-40; Bloco G).
-# Os alertas aparecem no Prometheus (/alerts), no Alertmanager e no Grafana (Alerting). Desde 2026-11-10 o Alertmanager
-#   manda por e-mail tudo o que tem decisao: d-05 (configs/d05-alertmanager-email-values.yaml, Bloco M).
+# Os alertas aparecem no Prometheus (/alerts) e no Alertmanager; no Grafana, só como regras "Data source-managed"
+#   da fonte Prometheus, e os disparados pela fonte Alertmanager (a tela não foi conferida: G-alertas). Desde 2026-11-10 o Alertmanager
+#   manda por e-mail tudo o que tem servico: vllm (configs/d05-alertmanager-email-values.yaml, Bloco M).
+# Desde 2026-11-11 (pedido do usuário) nada do que vai no e-mail cita a decisão: alertas sem o prefixo "D05" e rótulo de
+#   roteamento servico: vllm no lugar de decisao: d-05 (o assunto padrão do e-mail mostra os valores dos rótulos comuns).
+#   O objeto PrometheusRule continua com decisao: d-05 nos metadados (é o que o estudo controla); os nomes dos grupos
+#   (d05-*) não chegam ao e-mail.
 #
 # De onde vêm os limiares (mude aqui e reaplique; cada um é ponto de partida, não medida de falha):
 #   - fila, KV cache, preempções, latência: AC-31 (Nemo, 1 GPU, 32 usuários simultâneos com as perguntas reais):
@@ -22,96 +27,96 @@ spec:
   groups:
   - name: d05-vllm
     rules:
-    - alert: D05VllmReplicaFora
+    - alert: VllmReplicaFora
       expr: (count(up{namespace="vllms"} == 1) or vector(0)) < 3
       for: 3m
-      labels: {severity: critical, decisao: d-05}
+      labels: {severity: critical, servico: vllm}
       annotations:
         summary: "vLLM com menos de 3 réplicas respondendo ao Prometheus"
         description: "{{ $value }} de 3 réplicas do vllm-server com /metrics de pé. Veja kubectl get pods -n vllms."
     # As 3 regras por réplica cruzam com kube_pod_info para ter o nó (o /metrics do vLLM só tem "pod", cujo nome muda
     #   a cada rollout); "pod" fica no alerta para o kubectl. Mesmo cruzamento dos painéis (Bloco G, 2026-11-11).
-    - alert: D05VllmFila
+    - alert: VllmFila
       expr: >-
         max by (node, pod) (vllm:num_requests_waiting{namespace="vllms"}
         * on (namespace, pod) group_left (node) max by (namespace, pod, node) (kube_pod_info{namespace="vllms"})) > 0
       for: 5m
-      labels: {severity: warning, decisao: d-05}
+      labels: {severity: warning, servico: vllm}
       annotations:
         summary: "Réplica de {{ $labels.node }} com requisições na fila há 5 min"
-        description: "Na fila agora: {{ $value }} (pod {{ $labels.pod }}). Com 32 usuários por GPU a fila ficou em 0 (AC-31): a carga passou disso."
-    - alert: D05VllmKvCacheAlto
+        description: "Na fila agora: {{ $value }} (pod {{ $labels.pod }}). Em teste com 32 usuários por GPU a fila ficou em 0: a carga passou disso."
+    - alert: VllmKvCacheAlto
       expr: >-
         max by (node, pod) (vllm:kv_cache_usage_perc{namespace="vllms"}
         * on (namespace, pod) group_left (node) max by (namespace, pod, node) (kube_pod_info{namespace="vllms"})) > 0.8
       for: 5m
-      labels: {severity: warning, decisao: d-05}
+      labels: {severity: warning, servico: vllm}
       annotations:
         summary: "KV cache da réplica de {{ $labels.node }} acima de 80% há 5 min"
-        description: "Ocupação {{ $value | humanizePercentage }} (pod {{ $labels.pod }}); com 32 usuários o máximo foi 34% (AC-31)."
-    - alert: D05VllmPreempcoes
+        description: "Ocupação {{ $value | humanizePercentage }} (pod {{ $labels.pod }}); em teste com 32 usuários por GPU o máximo foi 34%."
+    - alert: VllmPreempcoes
       expr: >-
         sum by (node, pod) (increase(vllm:num_preemptions_total{namespace="vllms"}[10m])
         * on (namespace, pod) group_left (node) max by (namespace, pod, node) (kube_pod_info{namespace="vllms"})) > 0
       for: 0m
-      labels: {severity: warning, decisao: d-05}
+      labels: {severity: warning, servico: vllm}
       annotations:
         summary: "Réplica de {{ $labels.node }} tirou requisições da GPU por falta de KV cache"
-        description: "{{ $value }} preempções em 10 min (pod {{ $labels.pod }}); com 32 usuários foram 0 (AC-31). As requisições ficam mais lentas."
-    - alert: D05VllmLatenciaAlta
+        description: "{{ $value }} preempções em 10 min (pod {{ $labels.pod }}); em teste com 32 usuários por GPU foram 0. As requisições ficam mais lentas."
+    - alert: VllmLatenciaAlta
       expr: >-
         histogram_quantile(0.95, sum by (le) (rate(vllm:e2e_request_latency_seconds_bucket{namespace="vllms"}[10m])))
         > 25
       for: 10m
-      labels: {severity: warning, decisao: d-05}
+      labels: {severity: warning, servico: vllm}
       annotations:
         summary: "p95 da latência do vLLM acima de 25 s há 10 min"
-        description: "p95 = {{ $value | humanizeDuration }}. 25 s foi o p95 de uma pergunta inteira (2 chamadas) com 32 usuários (AC-31)."
+        description: "p95 = {{ $value | humanizeDuration }}. Em teste com 32 usuários por GPU, o p95 de uma pergunta inteira (2 chamadas) foi 25 s."
   - name: d05-gpu
     rules:
-    - alert: D05GpuEstrangulada
+    - alert: GpuEstrangulada
       expr: (DCGM_FI_DEV_SM_CLOCK{namespace="gpu-operator"} < 1000) and (DCGM_FI_DEV_GPU_UTIL{namespace="gpu-operator"} > 50)
       for: 2m
-      labels: {severity: critical, decisao: d-05}
+      labels: {severity: critical, servico: vllm}
       annotations:
         summary: "GPU de {{ $labels.Hostname }} trabalhando com clock baixo"
-        description: "SM a {{ $value }} MHz com a GPU ocupada. Em AC-17 o estrangulamento térmico levou o SM de 1560 a ~400 MHz e a vazão caiu 4×. Confira com nvidia-smi -q -d PERFORMANCE."
-    - alert: D05GpuQuente
+        description: "SM a {{ $value }} MHz com a GPU ocupada. Num estrangulamento térmico já ocorrido nestas GPUs, o SM caiu de 1560 a ~400 MHz e a vazão caiu 4×. Confira com nvidia-smi -q -d PERFORMANCE."
+    - alert: GpuQuente
       expr: DCGM_FI_DEV_GPU_TEMP{namespace="gpu-operator"} > 80
       for: 5m
-      labels: {severity: warning, decisao: d-05}
+      labels: {severity: warning, servico: vllm}
       annotations:
         summary: "GPU de {{ $labels.Hostname }} acima de 80 °C há 5 min"
-        description: "{{ $value }} °C. Em AC-17 o estrangulamento começou a 82 °C."
-    - alert: D05GpuSemMetricas
+        description: "{{ $value }} °C. Nestas GPUs, o estrangulamento térmico já começou a 82 °C."
+    - alert: GpuSemMetricas
       expr: (count(up{namespace="gpu-operator"} == 1) or vector(0)) < 3
       for: 5m
-      labels: {severity: warning, decisao: d-05}
+      labels: {severity: warning, servico: vllm}
       annotations:
         summary: "DCGM respondendo em menos de 3 nós"
         description: "{{ $value }} de 3. Sem isso, os alertas de GPU não disparam."
   - name: d05-kong
     rules:
-    - alert: D05KongErros5xx
+    - alert: KongErros5xx
       expr: >-
         sum(rate(kong_http_requests_total{code=~"5.."}[5m])) / sum(rate(kong_http_requests_total[5m])) > 0.05
         and sum(rate(kong_http_requests_total[5m])) > 0.1
       for: 5m
-      labels: {severity: critical, decisao: d-05}
+      labels: {severity: critical, servico: vllm}
       annotations:
         summary: "Mais de 5% de respostas 5xx na rota do vLLM"
         description: "Proporção {{ $value | humanizePercentage }}. 502/503: o Kong não alcança o vLLM; 504: o vLLM passou de 120 s."
-    - alert: D05KongLimiteDoAtor
+    - alert: KongLimiteDoAtor
       expr: sum by (consumer) (rate(kong_http_requests_total{code="429"}[5m])) > 0
       for: 10m
-      labels: {severity: warning, decisao: d-05}
+      labels: {severity: warning, servico: vllm}
       annotations:
         summary: "Ator {{ $labels.consumer }} batendo no limite de requisições há 10 min"
-        description: "{{ $value }} respostas 429 por segundo. Ou o ator precisa de limite maior (d05-rate-limit), ou há uso fora do previsto."
-    - alert: D05KongSemMetricas
+        description: "{{ $value }} respostas 429 por segundo. Ou o ator precisa de limite maior (plugin de limite do Kong), ou há uso fora do previsto."
+    - alert: KongSemMetricas
       expr: (count(up{namespace="kong"} == 1) or vector(0)) < 1
       for: 5m
-      labels: {severity: warning, decisao: d-05}
+      labels: {severity: warning, servico: vllm}
       annotations:
         summary: "Prometheus sem métricas do Kong"
-        description: "O PodMonitor d05-kong não alcança a porta 8100 do gateway. Os alertas do Kong não disparam."
+        description: "O Prometheus não alcança a porta 8100 do gateway. Os alertas do Kong não disparam."

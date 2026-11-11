@@ -1,7 +1,7 @@
 {
  "uid": "d05-vllm-gpu",
  "title": "vLLM e GPU",
- "description": "Estudo de caso vLLM/V100S (PD-38). Gerado no repositório vllm-master: configs/grafana/. Editar no Grafana não persiste; mude o JSON e reaplique (Bloco G de runbooks/observabilidade-d05.md).",
+ "description": "Mantido em arquivo (repositório vllm-master, configs/grafana/). Editar no Grafana não persiste: mude o JSON e reaplique.",
  "tags": [
   "vllm",
   "gpu"
@@ -38,7 +38,7 @@
   {
    "id": 1,
    "type": "row",
-   "title": "vLLM (3 réplicas do Mistral-Nemo, v0.19.1) — AC-39",
+   "title": "vLLM (3 réplicas do Mistral-Nemo, v0.19.1)",
    "collapsed": false,
    "gridPos": {
     "h": 1,
@@ -52,7 +52,7 @@
    "id": 2,
    "type": "timeseries",
    "title": "Requisições rodando e na fila, por réplica",
-   "description": "Fila > 0 por vários minutos: a réplica está saturada (AC-39).",
+   "description": "Fila > 0 por vários minutos: a réplica está saturada.",
    "datasource": {
     "type": "prometheus",
     "uid": "${datasource}"
@@ -623,7 +623,7 @@
    "id": 12,
    "type": "timeseries",
    "title": "Clock do SM",
-   "description": "Queda com a GPU ocupada indica estrangulamento (AC-17). O motivo da queda não vem do DCGM padrão: nas medições, o critério segue o nvidia-smi gravado.",
+   "description": "Queda com a GPU ocupada indica estrangulamento térmico (nestas GPUs, o SM já caiu de 1560 para ~400 MHz). O motivo da queda não vem do DCGM padrão: confira com nvidia-smi -q -d PERFORMANCE.",
    "datasource": {
     "type": "prometheus",
     "uid": "${datasource}"
@@ -740,7 +740,7 @@
    "id": 14,
    "type": "timeseries",
    "title": "Potência",
-   "description": "Limite: 250 W (§2).",
+   "description": "Limite: 250 W.",
    "datasource": {
     "type": "prometheus",
     "uid": "${datasource}"

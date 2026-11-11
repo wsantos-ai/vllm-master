@@ -3,6 +3,8 @@
 #   acrescentado wellington.santos-min@abdi.com.br (o 1º teste saiu do Alertmanager, mas não chegou à caixa); em
 #   2026-11-11, santos-wellington@hotmail.com (pessoal, fora do domínio): separa "o correio não entrega" de "o
 #   correio não entrega dentro do domínio" (Bloco M4); só o Hotmail recebeu.
+# 2026-11-11 (pedido do usuário: nada de "D05" no e-mail): rota por servico = "vllm" (antes decisao = "d-05", cujo valor
+#   aparecia no assunto) e receiver vllm-email (antes d05-email, que ia no link do e-mail). Bloco N.
 #
 # Values acrescentados ao release "monitoring" (kube-prometheus-stack-91.3.0) pelo Bloco M de
 #   runbooks/observabilidade-d05.md (helm upgrade --reuse-values, mesma versão; mantém os values do disco, AC-41).
@@ -30,15 +32,15 @@ alertmanager:
       routes:
       - receiver: 'null'
         matchers: ['alertname = "Watchdog"']
-      - receiver: d05-email
-        matchers: ['decisao = "d-05"']
+      - receiver: vllm-email
+        matchers: ['servico = "vllm"']
         group_by: [alertname]
         group_wait: 30s
         group_interval: 5m
         repeat_interval: 4h
     receivers:
     - name: 'null'
-    - name: d05-email
+    - name: vllm-email
       email_configs:
       - to: wsantos-min@abdi.com.br, wellington.santos-min@abdi.com.br, santos-wellington@hotmail.com
         send_resolved: true

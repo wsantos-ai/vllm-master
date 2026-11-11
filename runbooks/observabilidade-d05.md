@@ -617,19 +617,22 @@ tirados do estudo: fila, *KV cache*, preempções e latência do AC-31 (Nemo, 32
 34 %, 0 preempções, p95 de 25 s por pergunta); *clock* e temperatura do AC-17 (estrangulamento: SM de 1560 para ~400 MHz,
 a partir de 82 °C). Os do Kong (5xx acima de 5 %, 429 por 10 min) são escolha de operação.
 
+Nomes sem o prefixo `D05` e rótulo `servico: vllm` desde 2026-11-11 (Bloco N); os blocos M2 a M4 abaixo são histórico e
+procuram `D05TesteEmail`: para testar o e-mail hoje, use o N.
+
 | Grupo | Alerta | Dispara quando | Gravidade |
 |---|---|---|---|
-| vLLM | `D05VllmReplicaFora` | menos de 3 réplicas com `/metrics` de pé, por 3 min | critical |
-| | `D05VllmFila` | fila > 0 numa réplica por 5 min | warning |
-| | `D05VllmKvCacheAlto` | *KV cache* > 80 % por 5 min | warning |
-| | `D05VllmPreempcoes` | alguma preempção em 10 min | warning |
-| | `D05VllmLatenciaAlta` | p95 ponta a ponta > 25 s por 10 min | warning |
-| GPU | `D05GpuEstrangulada` | SM < 1000 MHz com uso > 50 %, por 2 min | critical |
-| | `D05GpuQuente` | > 80 °C por 5 min | warning |
-| | `D05GpuSemMetricas` | DCGM em menos de 3 nós, por 5 min | warning |
-| Kong | `D05KongErros5xx` | > 5 % de 5xx (com tráfego), por 5 min | critical |
-| | `D05KongLimiteDoAtor` | um ator com 429 por 10 min | warning |
-| | `D05KongSemMetricas` | Prometheus sem a porta 8100 do Kong, por 5 min | warning |
+| vLLM | `VllmReplicaFora` | menos de 3 réplicas com `/metrics` de pé, por 3 min | critical |
+| | `VllmFila` | fila > 0 numa réplica por 5 min | warning |
+| | `VllmKvCacheAlto` | *KV cache* > 80 % por 5 min | warning |
+| | `VllmPreempcoes` | alguma preempção em 10 min | warning |
+| | `VllmLatenciaAlta` | p95 ponta a ponta > 25 s por 10 min | warning |
+| GPU | `GpuEstrangulada` | SM < 1000 MHz com uso > 50 %, por 2 min | critical |
+| | `GpuQuente` | > 80 °C por 5 min | warning |
+| | `GpuSemMetricas` | DCGM em menos de 3 nós, por 5 min | warning |
+| Kong | `KongErros5xx` | > 5 % de 5xx (com tráfego), por 5 min | critical |
+| | `KongLimiteDoAtor` | um ator com 429 por 10 min | warning |
+| | `KongSemMetricas` | Prometheus sem a porta 8100 do Kong, por 5 min | warning |
 
 Os alertas aparecem no Prometheus, no Alertmanager e no Grafana (*Alerting* → *Alert rules*, fonte Prometheus). **Ninguém
 é avisado por e-mail ou mensagem** enquanto o Alertmanager não tiver um *receiver* de verdade: o bloco mostra os que
@@ -690,8 +693,10 @@ for g in json.load(open("d05-regras.json"))["data"]["groups"]:
 c = json.load(sys.stdin)["config"]["original"]
 for l in c.splitlines():
     if l.strip().startswith(("receiver:", "- name:", "- receiver:")): print(l)'
-  echo "### 4. alertas d05 disparando agora"
-  kubectl get --raw "$B/alerts" | tr '{' '\n' | grep -o '"alertname":"D05[^"]*"' | sort | uniq -c
+  echo "### 4. alertas do vLLM disparando agora (rótulo servico=vllm; até 2026-11-11, nomes D05*)"
+  kubectl get --raw "$B/alerts" | python3 -c 'import json,sys
+for a in json.load(sys.stdin)["data"]["alerts"]:
+    if a["labels"].get("servico") == "vllm": print(a["labels"]["alertname"], a["state"])'
   rm -f d05-regras.json
 } 2>&1 | tee d05-a-$(hostname -s)-$(date +%F-%H%M).log
 ```
@@ -730,6 +735,60 @@ for g in json.load(sys.stdin)["data"]["groups"]:
             print("  ", r["name"], r.get("health"), r.get("state"), r.get("lastError", ""))'
 } 2>&1 | tee d05-a-confere-$(hostname -s)-$(date +%F-%H%M).log
 ```
+
+### Onde os alertas aparecem no Grafana
+
+As 11 regras são do Prometheus (`PrometheusRule`), não do Grafana. O Grafana só as mostra lendo a fonte de dados, como
+regras **"gerenciadas pela fonte de dados"** (*Data source-managed*), separadas das *Grafana-managed*. O *chart* 91.3.0
+cria a fonte `Prometheus` (`uid: prometheus`) sem o campo `manageAlerts`, ou seja, com o padrão do Grafana. Cria também a
+fonte `Alertmanager` (`uid: alertmanager`, `implementation: prometheus`) [F-053, conferido em 2026-11-11]. Caminhos na
+tela:
+- **Alerting → Alert rules**, seção *Data source-managed* → `Prometheus` → grupos `d05-vllm`, `d05-gpu`, `d05-kong`
+  (o Grafana do *cluster* é o 13.2.1: pode ser preciso filtrar, veja o resultado do G-alertas) `[hipótese: rótulos da tela]`;
+- **Alerting → Active notifications** (ou *Alert groups*), com `Alertmanager` escolhido no seletor de Alertmanager do
+  topo: os alertas **disparando**, agrupados por `alertname`.
+
+Se nada disso aparecer, rode o G-alertas.
+
+### G-alertas — O Grafana enxerga as regras do Prometheus? (servidor `sabdiia01`, bash; só leitura)
+
+Lê a senha do `admin` do Secret do Grafana, sem imprimi-la, e pergunta à API do Grafana: versão; fontes de dados com
+`manageAlerts`; regras que o Grafana lê do Prometheus.
+
+**Expectativa (escrita antes) `[hipótese]`:** Grafana 12.x; `Prometheus` com `manageAlerts` ausente (= padrão);
+`Alertmanager` presente; pela API do Grafana, os 3 grupos `d05-*` com 11 regras. Se a API listar as regras e a tela não,
+o problema é de tela ou filtro. Se a API não listar, é a fonte de dados ou um padrão do Grafana desligado
+(`[unified_alerting] default_manage_alerts_ui_toggle`).
+
+```bash
+mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
+{ echo "== $(hostname -s)  $(date -Is)  D-05 G-alertas (só leitura)"
+  G=http://192.168.50.162
+  GP=$(kubectl get secret monitoring-grafana -n monitoring -o jsonpath='{.data.admin-password}' | base64 -d)
+  [ -n "$GP" ] || { echo "ABORTA: sem a senha do admin no Secret"; exit 1; }
+  echo "### 1. versão";  curl -s -m 10 $G/api/health; echo
+  echo "### 2. fontes de dados"
+  curl -s -m 10 -u "admin:$GP" $G/api/datasources | python3 -c 'import json,sys
+for d in json.load(sys.stdin):
+    print(d["name"], d["type"], d["uid"], "manageAlerts=", d.get("jsonData", {}).get("manageAlerts", "(padrão)"))'
+  echo "### 3. regras do Prometheus vistas pelo Grafana"
+  curl -s -m 20 -u "admin:$GP" "$G/api/prometheus/prometheus/api/v1/rules" | python3 -c 'import json,sys
+r = json.load(sys.stdin)
+gs = r.get("data", {}).get("groups", [])
+print("status", r.get("status"), "| grupos", len(gs), "| erro", r.get("error", ""))
+for g in gs:
+    if g["name"].startswith("d05"): print(g["name"], [x["name"] for x in g["rules"]])'
+  unset GP
+} 2>&1 | tee d05-g-alertas-$(hostname -s)-$(date +%F-%H%M).log
+```
+
+**Resultado (2026-11-11 11:33, [log](../logs-analysis/d05-g-alertas-sabdiia01-2026-11-11-1133.log)):** **Grafana
+13.2.1** (não 12); as fontes `Prometheus` e `Alertmanager` estão com `manageAlerts` no padrão; pela API do Grafana,
+`status success`, **38 grupos**, entre eles os 3 `d05-*` com as 11 regras. O Grafana lê as regras; se a tela não as
+mostra, é tela ou filtro: na lista de *Alert rules* elas se misturam aos 35 grupos padrão do *chart*. No filtro, use a
+busca `group:d05` ou a opção *rule source* = fonte de dados `[hipótese: sintaxe da busca na 13.2; a doc lista os filtros
+"evaluation group", "data source" e "rule source"]`. A partir da 13.3, a lista principal deixa de mostrar regras de fonte de
+dados, que passam a um *plugin* próprio (*Prometheus Alerting*); isso entra num *upgrade* do Grafana.
 
 ### A-desfazer — Tira os alertas (servidor `sabdiia01`, bash)
 
@@ -1063,6 +1122,123 @@ sem edição fora do Helm; os três endereços carregados em 45 s, sem reiniciar
 entrega para fora, mas não para dentro do próprio domínio `[hipótese: filtro anti-spoofing, quarentena ou regra de
 transporte]`. Para quem administra o correio: remetente `noreply@abdi.com.br`, 12:45-12:46 UTC de 2026-11-11, mesma
 mensagem entregue ao Hotmail e não às caixas `@abdi.com.br`.
+
+### N — Tira o "D05" dos e-mails (servidor `sabdiia01`, bash)
+
+Pedido do usuário (2026-11-11): os e-mails não citam a decisão. Hoje "D05" aparece no nome do alerta (`D05VllmFila`) e
+"d-05" no assunto, porque o assunto padrão do Alertmanager lista os valores dos rótulos comuns, e um deles é `decisao`.
+Mudanças:
+- os 11 alertas e o de teste perdem o prefixo `D05` (`VllmFila`, `GpuQuente`, `TesteEmail`...);
+- o rótulo de roteamento dos alertas passa de `decisao: d-05` para `servico: vllm`;
+- a rota e o *receiver* do Alertmanager passam a `servico = "vllm"` → `vllm-email`.
+
+Junto, os textos que aparecem no Grafana e nos e-mails perdem as siglas do estudo (`AC-xx`, `PD-38`, `F-049`, `§2`,
+"Bloco"), reescritos para quem opera sem o estudo à mão. Os painéis vão pelo Bloco G, rodado depois do N.
+
+O objeto `PrometheusRule` continua com `decisao=d-05` nos metadados. A ordem importa: o Alertmanager muda primeiro.
+Entre os passos 2 e 3, um alerta que disparasse ainda com o rótulo antigo cairia no `'null'`; hoje nenhum dispara.
+Envie antes (notebook, PowerShell):
+
+```powershell
+$u = Read-Host "Usuário com que você entra no sabdiia01"
+$c = "C:\www\vllm-master\configs"
+scp "$c\d05-alertmanager-email-values.yaml" "$c\d05-alertas.yaml" "$c\d05-alerta-teste.yaml" `
+  "${u}@192.168.50.151:/home/utec/vllm-estudo/"
+```
+
+**Expectativa (escrita antes):** sem edição fora do Helm; revisão 7 `deployed`; a configuração com `vllm-email` carregada
+sem reiniciar o *pod*; regras novas carregadas, 11 `ok` e `inactive`, nenhuma com `D05`; teste `TesteEmail` ativo;
+`notifications_total` de e-mail +1, falhas 0. No Hotmail chega um e-mail com assunto `[FIRING:1] TesteEmail (vllm
+warning)` `[hipótese: formato do assunto padrão]`, sem "D05" nem "d-05".
+
+```bash
+mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
+{ echo "== $(hostname -s)  $(date -Is)  D-05 N: e-mails sem D05 (PD-38)"
+  [ "$(hostname -s)" = sabdiia01 ] || { echo "ABORTA: este bloco é para sabdiia01"; exit 1; }
+  NS=monitoring; REL=monitoring; V=d05-alertmanager-email-values.yaml; M=d05-alertas.yaml
+  T=d05-alerta-teste.yaml; P=alertmanager-monitoring-kube-prometheus-alertmanager-0; TS=$(date +%F-%H%M)
+  for F in $V $M $T; do [ -f $F ] || { echo "ABORTA: $F ausente; envie os arquivos"; exit 1; }; done
+  grep -q 'vllm-email' $V && ! grep -q 'alert: D05' $M $T || { echo "ABORTA: arquivos antigos"; exit 1; }
+  sha256sum $V $M $T
+  kubectl get secret d05-alertmanager-smtp -n $NS >/dev/null || { echo "ABORTA: sem o secret"; exit 1; }
+  B="/api/v1/namespaces/monitoring/services/monitoring-kube-prometheus-prometheus:9090/proxy/api/v1"
+  A="/api/v1/namespaces/monitoring/services/monitoring-kube-prometheus-alertmanager:9093/proxy"
+  Q='%7B__name__%3D~%22alertmanager_notification.%2A%22%2Cintegration%3D%22email%22%7D'
+  conta() { kubectl get --raw "$B/query?query=$Q" | python3 -c 'import json,sys
+for r in json.load(sys.stdin)["data"]["result"]:
+    m = r["metric"]
+    if m["__name__"].endswith("_total") and (float(r["value"][1]) or not m.get("reason")):
+        print(m["__name__"], m.get("reason", ""), r["value"][1])'; }
+  echo "### 0. cópias e contadores antes   $(date +%T)"
+  kubectl get prometheusrule d05-alertas -n vllms -o yaml > d05-alertas-antes-$TS.yaml
+  ( umask 077; helm get values $REL -n $NS -o yaml > monitoring-values-antes-$TS.yaml )
+  conta
+  echo "### 1. edições fora do Helm? (AC-41)   $(date +%T)"
+  ULT=$(helm history $REL -n $NS | awk '$0 ~ /deployed/ {print $1}' | tail -1)
+  helm get manifest $REL -n $NS --revision $ULT > monitoring-manifest-rev$ULT.yaml
+  D=$(kubectl diff -f monitoring-manifest-rev$ULT.yaml 2>&1 | grep -E '^[-+] ' \
+    | grep -vE 'generation:|resourceVersion|creationTimestamp')
+  [ -z "$D" ] || { echo "$D" | head -30; echo "ABORTA: há edição fora do Helm"; exit 1; }
+  echo "revisão $ULT: nenhuma diferença"
+  echo "### 2. Alertmanager: rota servico=vllm   $(date +%T)"
+  REPO=https://prometheus-community.github.io/helm-charts
+  helm upgrade $REL kube-prometheus-stack --repo $REPO \
+    --version 91.3.0 -n $NS --reuse-values -f $V --wait --timeout 10m \
+    || { echo "FALHOU o upgrade; pode ter aplicado parte (AC-41): traga o log"; exit 1; }
+  helm history $REL -n $NS | tail -2 | cut -c1-100
+  for i in $(seq 1 12); do
+    kubectl get --raw "$A/api/v2/status" 2>/dev/null | grep -q 'vllm-email' && break; sleep 15; done
+  echo "configuração nova após $(( (i-1)*15 )) s"
+  kubectl get pod $P -n $NS -o wide
+  kubectl get --raw "$A/api/v2/status" | python3 -c 'import json,sys
+c = json.load(sys.stdin)["config"]["original"]
+for l in c.splitlines():
+    if l.strip().startswith(("- receiver:", "- name:", "matchers:", "- servico", "- decisao")): print(l)'
+  echo "### 3. regras sem D05   $(date +%T)"
+  kubectl apply --dry-run=server -f $M || { echo "ABORTA: o cluster recusou as regras"; exit 1; }
+  kubectl apply -f $M
+  for i in $(seq 1 20); do
+    kubectl get --raw "$B/rules" | grep -q '"name":"VllmFila"' && break; sleep 15; done
+  echo "regras novas após $(( (i-1)*15 )) s"
+  kubectl get --raw "$B/rules" | python3 -c 'import json,sys
+for g in json.load(sys.stdin)["data"]["groups"]:
+    if g["name"].startswith("d05"):
+        for r in g["rules"]:
+            print(g["name"], r["name"], r.get("health"), r.get("state"), r.get("labels", {}))'
+  echo "### 4. teste   $(date +%T) = $(date -u +%T) UTC"
+  kubectl apply -f $T
+  for i in $(seq 1 16); do
+    kubectl get --raw "$A/api/v2/alerts?filter=alertname%3D%22TesteEmail%22" \
+      | grep -q '"state":"active"' && break; sleep 15; done
+  echo "ativo às $(date -u +%T) UTC"; sleep 120
+  kubectl logs -n $NS $P -c alertmanager --since=5m 2>&1 \
+    | grep -iE 'error|warn|notify|smtp|email|tls' | tail -10
+  kubectl delete -f $T
+  echo "### 5. contadores depois   $(date +%T)"; sleep 45; conta
+} 2>&1 | tee d05-n-$(hostname -s)-$(date +%F-%H%M).log
+```
+
+Depois, confira no Hotmail o assunto e o corpo do e-mail de teste e do "resolvido", que chega uns 5 min depois.
+
+**Resultado (2026-11-11 11:10, [log](../logs-analysis/d05-n-sabdiia01-2026-11-11-1110.log)):** `sha256` dos três
+arquivos iguais aos do repositório; revisão 6 sem edição fora do Helm; revisão 7 `deployed`. A rota `servico="vllm"` e o
+*receiver* `vllm-email` foram carregados em 60 s, sem reiniciar o *pod*. As 11 regras novas, sem `D05` e com `servico: vllm`,
+foram carregadas em 45 s, mas estavam `unknown` na leitura (1ª avaliação pendente, como no A de 2026-11-10); o A-confere
+fecha isso. `TesteEmail` ficou ativo às 14:14:06 UTC. `alertmanager_notifications_total` de e-mail foi de 6 para 7, e as
+tentativas recusadas ficaram em 6. Os textos dos painéis foram aplicados pelo G às 11:21
+([log](../logs-analysis/d05-g-sabdiia01-2026-11-11-1121.log)): `sha256` iguais aos do repositório, *sidecar* regravou os
+dois e as 30 consultas devolveram séries. **A-confere às 11:25 ([log](../logs-analysis/d05-a-confere-sabdiia01-2026-11-11-1125.log)):
+as 11 regras `ok` e `inactive`**, os 3 grupos avaliados entre 14:24:33 e 14:24:57 UTC. O usuário confirmou no Hotmail os
+e-mails do teste (disparo e resolvido) sem "D05", "d-05" nem siglas do estudo.
+
+**N-desfazer** (servidor `sabdiia01`, bash): volta o Alertmanager à revisão 6 (M4) e as regras à cópia mais recente do
+passo 0.
+
+```bash
+cd /home/utec/vllm-estudo && C=$(ls -t d05-alertas-antes-*.yaml | head -1) && echo "cópia: $C"
+helm rollback monitoring 6 -n monitoring --wait --timeout 10m && kubectl replace -f "$C"
+```
+
 
 ### M-desfazer — Volta o Alertmanager ao `'null'` (servidor `sabdiia01`, bash)
 

@@ -1,0 +1,15 @@
+== sabdiia01  2026-11-11T11:25:02-03:00  D-05 A-confere (só leitura)
+d05-gpu avaliado em 2026-11-11T14:24:33.795273612Z
+   GpuEstrangulada ok inactive 
+   GpuQuente ok inactive 
+   GpuSemMetricas ok inactive 
+d05-kong avaliado em 2026-11-11T14:24:57.646059353Z
+   KongErros5xx ok inactive 
+   KongLimiteDoAtor ok inactive 
+   KongSemMetricas ok inactive 
+d05-vllm avaliado em 2026-11-11T14:24:42.287388782Z
+   VllmReplicaFora ok inactive 
+   VllmFila ok inactive 
+   VllmKvCacheAlto ok inactive 
+   VllmPreempcoes ok inactive 
+   VllmLatenciaAlta ok inactive 
