@@ -764,6 +764,14 @@ que dure, o usuário entra pelos *values* do Helm ou o Grafana ganha disco.
 
 Servidor `sabdiia01`, bash. Bloco A de [runbooks/observabilidade-d05.md](runbooks/observabilidade-d05.md): `ruleSelector` do objeto `Prometheus` por `jsonpath`; regras carregadas por `.../api/v1/rules`; *receivers* do Alertmanager por `.../alertmanager:9093/proxy/api/v2/status` (só os nomes). `[executado: 2026-11-10]` ([log](logs-analysis/d05-a-sabdiia01-2026-11-10-1749.log): 11 regras sem erro; Alertmanager só com `"null"`); A-confere `[executado: 2026-11-10]` ([log](logs-analysis/d05-a-confere-sabdiia01-2026-11-10-1754.log): 11 `ok`).
 
+### Alertas por e-mail no Alertmanager (PD-38)
+
+Servidor `sabdiia01`, bash. Bloco M de [runbooks/observabilidade-d05.md](runbooks/observabilidade-d05.md): senha do arquivo para o secret sem passar pela tela (`--from-file=password=<(printf ...)`, `shred -u`); conferência de edições fora do Helm (`helm get manifest --revision` + `kubectl diff -f`); alerta de teste por `kubectl create --raw .../api/v2/alerts -f` `[executado: 2026-11-10]`: recusado com `UnsupportedMediaType` ([log](logs-analysis/d05-m-sabdiia01-2026-11-10-1814.log)); trocado por uma `PrometheusRule` com `expr: vector(1)` (M2) `[executado: 2026-11-10]` ([log](logs-analysis/d05-m2-sabdiia01-2026-11-10-1823.log): `Notify success`).
+
+### O Alertmanager mandou os e-mails? (PD-38)
+
+Servidor `sabdiia01`, bash. M-confere de [runbooks/observabilidade-d05.md](runbooks/observabilidade-d05.md): contadores `alertmanager_notification*` com `integration="email"` pelo Prometheus. `alertmanager_notifications_total` conta mensagens aceitas pelo servidor de e-mail; `notification_requests_failed_total`, tentativas recusadas. `[executado: 2026-11-10]` ([log](logs-analysis/d05-m-confere-sabdiia01-2026-11-10-1845.log): 3 aceitas, 0 falhas)
+
 ### Ver o Kong Manager (painel do administrador; só leitura)
 
 O painel (`kong-gateway-manager`, *NodePort* 32492/32616) abre, mas vem sem dados: o `kconfig.js` dele tem

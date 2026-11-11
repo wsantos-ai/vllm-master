@@ -1,0 +1,44 @@
+# D-05 — Avisos dos alertas d05 por e-mail (PD-38). Autorizado pelo administrador em 2026-11-10 (liberou o estudo
+#   para mexer no ambiente). Pedido do usuário em 2026-11-10: destinatário wsantos-min@abdi.com.br; às 18:40,
+#   acrescentado wellington.santos-min@abdi.com.br (o 1º teste saiu do Alertmanager, mas não chegou à caixa); em
+#   2026-11-11, santos-wellington@hotmail.com (pessoal, fora do domínio): separa "o correio não entrega" de "o
+#   correio não entrega dentro do domínio" (Bloco M4); só o Hotmail recebeu.
+#
+# Values acrescentados ao release "monitoring" (kube-prometheus-stack-91.3.0) pelo Bloco M de
+#   runbooks/observabilidade-d05.md (helm upgrade --reuse-values, mesma versão; mantém os values do disco, AC-41).
+# Campos conferidos em 2026-11-10:
+#   - chart 91.3.0 [F-053]: alertmanager.config (padrão: route com receiver 'null' e rota Watchdog -> 'null', 4
+#     inhibit_rules, group_by [namespace]); alertmanager.alertmanagerSpec.secrets monta cada Secret do namespace
+#     monitoring em /etc/alertmanager/secrets/<nome>/; imagem do Alertmanager v0.34.0;
+#   - doc do Alertmanager [F-055]: global.smtp_smarthost (host:porta; 587 = STARTTLS), smtp_from, smtp_auth_username,
+#     smtp_auth_password_file, smtp_require_tls; email_configs[].to, send_resolved (padrão false).
+# O Helm junta mapas e troca listas: route.routes e receivers abaixo substituem as listas do chart, por isso repetem a
+#   rota do Watchdog e o receiver 'null'. global e inhibit_rules do chart continuam.
+# A SENHA NÃO ESTÁ AQUI: fica no Secret d05-alertmanager-smtp (chave "password"), criado pelo Bloco M a partir de
+#   credenciais-email.txt, que fica fora do repositório (.gitignore).
+alertmanager:
+  alertmanagerSpec:
+    secrets: [d05-alertmanager-smtp]
+  config:
+    global:
+      smtp_smarthost: correio.abdi.com.br:587
+      smtp_from: noreply@abdi.com.br
+      smtp_auth_username: noreply@abdi.com.br
+      smtp_auth_password_file: /etc/alertmanager/secrets/d05-alertmanager-smtp/password
+      smtp_require_tls: true
+    route:
+      routes:
+      - receiver: 'null'
+        matchers: ['alertname = "Watchdog"']
+      - receiver: d05-email
+        matchers: ['decisao = "d-05"']
+        group_by: [alertname]
+        group_wait: 30s
+        group_interval: 5m
+        repeat_interval: 4h
+    receivers:
+    - name: 'null'
+    - name: d05-email
+      email_configs:
+      - to: wsantos-min@abdi.com.br, wellington.santos-min@abdi.com.br, santos-wellington@hotmail.com
+        send_resolved: true

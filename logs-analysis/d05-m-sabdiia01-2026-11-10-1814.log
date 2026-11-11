@@ -1,0 +1,51 @@
+== sabdiia01  2026-11-10T18:14:02-03:00  D-05 M: alertas por e-mail (PD-38)
+c110f08aca568ef3d4bc49b6e2ea074813b1856b953feb229ce6104b8a15e0de  d05-alertmanager-email-values.yaml
+2       	Tue Nov 10 17:01:10 2026	failed    	kube-prometheus-stack-91.3.0	v0.94.0    	Upgrade "monit
+3       	Tue Nov 10 17:13:58 2026	deployed  	kube-prometheus-stack-91.3.0	v0.94.0    	Upgrade comple
+### 1. edições fora do Helm desde a última revisão? (AC-41)   18:14:02
+revisão 3: nenhuma diferença
+### 2. secret com a senha (sem mostrá-la)   18:14:13
+secret/d05-alertmanager-smtp created
+credenciais-email.txt apagado do servidor
+chaves do secret: password 
+### 3. helm upgrade   18:14:13
+Release "monitoring" has been upgraded. Happy Helming!
+NAME: monitoring
+LAST DEPLOYED: Tue Nov 10 18:14:16 2026
+NAMESPACE: monitoring
+STATUS: deployed
+REVISION: 4
+DESCRIPTION: Upgrade complete
+TEST SUITE: None
+NOTES:
+kube-prometheus-stack has been installed. Check its status by running:
+  kubectl --namespace monitoring get pods -l "release=monitoring"
+
+Get Grafana 'admin' user password by running:
+
+  kubectl --namespace monitoring get secrets monitoring-grafana -o jsonpath="{.data.admin-password}" | base64 -d ; echo
+
+Access Grafana local instance:
+
+  export POD_NAME=$(kubectl --namespace monitoring get pod -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance=monitoring" -oname)
+  kubectl --namespace monitoring port-forward $POD_NAME 3000
+
+Get your grafana admin user password by running:
+
+  kubectl get secret --namespace monitoring -l app.kubernetes.io/component=admin-secret -o jsonpath="{.items[0].data.admin-password}" | base64 --decode ; echo
+
+
+Visit https://github.com/prometheus-operator/kube-prometheus for instructions on how to create & configure Alertmanager and Prometheus instances using the Operator.
+3       	Tue Nov 10 17:13:58 2026	superseded	kube-prometheus-stack-91.3.0	v0.94.0    	Upgrade comple
+4       	Tue Nov 10 18:14:16 2026	deployed  	kube-prometheus-stack-91.3.0	v0.94.0    	Upgrade comple
+statefulset rolling update complete 1 pods at revision alertmanager-monitoring-kube-prometheus-alertmanager-6f4b6c7c45...
+alertmanager-monitoring-kube-prometheus-alertmanager-0   2/2     Running   2 (13d ago)   15d   10.244.50.173    sabdiia03   <none>           <none>
+### 4. configuração carregada (só nomes)   18:15:02
+  smtp_require_tls: true
+  receiver: "null"
+  - receiver: "null"
+- name: "null"
+### 5. alerta de teste   18:15:22
+Error from server (UnsupportedMediaType): unknown
+Error from server (ServiceUnavailable): no endpoints available for service "monitoring-kube-prometheus-alertmanager"
+Error from server (BadRequest): container "alertmanager" in pod "alertmanager-monitoring-kube-prometheus-alertmanager-0" is waiting to start: PodInitializing

@@ -1,0 +1,71 @@
+== sabdiia01  2026-11-11T09:43:30-03:00  D-05 M4: destinatário fora do domínio (PD-38)
+56984a7566d35b00fde4d9126939820c6cb230a1c8a9de41a5ddc307053ae5e1  d05-alertmanager-email-values.yaml
+### 0. contadores antes   09:43:30
+alertmanager_notification_latency_seconds_bucket  10
+alertmanager_notification_latency_seconds_bucket  10
+alertmanager_notification_latency_seconds_bucket  10
+alertmanager_notification_latency_seconds_bucket  10
+alertmanager_notification_latency_seconds_bucket  10
+alertmanager_notification_latency_seconds_bucket  10
+alertmanager_notification_latency_seconds_sum  2.9782142260000004
+alertmanager_notification_latency_seconds_count  10
+alertmanager_notification_requests_failed_total  6
+alertmanager_notification_requests_total  10
+alertmanager_notifications_total  4
+### 1. edições fora do Helm? (AC-41)   09:43:30
+revisão 5: nenhuma diferença
+### 2. helm upgrade   09:43:40
+Release "monitoring" has been upgraded. Happy Helming!
+NAME: monitoring
+LAST DEPLOYED: Wed Nov 11 09:43:44 2026
+NAMESPACE: monitoring
+STATUS: deployed
+REVISION: 6
+DESCRIPTION: Upgrade complete
+TEST SUITE: None
+NOTES:
+kube-prometheus-stack has been installed. Check its status by running:
+  kubectl --namespace monitoring get pods -l "release=monitoring"
+
+Get Grafana 'admin' user password by running:
+
+  kubectl --namespace monitoring get secrets monitoring-grafana -o jsonpath="{.data.admin-password}" | base64 -d ; echo
+
+Access Grafana local instance:
+
+  export POD_NAME=$(kubectl --namespace monitoring get pod -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance=monitoring" -oname)
+  kubectl --namespace monitoring port-forward $POD_NAME 3000
+
+Get your grafana admin user password by running:
+
+  kubectl get secret --namespace monitoring -l app.kubernetes.io/component=admin-secret -o jsonpath="{.items[0].data.admin-password}" | base64 --decode ; echo
+
+
+Visit https://github.com/prometheus-operator/kube-prometheus for instructions on how to create & configure Alertmanager and Prometheus instances using the Operator.
+5       	Tue Nov 10 18:37:40 2026	superseded	kube-prometheus-stack-91.3.0	v0.94.0    	Upgrade comple
+6       	Wed Nov 11 09:43:44 2026	deployed  	kube-prometheus-stack-91.3.0	v0.94.0    	Upgrade comple
+### 3. configuração nova carregada? (até 3 min)   09:44:11
+esperou 45 s
+NAME                                                     READY   STATUS    RESTARTS   AGE   IP               NODE        NOMINATED NODE   READINESS GATES
+alertmanager-monitoring-kube-prometheus-alertmanager-0   2/2     Running   0          15h   10.244.182.138   sabdiia02   <none>           <none>
+  - receiver: "null"
+  - receiver: d05-email
+- name: "null"
+- name: d05-email
+    to: wsantos-min@abdi.com.br, wellington.santos-min@abdi.com.br, santos-wellington@hotmail.com
+### 4. teste   09:44:42 = 12:44:42 UTC
+prometheusrule.monitoring.coreos.com/d05-alerta-teste created
+esperou 60 s; ativo às 12:45:27 UTC
+prometheusrule.monitoring.coreos.com "d05-alerta-teste" deleted from vllms namespace
+### 5. contadores depois (a coleta é a cada 30 s)   09:47:27
+alertmanager_notification_latency_seconds_bucket  11
+alertmanager_notification_latency_seconds_bucket  11
+alertmanager_notification_latency_seconds_bucket  11
+alertmanager_notification_latency_seconds_bucket  11
+alertmanager_notification_latency_seconds_bucket  11
+alertmanager_notification_latency_seconds_bucket  11
+alertmanager_notification_latency_seconds_sum  3.504380214
+alertmanager_notification_latency_seconds_count  11
+alertmanager_notification_requests_failed_total  6
+alertmanager_notification_requests_total  11
+alertmanager_notifications_total  5

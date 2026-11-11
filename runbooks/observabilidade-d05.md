@@ -690,6 +690,349 @@ for g in json.load(sys.stdin)["data"]["groups"]:
 kubectl delete prometheusrule d05-alertas -n vllms
 ```
 
+## Avisos por e-mail (Bloco M, M-desfazer)
+
+**Autorizado pelo administrador em 2026-11-10.** Os alertas com `decisao: d-05` (os 11 do Bloco A) passam a ir por e-mail
+para `wsantos-min@abdi.com.br`, de `noreply@abdi.com.br`, por `correio.abdi.com.br:587` (STARTTLS), agrupados por
+alerta, repetidos a cada 4 h enquanto durarem e com aviso de resolvido. O resto continua no *receiver* `'null'`.
+*Values*: [d05-alertmanager-email-values.yaml](../configs/d05-alertmanager-email-values.yaml) [F-053, F-055].
+
+**A senha não entra no repositório nem no log.** Ela está em `credenciais-email.txt` no notebook (fora do Git pelo
+`.gitignore`). O bloco lê o arquivo no servidor, grava a senha no secret `d05-alertmanager-smtp` de `monitoring` sem
+mostrá-la e apaga a cópia do servidor (`shred`). O Alertmanager lê a senha do arquivo montado
+(`smtp_auth_password_file`).
+
+Envie os dois arquivos (notebook, PowerShell):
+
+```powershell
+$u = Read-Host "Usuário com que você entra no sabdiia01"
+scp C:\www\vllm-master\credenciais-email.txt C:\www\vllm-master\configs\d05-alertmanager-email-values.yaml `
+  "${u}@192.168.50.151:/home/utec/vllm-estudo/"
+```
+
+### Bloco M — E-mail no Alertmanager e alerta de teste (servidor `sabdiia01`, bash)
+
+Antes do `upgrade`, compara o manifesto da última revisão `deployed` com o *cluster* (regra do AC-41) e aborta se houver
+edição fora do Helm. O *pod* do Alertmanager é recriado (o secret novo entra como volume): silêncios criados à mão se
+perdem (ele está em `emptyDir`). O teste do e-mail é o M2, logo abaixo.
+
+**Expectativa (escrita antes):** nenhuma diferença no `kubectl diff`; secret criado com 1 chave; revisão 4 `deployed`;
+Alertmanager `2/2` de novo; *receivers* `null` e `d05-email`; o teste aparece no Alertmanager e, em até 1 min, chega
+um e-mail "[FIRING:1] D05TesteEmail" e, depois de 10 min, um "[RESOLVED]". Se o servidor de e-mail usar certificado
+de CA interna, o log do Alertmanager acusa erro de TLS `[hipótese]`.
+
+```bash
+mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
+{ echo "== $(hostname -s)  $(date -Is)  D-05 M: alertas por e-mail (PD-38)"
+  [ "$(hostname -s)" = sabdiia01 ] || { echo "ABORTA: este bloco é para sabdiia01"; exit 1; }
+  NS=monitoring; REL=monitoring; V=d05-alertmanager-email-values.yaml; C=credenciais-email.txt
+  TS=$(date +%F-%H%M)
+  for F in $V $C; do [ -f $F ] || { echo "ABORTA: $F ausente; envie os arquivos"; exit 1; }; done
+  chmod 600 $C; sed -i 's/\r$//' $C   # arquivo do Windows: CRLF viraria "587\r" (§9, 2026-11-10)
+  sha256sum $V
+  CH=$(helm list -n $NS -o json | grep -o '"chart":"kube-prometheus-stack-[0-9.]*"' | cut -d'"' -f4)
+  [ "$CH" = kube-prometheus-stack-91.3.0 ] || { echo "ABORTA: chart $CH"; exit 1; }
+  helm history $REL -n $NS | tail -2 | cut -c1-100
+
+  echo "### 1. edições fora do Helm desde a última revisão? (AC-41)   $(date +%T)"
+  ULT=$(helm history $REL -n $NS | awk '$0 ~ /deployed/ {print $1}' | tail -1)
+  helm get manifest $REL -n $NS --revision $ULT > monitoring-manifest-rev$ULT.yaml
+  D=$(kubectl diff -f monitoring-manifest-rev$ULT.yaml 2>&1 | grep -E '^[-+] ' \
+    | grep -vE 'generation:|resourceVersion|creationTimestamp')
+  [ -z "$D" ] || { echo "$D" | head -30; echo "ABORTA: há edição fora do Helm"; exit 1; }
+  echo "revisão $ULT: nenhuma diferença"
+
+  echo "### 2. secret com a senha (sem mostrá-la)   $(date +%T)"
+  ( set +x; . ./$C
+    [ -n "$MAIL_PASSWORD" ] || { echo "ABORTA: MAIL_PASSWORD vazio em $C"; exit 1; }
+    grep -q "smtp_smarthost: $MAIL_HOST:$MAIL_PORT" $V \
+      || { echo "ABORTA: host/porta de $C diferentes dos values"; exit 1; }
+    grep -q "smtp_auth_username: $MAIL_USER" $V \
+      || { echo "ABORTA: usuário de $C diferente dos values"; exit 1; }
+    kubectl create secret generic d05-alertmanager-smtp -n $NS \
+      --from-file=password=<(printf '%s' "$MAIL_PASSWORD") --dry-run=client -o yaml \
+      | kubectl label --local -f - decisao=d-05 -o yaml | kubectl apply -f - ) || exit 1
+  shred -u $C && echo "$C apagado do servidor"
+  echo "chaves do secret: $(kubectl get secret d05-alertmanager-smtp -n $NS \
+    -o go-template='{{range $k, $v := .data}}{{$k}} {{end}}')"
+
+  echo "### 3. helm upgrade   $(date +%T)"
+  ( umask 077; helm get values $REL -n $NS -o yaml > monitoring-values-antes-$TS.yaml )
+  REPO=https://prometheus-community.github.io/helm-charts
+  helm upgrade $REL kube-prometheus-stack --repo $REPO \
+    --version 91.3.0 -n $NS --reuse-values -f $V --wait --timeout 10m \
+    || { echo "FALHOU o upgrade; pode ter aplicado parte (AC-41): traga o log"; exit 1; }
+  helm history $REL -n $NS | tail -2 | cut -c1-100
+  kubectl rollout status statefulset/alertmanager-monitoring-kube-prometheus-alertmanager -n $NS \
+    --timeout=5m
+  kubectl get pods -n $NS -o wide | grep alertmanager
+
+  echo "### 4. configuração carregada (só nomes)   $(date +%T)"
+  A="/api/v1/namespaces/monitoring/services/monitoring-kube-prometheus-alertmanager:9093/proxy"
+  sleep 20
+  kubectl get --raw "$A/api/v2/status" | python3 -c 'import json,sys
+c = json.load(sys.stdin)["config"]["original"]
+for l in c.splitlines():
+    s = l.strip()
+    if s.startswith(("receiver:", "- name:", "- receiver:", "smtp_smarthost", "smtp_from", "to:",
+                     "smtp_auth_password_file", "smtp_require_tls")): print(l)'
+
+} 2>&1 | tee d05-m-$(hostname -s)-$(date +%F-%H%M).log
+```
+
+**Resultado (2026-11-10 18:14, [log](../logs-analysis/d05-m-sabdiia01-2026-11-10-1814.log)):** secret criado (chave `password`), arquivo apagado do
+servidor, revisão 4 `deployed`. Mas o `rollout status` voltou antes de o operador trocar o *pod* (o mostrado ainda tinha
+15 dias): a etapa 4 leu a configuração antiga (só `"null"`), e na 5 o Alertmanager estava reiniciando (`PodInitializing`,
+`no endpoints`). O `POST` do teste pelo *proxy* da API do Kubernetes deu `UnsupportedMediaType`. A etapa 5 saiu do bloco;
+o teste é o M2.
+
+### M2 — Confere a configuração e testa o e-mail com uma regra que dispara (servidor `sabdiia01`, bash)
+
+Aplica [d05-alerta-teste.yaml](../configs/d05-alerta-teste.yaml) (regra `D05TesteEmail`, `expr: vector(1)`), que passa
+pelo caminho inteiro: Prometheus → Alertmanager → rota `decisao="d-05"` → e-mail. Espera o alerta chegar ao Alertmanager,
+dá 90 s para o e-mail sair, mostra o log do Alertmanager e apaga a regra. Envie antes o YAML (notebook, PowerShell):
+`scp C:\www\vllm-master\configs\d05-alerta-teste.yaml "<usuário>@192.168.50.151:/home/utec/vllm-estudo/"`.
+
+**Expectativa (escrita antes):** Alertmanager `2/2` com *pod* novo; configuração com `smtp_smarthost:
+correio.abdi.com.br:587`, *receiver* `d05-email` e `to: wsantos-min@abdi.com.br`; o alerta `D05TesteEmail` `active` no
+Alertmanager em até 2 min; log sem erro de envio; e-mail "[FIRING:1] D05TesteEmail" na caixa; uns 5-10 min depois de
+apagada a regra, "[RESOLVED]". Erro de TLS se o certificado do servidor de e-mail for de CA interna `[hipótese]`.
+
+```bash
+mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
+{ echo "== $(hostname -s)  $(date -Is)  D-05 M2: configuração e teste do e-mail (PD-38)"
+  [ "$(hostname -s)" = sabdiia01 ] || { echo "ABORTA: este bloco é para sabdiia01"; exit 1; }
+  NS=monitoring; T=d05-alerta-teste.yaml; P=alertmanager-monitoring-kube-prometheus-alertmanager-0
+  [ -f $T ] || { echo "ABORTA: $T ausente; envie o arquivo"; exit 1; }
+  A="/api/v1/namespaces/monitoring/services/monitoring-kube-prometheus-alertmanager:9093/proxy"
+  echo "### 1. pod e configuração (só nomes)   $(date +%T)"
+  kubectl wait --for=condition=Ready pod/$P -n $NS --timeout=3m
+  kubectl get pod $P -n $NS -o wide
+  kubectl get --raw "$A/api/v2/status" | python3 -c 'import json,sys
+c = json.load(sys.stdin)["config"]["original"]
+for l in c.splitlines():
+    s = l.strip()
+    if s.startswith(("receiver:", "- name:", "- receiver:", "smtp_smarthost", "smtp_from", "to:",
+                     "smtp_auth_password_file", "smtp_require_tls")): print(l)'
+
+  echo "### 2. regra de teste   $(date +%T)"
+  kubectl apply -f $T
+  for i in $(seq 1 16); do
+    kubectl get --raw "$A/api/v2/alerts?filter=alertname%3D%22D05TesteEmail%22" \
+      | grep -q '"state":"active"' && break; sleep 15; done
+  echo "esperou $((i*15)) s"
+  kubectl get --raw "$A/api/v2/alerts?filter=alertname%3D%22D05TesteEmail%22" \
+    | grep -oE '"(alertname|state|decisao)":"[^"]*"' | sort | uniq -c
+  sleep 90
+  echo "### 3. log do Alertmanager (envio)   $(date +%T)"
+  kubectl logs -n $NS $P -c alertmanager --since=5m 2>&1 \
+    | grep -iE 'error|warn|notify|smtp|email|tls' | tail -10 | cut -c1-300
+  echo "### 4. apaga a regra de teste (o aviso de resolvido vem em 5-10 min)   $(date +%T)"
+  kubectl delete -f $T
+} 2>&1 | tee d05-m2-$(hostname -s)-$(date +%F-%H%M).log
+```
+
+Sem erro no passo 3 e sem e-mail na caixa nem no *spam*: o servidor de e-mail aceitou e não entregou (filtro,
+remetente). Com erro: traga o log.
+
+**Resultado (2026-11-10 18:23, [log](../logs-analysis/d05-m2-sabdiia01-2026-11-10-1823.log)):** configuração nova carregada (*pod* novo em `sabdiia02`); `D05TesteEmail` `active` em 60 s; 1ª tentativa recusada com `421 "4.4.2 Message submiss...` (recusa temporária do servidor de e-mail; o texto foi cortado em 300 caracteres) e `Notify success` na 7ª, 11 s depois. TLS e senha aceitos. O Alertmanager tenta de novo sozinho, então o `421` só atrasa.
+
+**O e-mail do M2 não chegou à caixa** (usuário, 2026-11-10 ~18:40): o servidor aceitou a mensagem (`Notify success`) e
+não entregou, ou entregou fora da caixa. O destino passa a ter também `wellington.santos-min@abdi.com.br`.
+
+### M3 — Atualiza os destinatários e repete o teste (servidor `sabdiia01`, bash)
+
+Só o `helm upgrade` com os *values* novos (o secret da senha continua; o arquivo de credenciais não é mais preciso) e o
+teste do M2, com o log do Alertmanager sem cortes. Envie antes (notebook, PowerShell):
+
+```powershell
+$u = Read-Host "Usuário com que você entra no sabdiia01"
+$c = "C:\www\vllm-master\configs"
+scp "$c\d05-alertmanager-email-values.yaml" "$c\d05-alerta-teste.yaml" "${u}@192.168.50.151:/home/utec/vllm-estudo/"
+```
+
+**Expectativa (escrita antes):** sem edição fora do Helm; revisão 5 `deployed`; o Alertmanager recarrega a configuração
+sem reiniciar (só o secret da configuração muda) e mostra os dois endereços em `to:`; `Notify success` (com ou sem
+`421` antes); o texto inteiro do `421`, se vier.
+
+```bash
+mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
+{ echo "== $(hostname -s)  $(date -Is)  D-05 M3: destinatários e novo teste do e-mail (PD-38)"
+  [ "$(hostname -s)" = sabdiia01 ] || { echo "ABORTA: este bloco é para sabdiia01"; exit 1; }
+  NS=monitoring; REL=monitoring; V=d05-alertmanager-email-values.yaml; T=d05-alerta-teste.yaml
+  P=alertmanager-monitoring-kube-prometheus-alertmanager-0; TS=$(date +%F-%H%M)
+  for F in $V $T; do [ -f $F ] || { echo "ABORTA: $F ausente; envie os arquivos"; exit 1; }; done
+  grep -q 'wellington.santos-min@abdi.com.br' $V || { echo "ABORTA: $V antigo"; exit 1; }
+  sha256sum $V
+  kubectl get secret d05-alertmanager-smtp -n $NS >/dev/null \
+    || { echo "ABORTA: sem o secret"; exit 1; }
+  echo "### 1. edições fora do Helm? (AC-41)   $(date +%T)"
+  ULT=$(helm history $REL -n $NS | awk '$0 ~ /deployed/ {print $1}' | tail -1)
+  helm get manifest $REL -n $NS --revision $ULT > monitoring-manifest-rev$ULT.yaml
+  D=$(kubectl diff -f monitoring-manifest-rev$ULT.yaml 2>&1 | grep -E '^[-+] ' \
+    | grep -vE 'generation:|resourceVersion|creationTimestamp')
+  [ -z "$D" ] || { echo "$D" | head -30; echo "ABORTA: há edição fora do Helm"; exit 1; }
+  echo "revisão $ULT: nenhuma diferença"
+  echo "### 2. helm upgrade   $(date +%T)"
+  ( umask 077; helm get values $REL -n $NS -o yaml > monitoring-values-antes-$TS.yaml )
+  REPO=https://prometheus-community.github.io/helm-charts
+  helm upgrade $REL kube-prometheus-stack --repo $REPO \
+    --version 91.3.0 -n $NS --reuse-values -f $V --wait --timeout 10m \
+    || { echo "FALHOU o upgrade; pode ter aplicado parte (AC-41): traga o log"; exit 1; }
+  helm history $REL -n $NS | tail -2 | cut -c1-100
+  echo "### 3. configuração nova carregada? (até 3 min)   $(date +%T)"
+  A="/api/v1/namespaces/monitoring/services/monitoring-kube-prometheus-alertmanager:9093/proxy"
+  for i in $(seq 1 12); do
+    kubectl get --raw "$A/api/v2/status" 2>/dev/null | grep -q 'wellington' && break; sleep 15; done
+  echo "esperou $((i*15)) s"
+  kubectl get pod $P -n $NS -o wide
+  kubectl get --raw "$A/api/v2/status" | python3 -c 'import json,sys
+c = json.load(sys.stdin)["config"]["original"]
+for l in c.splitlines():
+    if l.strip().startswith(("- receiver:", "- name:", "to:")): print(l)'
+  echo "### 4. teste   $(date +%T)"
+  kubectl apply -f $T
+  for i in $(seq 1 16); do
+    kubectl get --raw "$A/api/v2/alerts?filter=alertname%3D%22D05TesteEmail%22" \
+      | grep -q '"state":"active"' && break; sleep 15; done
+  echo "esperou $((i*15)) s"; sleep 90
+  kubectl logs -n $NS $P -c alertmanager --since=4m 2>&1 \
+    | grep -iE 'error|warn|notify|smtp|email|tls' | tail -10
+  kubectl delete -f $T
+} 2>&1 | tee d05-m3-$(hostname -s)-$(date +%F-%H%M).log
+```
+
+Se de novo `Notify success` e nada na caixa (nem no *spam*, nem na quarentena do Exchange/Office 365): o problema é
+entrega dentro do servidor de e-mail. Leve a quem administra o correio o horário do envio (UTC no log), o remetente
+`noreply@abdi.com.br` e os destinatários.
+
+**Resultado (2026-11-10 18:37, [log](../logs-analysis/d05-m3-sabdiia01-2026-11-10-1837.log)):** revisão 5 `deployed`, sem edição fora do Helm; a configuração
+com os dois endereços carregou em 60 s, sem reiniciar o *pod*; `D05TesteEmail` `active` em 105 s; **log do Alertmanager
+vazio** (nem erro, nem `Notify success`). No M2, o `Notify success` só apareceu depois de falhas; envio que dá certo de
+primeira não deixa linha nesse nível de log `[hipótese]`. O M-confere tira a dúvida pelos contadores.
+
+### M-confere — Quantos e-mails o Alertmanager mandou e quantos falharam (servidor `sabdiia01`, bash; só leitura)
+
+Lê do Prometheus os contadores do próprio Alertmanager (o *job* dele já é coletado: AC-38) para a integração `email`.
+
+**Expectativa:** notificações de e-mail ≥ 4 (FIRING e RESOLVED do M2 e do M3), falhas = 0; tentativas falhas ≥ 6 (o
+`421` do M2) `[hipótese: nomes das métricas]`.
+
+**Resultado (2026-11-10 18:45, [log](../logs-analysis/d05-m-confere-sabdiia01-2026-11-10-1845.log)):** `alertmanager_notifications_total` 3 (FIRING e RESOLVED do M2, FIRING do M3; o RESOLVED do M3 ainda não tinha saído), `notifications_failed_total` 0 em todos os motivos, `notification_requests_total` 9 e `requests_failed_total` 6 (as 6 recusas `421` do M2). O servidor de e-mail aceitou as 3 mensagens.
+
+```bash
+mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
+{ echo "== $(hostname -s)  $(date -Is)  D-05 M-confere: contadores de e-mail (só leitura)"
+  B="/api/v1/namespaces/monitoring/services/monitoring-kube-prometheus-prometheus:9090/proxy/api/v1"
+  Q='%7B__name__%3D~%22alertmanager_notification.%2A%22%2Cintegration%3D%22email%22%7D'
+  kubectl get --raw "$B/query?query=$Q" | python3 -c 'import json,sys
+for r in json.load(sys.stdin)["data"]["result"]:
+    m = r["metric"]
+    print(m["__name__"], m.get("reason", ""), m.get("pod", ""), r["value"][1])'
+} 2>&1 | tee d05-m-confere-$(hostname -s)-$(date +%F-%H%M).log
+```
+
+**Os e-mails do M2 e do M3 não chegaram a nenhuma das duas caixas** (usuário, 2026-11-11). O usuário leva o caso a quem
+administra o correio e pede um teste com um endereço pessoal fora do domínio, `santos-wellington@hotmail.com`.
+
+### M4 — Acrescenta um destinatário fora do domínio e repete o teste (servidor `sabdiia01`, bash)
+
+O M4 separa duas situações. Se só o Hotmail recebe, o correio aceita e não entrega dentro do próprio domínio. Se nenhum
+recebe, o problema está na saída do `noreply@abdi.com.br` como um todo. O bloco é o M3 com o novo endereço e com os
+contadores do M-confere antes e depois. Envie antes (notebook, PowerShell):
+
+```powershell
+$u = Read-Host "Usuário com que você entra no sabdiia01"
+$c = "C:\www\vllm-master\configs"
+scp "$c\d05-alertmanager-email-values.yaml" "$c\d05-alerta-teste.yaml" "${u}@192.168.50.151:/home/utec/vllm-estudo/"
+```
+
+**Expectativa (escrita antes):** sem edição fora do Helm; revisão 6 `deployed`; os três endereços em `to:` em até
+3 min, sem reiniciar o *pod*; `alertmanager_notifications_total` de e-mail sobe 1 (uma mensagem com os três
+destinatários) e as falhas ficam em 0. Um `5xx` de *relay* recusado (por exemplo `550 5.7.x`) faria a falha subir e
+apareceria no log `[hipótese]`.
+
+```bash
+mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
+{ echo "== $(hostname -s)  $(date -Is)  D-05 M4: destinatário fora do domínio (PD-38)"
+  [ "$(hostname -s)" = sabdiia01 ] || { echo "ABORTA: este bloco é para sabdiia01"; exit 1; }
+  NS=monitoring; REL=monitoring; V=d05-alertmanager-email-values.yaml; T=d05-alerta-teste.yaml
+  P=alertmanager-monitoring-kube-prometheus-alertmanager-0; TS=$(date +%F-%H%M)
+  for F in $V $T; do [ -f $F ] || { echo "ABORTA: $F ausente; envie os arquivos"; exit 1; }; done
+  grep -q 'santos-wellington@hotmail.com' $V || { echo "ABORTA: $V antigo"; exit 1; }
+  sha256sum $V
+  kubectl get secret d05-alertmanager-smtp -n $NS >/dev/null || { echo "ABORTA: sem o secret"; exit 1; }
+  B="/api/v1/namespaces/monitoring/services/monitoring-kube-prometheus-prometheus:9090/proxy/api/v1"
+  Q='%7B__name__%3D~%22alertmanager_notification.%2A%22%2Cintegration%3D%22email%22%7D'
+  conta() { kubectl get --raw "$B/query?query=$Q" | python3 -c 'import json,sys
+for r in json.load(sys.stdin)["data"]["result"]:
+    m = r["metric"]
+    if float(r["value"][1]) or not m.get("reason"):
+        print(m["__name__"], m.get("reason", ""), r["value"][1])'; }
+  echo "### 0. contadores antes   $(date +%T)"; conta
+  echo "### 1. edições fora do Helm? (AC-41)   $(date +%T)"
+  ULT=$(helm history $REL -n $NS | awk '$0 ~ /deployed/ {print $1}' | tail -1)
+  helm get manifest $REL -n $NS --revision $ULT > monitoring-manifest-rev$ULT.yaml
+  D=$(kubectl diff -f monitoring-manifest-rev$ULT.yaml 2>&1 | grep -E '^[-+] ' \
+    | grep -vE 'generation:|resourceVersion|creationTimestamp')
+  [ -z "$D" ] || { echo "$D" | head -30; echo "ABORTA: há edição fora do Helm"; exit 1; }
+  echo "revisão $ULT: nenhuma diferença"
+  echo "### 2. helm upgrade   $(date +%T)"
+  ( umask 077; helm get values $REL -n $NS -o yaml > monitoring-values-antes-$TS.yaml )
+  REPO=https://prometheus-community.github.io/helm-charts
+  helm upgrade $REL kube-prometheus-stack --repo $REPO \
+    --version 91.3.0 -n $NS --reuse-values -f $V --wait --timeout 10m \
+    || { echo "FALHOU o upgrade; pode ter aplicado parte (AC-41): traga o log"; exit 1; }
+  helm history $REL -n $NS | tail -2 | cut -c1-100
+  echo "### 3. configuração nova carregada? (até 3 min)   $(date +%T)"
+  A="/api/v1/namespaces/monitoring/services/monitoring-kube-prometheus-alertmanager:9093/proxy"
+  for i in $(seq 1 12); do
+    kubectl get --raw "$A/api/v2/status" 2>/dev/null | grep -q 'hotmail' && break; sleep 15; done
+  echo "esperou $((i*15)) s"
+  kubectl get pod $P -n $NS -o wide
+  kubectl get --raw "$A/api/v2/status" | python3 -c 'import json,sys
+c = json.load(sys.stdin)["config"]["original"]
+for l in c.splitlines():
+    if l.strip().startswith(("- receiver:", "- name:", "to:")): print(l)'
+  echo "### 4. teste   $(date +%T) = $(date -u +%T) UTC"
+  kubectl apply -f $T
+  for i in $(seq 1 16); do
+    kubectl get --raw "$A/api/v2/alerts?filter=alertname%3D%22D05TesteEmail%22" \
+      | grep -q '"state":"active"' && break; sleep 15; done
+  echo "esperou $((i*15)) s; ativo às $(date -u +%T) UTC"; sleep 120
+  kubectl logs -n $NS $P -c alertmanager --since=5m 2>&1 \
+    | grep -iE 'error|warn|notify|smtp|email|tls' | tail -10
+  kubectl delete -f $T
+  echo "### 5. contadores depois (a coleta é a cada 30 s)   $(date +%T)"; sleep 45; conta
+} 2>&1 | tee d05-m4-$(hostname -s)-$(date +%F-%H%M).log
+```
+
+Confira as três caixas (e o *lixo eletrônico* do Hotmail) por volta do horário UTC do passo 4 menos 3 h.
+
+**Resultado (2026-11-11 09:43, [log](../logs-analysis/d05-m4-sabdiia01-2026-11-11-0943.log)):** revisão 6 `deployed`,
+sem edição fora do Helm; os três endereços carregados em 45 s, sem reiniciar o *pod*; teste ativo às 12:45:27 UTC;
+`alertmanager_notifications_total` de e-mail 4 → 5 e tentativas recusadas paradas em 6; log do Alertmanager vazio.
+**Chegou só no Hotmail** (usuário). Uma única transação SMTP levou os três destinatários. Por isso o servidor de e-mail
+entrega para fora, mas não para dentro do próprio domínio `[hipótese: filtro anti-spoofing, quarentena ou regra de
+transporte]`. Para quem administra o correio: remetente `noreply@abdi.com.br`, 12:45-12:46 UTC de 2026-11-11, mesma
+mensagem entregue ao Hotmail e não às caixas `@abdi.com.br`.
+
+### M-desfazer — Volta o Alertmanager ao `'null'` (servidor `sabdiia01`, bash)
+
+```bash
+mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
+{ echo "== $(hostname -s)  $(date -Is)  D-05 M-desfazer"
+  NS=monitoring; REL=monitoring
+  # revisão 3 = P1b (disco local), a última sem e-mail; M, M3 e M4 criaram as revisões 4, 5 e 6
+  helm history $REL -n $NS | tail -5 | cut -c1-100
+  echo "rollback para a revisão 3"
+  helm rollback $REL 3 -n $NS --wait --timeout 10m \
+    || { echo "FALHOU o rollback"; exit 1; }
+  kubectl delete secret d05-alertmanager-smtp -n $NS --ignore-not-found
+  helm history $REL -n $NS | tail -2 | cut -c1-100
+} 2>&1 | tee d05-m-desfazer-$(hostname -s)-$(date +%F-%H%M).log
+```
+
 ## Trazer os logs (notebook, PowerShell)
 
 ```powershell

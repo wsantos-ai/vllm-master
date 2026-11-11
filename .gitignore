@@ -11,3 +11,5 @@ configs/k8config.txt
 admin.conf
 # cópia do repositório do administrador (tem token em texto puro): nunca no repositório do estudo
 llm_lhama_prototype/
+# credenciais de e-mail (SMTP) e afins: nunca no repositório
+credenciais*

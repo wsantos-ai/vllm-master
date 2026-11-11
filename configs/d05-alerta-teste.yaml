@@ -1,0 +1,21 @@
+# D-05 — Alerta de teste do e-mail (PD-38). TEMPORÁRIO: o Bloco M2 de runbooks/observabilidade-d05.md aplica,
+#   espera o e-mail sair e apaga. Dispara sempre (vector(1)) e percorre o caminho inteiro: regra no Prometheus ->
+#   Alertmanager -> rota decisao="d-05" -> receiver d05-email -> correio.abdi.com.br.
+# Substitui o POST direto na API do Alertmanager, que o proxy da API do Kubernetes recusou
+#   (UnsupportedMediaType; logs-analysis/d05-m-sabdiia01-2026-11-10-1814.log).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: d05-alerta-teste
+  namespace: vllms
+  labels: {decisao: d-05, release: monitoring}
+spec:
+  groups:
+  - name: d05-teste
+    rules:
+    - alert: D05TesteEmail
+      expr: vector(1)
+      labels: {severity: warning, decisao: d-05}
+      annotations:
+        summary: "Teste do e-mail de alertas do vLLM (PD-38)"
+        description: "Regra temporária do Bloco M2. Some quando o bloco apaga a regra; aí chega o aviso de resolvido."

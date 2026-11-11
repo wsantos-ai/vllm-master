@@ -1,0 +1,8 @@
+== sabdiia01  2026-11-10T18:11:10-03:00  D-05 M: alertas por e-mail (PD-38)
+c110f08aca568ef3d4bc49b6e2ea074813b1856b953feb229ce6104b8a15e0de  d05-alertmanager-email-values.yaml
+2       	Tue Nov 10 17:01:10 2026	failed    	kube-prometheus-stack-91.3.0	v0.94.0    	Upgrade "monit
+3       	Tue Nov 10 17:13:58 2026	deployed  	kube-prometheus-stack-91.3.0	v0.94.0    	Upgrade comple
+### 1. edições fora do Helm desde a última revisão? (AC-41)   18:11:10
+revisão 3: nenhuma diferença
+### 2. secret com a senha (sem mostrá-la)   18:11:20
+ABORTA: host/porta de credenciais-email.txt diferentes dos values

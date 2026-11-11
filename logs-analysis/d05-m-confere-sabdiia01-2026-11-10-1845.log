@@ -1,0 +1,19 @@
+== sabdiia01  2026-11-10T18:45:09-03:00  D-05 M-confere: contadores de e-mail (só leitura)
+alertmanager_notification_latency_seconds_bucket  alertmanager-monitoring-kube-prometheus-alertmanager-0 9
+alertmanager_notification_latency_seconds_bucket  alertmanager-monitoring-kube-prometheus-alertmanager-0 9
+alertmanager_notification_latency_seconds_bucket  alertmanager-monitoring-kube-prometheus-alertmanager-0 9
+alertmanager_notification_latency_seconds_bucket  alertmanager-monitoring-kube-prometheus-alertmanager-0 9
+alertmanager_notification_latency_seconds_bucket  alertmanager-monitoring-kube-prometheus-alertmanager-0 9
+alertmanager_notification_latency_seconds_bucket  alertmanager-monitoring-kube-prometheus-alertmanager-0 9
+alertmanager_notification_latency_seconds_sum  alertmanager-monitoring-kube-prometheus-alertmanager-0 2.62919485
+alertmanager_notification_latency_seconds_count  alertmanager-monitoring-kube-prometheus-alertmanager-0 9
+alertmanager_notification_requests_failed_total  alertmanager-monitoring-kube-prometheus-alertmanager-0 6
+alertmanager_notification_requests_total  alertmanager-monitoring-kube-prometheus-alertmanager-0 9
+alertmanager_notifications_failed_total authError alertmanager-monitoring-kube-prometheus-alertmanager-0 0
+alertmanager_notifications_failed_total clientError alertmanager-monitoring-kube-prometheus-alertmanager-0 0
+alertmanager_notifications_failed_total contextCanceled alertmanager-monitoring-kube-prometheus-alertmanager-0 0
+alertmanager_notifications_failed_total contextDeadlineExceeded alertmanager-monitoring-kube-prometheus-alertmanager-0 0
+alertmanager_notifications_failed_total other alertmanager-monitoring-kube-prometheus-alertmanager-0 0
+alertmanager_notifications_failed_total rateLimited alertmanager-monitoring-kube-prometheus-alertmanager-0 0
+alertmanager_notifications_failed_total serverError alertmanager-monitoring-kube-prometheus-alertmanager-0 0
+alertmanager_notifications_total  alertmanager-monitoring-kube-prometheus-alertmanager-0 3

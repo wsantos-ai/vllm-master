@@ -1,0 +1,47 @@
+== sabdiia01  2026-11-10T18:37:26-03:00  D-05 M3: destinatários e novo teste do e-mail (PD-38)
+3e0ef8364adb2ae91a0c93200c1f7f7e7fcc550d9f483cc3e7d8898379df2a8f  d05-alertmanager-email-values.yaml
+### 1. edições fora do Helm? (AC-41)   18:37:26
+revisão 4: nenhuma diferença
+### 2. helm upgrade   18:37:36
+Release "monitoring" has been upgraded. Happy Helming!
+NAME: monitoring
+LAST DEPLOYED: Tue Nov 10 18:37:40 2026
+NAMESPACE: monitoring
+STATUS: deployed
+REVISION: 5
+DESCRIPTION: Upgrade complete
+TEST SUITE: None
+NOTES:
+kube-prometheus-stack has been installed. Check its status by running:
+  kubectl --namespace monitoring get pods -l "release=monitoring"
+
+Get Grafana 'admin' user password by running:
+
+  kubectl --namespace monitoring get secrets monitoring-grafana -o jsonpath="{.data.admin-password}" | base64 -d ; echo
+
+Access Grafana local instance:
+
+  export POD_NAME=$(kubectl --namespace monitoring get pod -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance=monitoring" -oname)
+  kubectl --namespace monitoring port-forward $POD_NAME 3000
+
+Get your grafana admin user password by running:
+
+  kubectl get secret --namespace monitoring -l app.kubernetes.io/component=admin-secret -o jsonpath="{.items[0].data.admin-password}" | base64 --decode ; echo
+
+
+Visit https://github.com/prometheus-operator/kube-prometheus for instructions on how to create & configure Alertmanager and Prometheus instances using the Operator.
+4       	Tue Nov 10 18:14:16 2026	superseded	kube-prometheus-stack-91.3.0	v0.94.0    	Upgrade comple
+5       	Tue Nov 10 18:37:40 2026	deployed  	kube-prometheus-stack-91.3.0	v0.94.0    	Upgrade comple
+### 3. configuração nova carregada? (até 3 min)   18:38:08
+esperou 60 s
+NAME                                                     READY   STATUS    RESTARTS   AGE   IP               NODE        NOMINATED NODE   READINESS GATES
+alertmanager-monitoring-kube-prometheus-alertmanager-0   2/2     Running   0          22m   10.244.182.138   sabdiia02   <none>           <none>
+  - receiver: "null"
+  - receiver: d05-email
+- name: "null"
+- name: d05-email
+    to: wsantos-min@abdi.com.br, wellington.santos-min@abdi.com.br
+### 4. teste   18:38:54
+prometheusrule.monitoring.coreos.com/d05-alerta-teste created
+esperou 105 s
+prometheusrule.monitoring.coreos.com "d05-alerta-teste" deleted from vllms namespace

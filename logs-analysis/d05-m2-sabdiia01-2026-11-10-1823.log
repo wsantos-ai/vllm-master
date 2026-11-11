@@ -1,0 +1,26 @@
+== sabdiia01  2026-11-10T18:23:29-03:00  D-05 M2: configuração e teste do e-mail (PD-38)
+### 1. pod e configuração (só nomes)   18:23:29
+pod/alertmanager-monitoring-kube-prometheus-alertmanager-0 condition met
+NAME                                                     READY   STATUS    RESTARTS   AGE     IP               NODE        NOMINATED NODE   READINESS GATES
+alertmanager-monitoring-kube-prometheus-alertmanager-0   2/2     Running   0          6m50s   10.244.182.138   sabdiia02   <none>           <none>
+  smtp_from: noreply@abdi.com.br
+  smtp_smarthost: correio.abdi.com.br:587
+  smtp_auth_password_file: /etc/alertmanager/secrets/d05-alertmanager-smtp/password
+  smtp_require_tls: true
+  receiver: "null"
+  - receiver: "null"
+  - receiver: d05-email
+- name: "null"
+- name: d05-email
+    to: wsantos-min@abdi.com.br
+### 2. regra de teste   18:23:29
+prometheusrule.monitoring.coreos.com/d05-alerta-teste created
+esperou 60 s
+      1 "alertname":"D05TesteEmail"
+      1 "decisao":"d-05"
+      1 "state":"active"
+### 3. log do Alertmanager (envio)   18:25:45
+time=2026-11-10T21:24:36.344Z level=WARN source=retry_stage.go:165 msg="Notify attempt failed, will retry later" component=dispatcher receiver=d05-email integration=email[0] aggrGroup="{}/{decisao=\"d-05\"}:{alertname=\"D05TesteEmail\"}" attempts=1 err="send MAIL command: 421 \"4.4.2 Message submiss
+time=2026-11-10T21:24:47.647Z level=INFO source=retry_stage.go:180 msg="Notify success" component=dispatcher receiver=d05-email integration=email[0] aggrGroup="{}/{decisao=\"d-05\"}:{alertname=\"D05TesteEmail\"}" attempts=7 duration=274.820756ms numAlerts=1
+### 4. apaga a regra de teste (o aviso de resolvido vem em 5-10 min)   18:25:45
+prometheusrule.monitoring.coreos.com "d05-alerta-teste" deleted from vllms namespace
