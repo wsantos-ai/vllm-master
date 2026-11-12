@@ -1,0 +1,24 @@
+== sabdiia01  2026-11-12T17:00:43-03:00  T0: cert-manager e emissor neste cluster (PD-34)
+### 1. CRDs do cert-manager
+certificaterequests.cert-manager.io                      Namespaced   v1(storage)                2026-11-12T18:16:46Z
+certificates.cert-manager.io                             Namespaced   v1(storage)                2026-11-12T18:16:46Z
+challenges.acme.cert-manager.io                          Namespaced   v1(storage)                2026-11-12T18:16:46Z
+clusterissuers.cert-manager.io                           Cluster      v1(storage)                2026-11-12T18:16:47Z
+issuers.cert-manager.io                                  Namespaced   v1(storage)                2026-11-12T18:16:47Z
+orders.acme.cert-manager.io                              Namespaced   v1(storage)                2026-11-12T18:16:46Z
+### 2. pods do cert-manager
+cert-manager     cert-manager-bc8ddc9f6-wqsdq                                  1/1     Running     0                103m    10.244.182.145   sabdiia02   <none>           <none>
+cert-manager     cert-manager-cainjector-557444dc8d-tqt4q                      1/1     Running     0                103m    10.244.182.130   sabdiia02   <none>           <none>
+cert-manager     cert-manager-webhook-bf7f8b575-q2qtq                          1/1     Running     0                103m    10.244.182.191   sabdiia02   <none>           <none>
+### 3. emissores
+NAME                     READY   STATUS                                                                                                AGE
+letsencrypt-cloudflare   False   failed to get secret "cloudflare-api-token-secret": secrets "cloudflare-api-token-secret" not found   77m
+### 4. certificados existentes
+No resources found
+### 5. Ingress com nome (host) e LoadBalancers
+NAMESPACE   NAME                CLASS   HOSTS   ADDRESS          PORTS   AGE
+vllms       embeddings-bge-m3   kong    *       192.168.50.161   80      54m
+vllms       vllm-server         kong    *       192.168.50.161   80      4d19h
+kong             kong-gateway-proxy                                   LoadBalancer   10.98.30.231     192.168.50.161   80:30791/TCP,443:30659/TCP      59d
+monitoring       monitoring-grafana                                   LoadBalancer   10.110.254.9     192.168.50.162   80:30351/TCP                    59d
+== fim 2026-11-12T17:00:44-03:00

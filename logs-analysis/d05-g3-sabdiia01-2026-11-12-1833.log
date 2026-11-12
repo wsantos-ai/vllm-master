@@ -1,0 +1,105 @@
+== sabdiia01  2026-11-12T18:33:11-03:00  G3: max-model-len 32768, gpu-memory-utilization 0.93
+### 0. antes
+-rw-r--r-- 1 root root 6426 Nov 12 18:33 d05-vllm-server-antes-g3-2026-11-12-1833.yaml
+--max-model-len 8192 --gpu-memory-utilization 0.90
+NAME                           READY   STATUS    RESTARTS         AGE     IP               NODE        NOMINATED NODE   READINESS GATES
+vllm-server-58699c67bf-4sn8m   1/1     Running   16 (4d20h ago)   4d20h   10.244.182.161   sabdiia02   <none>           <none>
+vllm-server-58699c67bf-w9bsm   1/1     Running   0                4d19h   10.244.50.168    sabdiia03   <none>           <none>
+vllm-server-58699c67bf-xrpct   1/1     Running   0                4d21h   10.244.179.112   sabdiia01   <none>           <none>
+### 1. aplicar só o Deployment   18:33:12
+deployment.apps/vllm-server configured (server dry run)
+service/vllm-server unchanged (server dry run)
+deployment.apps/vllm-server configured
+service/vllm-server unchanged
+### 2. troca uma réplica por vez (até 45 min; desfaz se uma nova reiniciar)   18:33:12
+18:33:43
+   vllm-server-58699c67bf-w9bsm 2026-11-08T01:34:27Z 0 true
+   vllm-server-58699c67bf-xrpct 2026-11-08T00:30:44Z 0 true
+   vllm-server-8bc76db4-pphdw 2026-11-12T21:33:12Z 0 false
+18:34:14
+   vllm-server-58699c67bf-w9bsm 2026-11-08T01:34:27Z 0 true
+   vllm-server-58699c67bf-xrpct 2026-11-08T00:30:44Z 0 true
+   vllm-server-8bc76db4-pphdw 2026-11-12T21:33:12Z 0 false
+18:34:45
+   vllm-server-58699c67bf-w9bsm 2026-11-08T01:34:27Z 0 true
+   vllm-server-58699c67bf-xrpct 2026-11-08T00:30:44Z 0 true
+   vllm-server-8bc76db4-pphdw 2026-11-12T21:33:12Z 0 false
+18:35:16
+   vllm-server-58699c67bf-w9bsm 2026-11-08T01:34:27Z 0 true
+   vllm-server-58699c67bf-xrpct 2026-11-08T00:30:44Z 0 true
+   vllm-server-8bc76db4-pphdw 2026-11-12T21:33:12Z 0 false
+18:35:47
+   vllm-server-58699c67bf-w9bsm 2026-11-08T01:34:27Z 0 true
+   vllm-server-58699c67bf-xrpct 2026-11-08T00:30:44Z 0 true
+   vllm-server-8bc76db4-pphdw 2026-11-12T21:33:12Z 0 false
+18:36:18
+   vllm-server-58699c67bf-w9bsm 2026-11-08T01:34:27Z 0 true
+   vllm-server-8bc76db4-6rnk2 2026-11-12T21:36:12Z 0 false
+   vllm-server-8bc76db4-pphdw 2026-11-12T21:33:12Z 0 true
+18:36:49
+   vllm-server-58699c67bf-w9bsm 2026-11-08T01:34:27Z 0 true
+   vllm-server-8bc76db4-6rnk2 2026-11-12T21:36:12Z 0 false
+   vllm-server-8bc76db4-pphdw 2026-11-12T21:33:12Z 0 true
+18:37:21
+   vllm-server-58699c67bf-w9bsm 2026-11-08T01:34:27Z 0 true
+   vllm-server-8bc76db4-6rnk2 2026-11-12T21:36:12Z 0 false
+   vllm-server-8bc76db4-pphdw 2026-11-12T21:33:12Z 0 true
+18:37:52
+   vllm-server-58699c67bf-w9bsm 2026-11-08T01:34:27Z 0 true
+   vllm-server-8bc76db4-6rnk2 2026-11-12T21:36:12Z 0 false
+   vllm-server-8bc76db4-pphdw 2026-11-12T21:33:12Z 0 true
+18:38:23
+   vllm-server-58699c67bf-w9bsm 2026-11-08T01:34:27Z 0 true
+   vllm-server-8bc76db4-6rnk2 2026-11-12T21:36:12Z 0 true
+   vllm-server-8bc76db4-pphdw 2026-11-12T21:33:12Z 0 true
+   vllm-server-8bc76db4-vdtjf 2026-11-12T21:38:15Z  
+18:38:54
+   vllm-server-8bc76db4-6rnk2 2026-11-12T21:36:12Z 0 true
+   vllm-server-8bc76db4-pphdw 2026-11-12T21:33:12Z 0 true
+   vllm-server-8bc76db4-vdtjf 2026-11-12T21:38:15Z 0 false
+18:39:25
+   vllm-server-8bc76db4-6rnk2 2026-11-12T21:36:12Z 0 true
+   vllm-server-8bc76db4-pphdw 2026-11-12T21:33:12Z 0 true
+   vllm-server-8bc76db4-vdtjf 2026-11-12T21:38:15Z 0 false
+18:39:56
+   vllm-server-8bc76db4-6rnk2 2026-11-12T21:36:12Z 0 true
+   vllm-server-8bc76db4-pphdw 2026-11-12T21:33:12Z 0 true
+   vllm-server-8bc76db4-vdtjf 2026-11-12T21:38:15Z 0 false
+18:40:28
+   vllm-server-8bc76db4-6rnk2 2026-11-12T21:36:12Z 0 true
+   vllm-server-8bc76db4-pphdw 2026-11-12T21:33:12Z 0 true
+   vllm-server-8bc76db4-vdtjf 2026-11-12T21:38:15Z 0 false
+18:40:59
+   vllm-server-8bc76db4-6rnk2 2026-11-12T21:36:12Z 0 true
+   vllm-server-8bc76db4-pphdw 2026-11-12T21:33:12Z 0 true
+   vllm-server-8bc76db4-vdtjf 2026-11-12T21:38:15Z 0 false
+18:41:30
+   vllm-server-8bc76db4-6rnk2 2026-11-12T21:36:12Z 0 true
+   vllm-server-8bc76db4-pphdw 2026-11-12T21:33:12Z 0 true
+   vllm-server-8bc76db4-vdtjf 2026-11-12T21:38:15Z 0 true
+trocou: sim  (8 min)
+### 3. o que cada réplica calculou
+-- vllm-server-8bc76db4-6rnk2 em sabdiia01
+(EngineCore pid=198) INFO 11-12 21:37:53 [gpu_worker.py:436] Available KV cache memory: 5.27 GiB
+(EngineCore pid=198) INFO 11-12 21:37:53 [kv_cache_utils.py:1319] GPU KV cache size: 34,528 tokens
+(EngineCore pid=198) INFO 11-12 21:37:53 [kv_cache_utils.py:1324] Maximum concurrency for 32,768 tokens per request: 1.05x
+-- vllm-server-8bc76db4-pphdw em sabdiia02
+(EngineCore pid=199) INFO 11-12 21:35:39 [gpu_worker.py:436] Available KV cache memory: 5.27 GiB
+(EngineCore pid=199) INFO 11-12 21:35:39 [kv_cache_utils.py:1319] GPU KV cache size: 34,528 tokens
+(EngineCore pid=199) INFO 11-12 21:35:39 [kv_cache_utils.py:1324] Maximum concurrency for 32,768 tokens per request: 1.05x
+-- vllm-server-8bc76db4-vdtjf em sabdiia03
+(EngineCore pid=198) INFO 11-12 21:41:01 [gpu_worker.py:436] Available KV cache memory: 5.27 GiB
+(EngineCore pid=198) INFO 11-12 21:41:01 [kv_cache_utils.py:1319] GPU KV cache size: 34,528 tokens
+(EngineCore pid=198) INFO 11-12 21:41:01 [kv_cache_utils.py:1324] Maximum concurrency for 32,768 tokens per request: 1.05x
+### 4. prompts longos direto numa réplica (sem Kong)   18:41:31
+400 frases: 200 prompt_tokens=7211 resposta='OK' 9.1 s
+1100 frases: 200 prompt_tokens=19811 resposta='O vLLM é' 41.0 s
+1800 frases: 200 prompt_tokens=32411 resposta='O vLLM é' 75.7 s
+2400 frases: 400 {"error":{"message":"This model's maximum context length is 32768 tokens. However, you requested 5 output tokens and your prompt contains 43211 input tokens, for a total of 43216 tokens. Please reduce the length of the i 0.1 s
+### 5. estado final
+--max-model-len 32768 --gpu-memory-utilization 0.93
+NAME                         READY   STATUS    RESTARTS   AGE     IP               NODE        NOMINATED NODE   READINESS GATES
+vllm-server-8bc76db4-6rnk2   1/1     Running   0          7m25s   10.244.179.89    sabdiia01   <none>           <none>
+vllm-server-8bc76db4-pphdw   1/1     Running   0          10m     10.244.182.132   sabdiia02   <none>           <none>
+vllm-server-8bc76db4-vdtjf   1/1     Running   0          5m22s   10.244.50.191    sabdiia03   <none>           <none>
+== fim 2026-11-12T18:43:37-03:00

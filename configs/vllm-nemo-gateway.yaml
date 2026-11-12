@@ -68,6 +68,10 @@ spec:
             topologyKey: kubernetes.io/hostname
       # Sem token da API do Kubernetes dentro do pod: o vLLM não precisa dele.
       automountServiceAccountToken: false
+      # Contexto (2026-11-12, pedido do usuário; Bloco G3): --max-model-len 8192 -> 32768. O vLLM v0.19.1 só arranca se
+      # uma requisição do tamanho máximo couber no KV cache (_check_enough_kv_cache_memory): 32768 x 160 KiB/token
+      # (40 camadas x 8 cabeças KV x 128 x 2 x 2 B, F-044) = 5,0 GiB, e com 0.90 havia 4,32 GiB (28.288 tokens). Por isso
+      # --gpu-memory-utilization 0.90 -> 0.93 (+~0,96 GiB, ~34.600 tokens [cálculo]; o valor real sai do log de arranque).
       containers:
       - name: vllm
         # Última versão com sm_70 (AC-11). Fixar por digest em produção.
@@ -78,7 +82,7 @@ spec:
           set -e
           P=$(python3 -c "from huggingface_hub import snapshot_download as s; print(s('mistralai/Mistral-Nemo-Instruct-2407', local_files_only=True))")
           echo "pesos em $P"
-          exec vllm serve "$P" --served-model-name mistralai/Mistral-Nemo-Instruct-2407 --dtype float16 --max-model-len 8192 --gpu-memory-utilization 0.90 --generation-config vllm --tokenizer_mode mistral --config_format mistral --load_format mistral --enable-auto-tool-choice --tool-call-parser mistral --disable-fastapi-docs --host 0.0.0.0 --port 8000
+          exec vllm serve "$P" --served-model-name mistralai/Mistral-Nemo-Instruct-2407 --dtype float16 --max-model-len 32768 --gpu-memory-utilization 0.93 --generation-config vllm --tokenizer_mode mistral --config_format mistral --load_format mistral --enable-auto-tool-choice --tool-call-parser mistral --disable-fastapi-docs --host 0.0.0.0 --port 8000
         env:
         - {name: HF_HOME, value: /hf-cache}
         # Nunca baixa nada: o que roda é o que está no cache (AC-18).

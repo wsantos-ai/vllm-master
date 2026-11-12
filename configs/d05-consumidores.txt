@@ -2,6 +2,7 @@
 #
 # Uma linha por ator:  nome  IP-ou-CIDR  [IP-ou-CIDR ...]
 #   nome: minúsculas, dígitos e hífen, até 32 caracteres (vira o nome do KongConsumer e do Secret).
+#   limite=NNN (opcional): requisições por minuto só deste ator, no lugar das 120 da rota (Bloco C, 2026-11-12).
 #   IP:   o da máquina que chama o modelo (PC do dev, servidor ou máquinas da equipe), não o do navegador
 #         de usuário. CIDR de /8 a /32 (ex.: uma faixa de DHCP). Ainda sem IP: "pendente" (a chave é
 #         criada, mas o Kong recusa o ator até o IP entrar aqui).
@@ -21,3 +22,10 @@ dev-2          pendente
 # 2026-11-09). Só o /32: a faixa 172.16.30.0/24 liberaria toda a rede da estação com esta chave. Se o DHCP trocar o
 # IP, o Kong responde 403: peça à infraestrutura uma reserva de DHCP para esta máquina.
 crp            172.16.30.201
+# nib-dth: aplicação NIB em homologação no cluster dth (namespace dth). Pedido da infraestrutura em 2026-11-12: o pod
+# sai pelo IP do nó, por NAT do Calico (nó atual k8s-node02, 192.168.41.6), e muda de nó a cada deploy, então a faixa
+# dos nós. Confirmado pela infraestrutura (2026-11-12): 192.168.41.0/24 só tem nós do dth. A confirmar: que não há
+# outro NAT até o Kong (o 403 do 1º teste de dentro do pod mostra o IP que chega). Chave entregue em 2026-11-12.
+# limite=300: pedido da equipe do NIB por mais de 120/min; valor do usuário (2026-11-12). Capacidade: ~640/min nas
+# 3 réplicas, divididas com os outros atores (AC-31).
+nib-dth        192.168.41.0/24  limite=300

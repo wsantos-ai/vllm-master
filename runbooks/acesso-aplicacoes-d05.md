@@ -670,6 +670,134 @@ EOF
 **Pronto se:** `pronto=1`; a seção 5 sem `[ESPERADO`; a seção 6 com "sem resposta" nas duas primeiras
 linhas e um código HTTP na terceira; a seção 8 com 401 e 404.
 
+## Bloco G3 — Contexto de 32.768 *tokens* (servidor `sabdiia01`, bash; 2026-11-12)
+
+Pedido do usuário: `--max-model-len` 8192 → **32768**. Na `v0.19.1`, o vLLM só arranca se uma requisição do tamanho
+máximo couber no *KV cache* (`_check_enough_kv_cache_memory` em `vllm/v1/core/kv_cache_utils.py`, conferido em
+2026-11-12). Senão, cai com `To serve at least one request with the models's max seq len (...) Try increasing
+gpu_memory_utilization or decreasing max_model_len`. A conta para o Nemo:
+- cada *token* ocupa 160 KiB (40 camadas × 8 cabeças KV × 128 × 2 × 2 B, [F-044]);
+- 32.768 *tokens* precisam de 5,0 GiB;
+- com `0.90` havia 4,32 GiB (28.288 *tokens*, §6).
+
+Por isso `--gpu-memory-utilization` 0.90 → **0.93**: +~0,96 GiB, ~34.600 *tokens* [cálculo]. São duas *flags*, mas uma
+decisão: a 2ª só existe para a 1ª caber.
+
+Aplica **só o `Deployment`**, com `kubectl apply -l app=vllm-server`; o `Service`, que tem o mesmo rótulo, sai `unchanged`.
+Reaplicar o manifesto inteiro regravaria a anotação de plugins da rota e tiraria o `d05-prometheus`. A troca é de uma
+réplica por vez (`maxSurge 0`, `maxUnavailable 1`): durante ~15 min o serviço fica com 2 de 3 réplicas. Se uma réplica
+nova reiniciar (falta de memória ou o erro acima), o bloco mostra o log dela e faz `rollout undo`. Cópia antes:
+`d05-vllm-server-antes-g3-<data>.yaml`. Envie antes o manifesto pelo E0-cópia.
+
+**Expectativa (escrita antes):**
+- seção 0: `--max-model-len 8192 --gpu-memory-utilization 0.90`;
+- seção 2: as 3 réplicas trocadas uma a uma, ~4-5 min cada, sem reinício;
+- seção 3, em cada réplica: `Available KV cache memory` ~5,2-5,3 GiB, `GPU KV cache size` ~34.000-35.000 *tokens* e
+  `Maximum concurrency for 32,768 tokens per request` ~1,05x. Uma conversa de 32 mil *tokens* ocupa a réplica
+  inteira; as curtas continuam cabendo às dezenas (o *KV cache* total até cresce, de 28.288 para ~34.600);
+- seção 4: ~7 mil e ~19 mil *tokens* com `200`. ~20 mil só cabem agora. ~31 mil com `200`, mais lento (tempo
+  `[não medido]`). ~40 mil com `400` e a mensagem de contexto máximo.
+
+```bash
+mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
+{
+  echo "== $(hostname -s)  $(date -Is)  G3: max-model-len 32768, gpu-memory-utilization 0.93"
+  [ "$(hostname -s)" = sabdiia01 ] || { echo "ABORTA: rode em sabdiia01 (kubectl)"; exit 1; }
+  NS=vllms; MAN=vllm-nemo-gateway.yaml; TS=$(date +%F-%H%M)
+  grep -q -- '--max-model-len 32768 --gpu-memory-utilization 0.93' $MAN \
+    || { echo "ABORTA: $MAN sem 32768/0.93: envie a versão nova (E0-cópia)"; exit 1; }
+  ARGS='{.spec.template.spec.containers[0].args[0]}'
+  FLAGS='--max-model-len [0-9]* --gpu-memory-utilization [0-9.]*'
+
+  echo "### 0. antes"
+  kubectl get deploy vllm-server -n $NS -o yaml > d05-vllm-server-antes-g3-$TS.yaml
+  ls -l d05-vllm-server-antes-g3-$TS.yaml
+  kubectl get deploy vllm-server -n $NS -o jsonpath="$ARGS" | grep -o -- "$FLAGS"
+  kubectl get pods -n $NS -l app=vllm-server -o wide
+
+  echo "### 1. aplicar só o Deployment   $(date +%T)"
+  INI=$(date -u +%FT%TZ)
+  kubectl apply -f $MAN -l app=vllm-server --dry-run=server || { echo "ABORTA: dry-run"; exit 1; }
+  kubectl apply -f $MAN -l app=vllm-server
+
+  echo "### 2. troca uma réplica por vez (até 45 min; desfaz se uma nova reiniciar)   $(date +%T)"
+  J='{range .items[*]}{.metadata.name} {.metadata.creationTimestamp} '
+  C='.status.containerStatuses[0]'
+  J="$J{$C.restartCount} {$C.ready}"'{"\n"}{end}'
+  T0=$(date +%s); OK=nao
+  while [ $(( $(date +%s) - T0 )) -lt 2700 ]; do
+    sleep 30
+    Q=$(kubectl get pods -n $NS -l app=vllm-server -o jsonpath="$J")
+    echo "$(date +%T)"; echo "$Q" | sed 's/^/   /'
+    RUIM=$(echo "$Q" | awk -v i="$INI" '$2 >= i && $3 >= 1 {print $1; exit}')
+    if [ -n "$RUIM" ]; then
+      echo "FALHA: $RUIM reiniciou. Log da tentativa anterior:"
+      kubectl logs -n $NS $RUIM --previous 2>&1 | grep -E 'Error|error|memory|KV cache' \
+        | cut -c1-250 | tail -12
+      kubectl rollout undo deploy/vllm-server -n $NS
+      break
+    fi
+    kubectl rollout status deploy/vllm-server -n $NS --timeout=1s >/dev/null 2>&1 \
+      && { OK=sim; break; }
+  done
+  echo "trocou: $OK  ($(( ($(date +%s) - T0) / 60 )) min)"
+
+  echo "### 3. o que cada réplica calculou"
+  for P in $(kubectl get pods -n $NS -l app=vllm-server -o jsonpath='{.items[*].metadata.name}'); do
+    echo "-- $P em $(kubectl get pod -n $NS $P -o jsonpath='{.spec.nodeName}')"
+    kubectl logs -n $NS $P 2>&1 \
+      | grep -E 'Available KV cache memory|GPU KV cache size|Maximum concurrency' | cut -c1-200
+  done
+
+  if [ "$OK" = sim ]; then
+    echo "### 4. prompts longos direto numa réplica (sem Kong)   $(date +%T)"
+    P=$(kubectl get pods -n $NS -l app=vllm-server -o jsonpath='{.items[0].metadata.name}')
+    kubectl exec -i -n $NS $P -- python3 - <<'PY'
+import json, os, time, urllib.request, urllib.error
+U = 'http://127.0.0.1:8000/v1/chat/completions'
+H = {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + os.environ['VLLM_API_KEY']}
+frase = 'O vLLM serve o modelo de linguagem em tres servidores com GPU no cluster. '
+for n in (400, 1100, 1800, 2400):
+    corpo = {'model': 'mistralai/Mistral-Nemo-Instruct-2407', 'max_tokens': 5, 'temperature': 0,
+             'messages': [{'role': 'user', 'content': frase * n + '\nResponda apenas: OK'}]}
+    r = urllib.request.Request(U, json.dumps(corpo).encode(), H)
+    t = time.time()
+    try:
+        d = json.load(urllib.request.urlopen(r, timeout=900))
+        print(f"{n} frases: 200 prompt_tokens={d['usage']['prompt_tokens']} "
+              f"resposta={d['choices'][0]['message']['content']!r} {time.time() - t:.1f} s")
+    except urllib.error.HTTPError as e:
+        print(f"{n} frases: {e.code} {e.read().decode()[:220]} {time.time() - t:.1f} s")
+PY
+  fi
+
+  echo "### 5. estado final"
+  kubectl get deploy vllm-server -n $NS -o jsonpath="$ARGS" | grep -o -- "$FLAGS"
+  kubectl get pods -n $NS -l app=vllm-server -o wide
+  echo "== fim $(date -Is)"
+} 2>&1 | tee d05-g3-$(hostname -s)-$(date +%F-%H%M).log
+```
+
+**Pronto se:** `trocou: sim`; a seção 3 com ~34 mil *tokens* de *KV cache* nas 3 réplicas; a seção 4 com `200` até ~31
+mil *tokens* e `400` acima de 32.768. A frase tem ~17 *tokens* (683 em 40 repetições no tokenizador do `bge-m3`, E1; no do Nemo pode variar), então 400, 1.100, 1.800 e 2.400 frases dão ~7, ~19, ~31 e ~41 mil [estimativa]; o
+`prompt_tokens` mostra o número real.
+
+**Efeitos a acompanhar depois:**
+- Uma conversa de ~25 mil *tokens* ocupa ~72 % do *KV cache* de uma réplica. Com duas assim ao mesmo tempo na mesma
+  réplica, há preempção, e os alertas `VllmKvCacheAlto` (80 %) e `VllmPreempcoes` vão disparar.
+- Pelo Kong, o `read-timeout` é de 120 s (`Service` `vllm-server`). Um *prompt* longo sem *streaming* que passe disso
+  recebe `504`. O tempo da seção 4 diz se é preciso subir.
+
+### G3-desfazer (servidor `sabdiia01`, bash)
+
+Volta o `Deployment` à revisão anterior (8192 / 0.90), trocando uma réplica por vez. No repositório, volte as duas
+*flags* em `configs/vllm-nemo-gateway.yaml`, para o próximo `apply` não refazer a mudança.
+
+```bash
+kubectl rollout undo deploy/vllm-server -n vllms && \
+  kubectl rollout status deploy/vllm-server -n vllms --timeout=45m
+```
+
 ## Bloco C — Consumidores a partir da lista (servidor `sabdiia01`, bash; repetível)
 
 Lê `d05-consumidores.txt`, copiado pelo E0, e:
@@ -696,17 +824,22 @@ mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
   read -r KSVC KIP ETP _ <<< "$LBS"; echo "proxy do Kong: $KSVC  IP $KIP  externalTrafficPolicy $ETP"
 
   echo "### 1. a lista"
-  ERRO=0; NOMES=""; declare -A IPS_DE
+  ERRO=0; NOMES=""; declare -A IPS_DE LIM_DE
   while read -r NOME RESTO; do
     echo "$NOME" | grep -qE '^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$' || { echo "ERRO: nome inválido: $NOME"; ERRO=1; continue; }
-    NOMES="$NOMES $NOME"; IPS=""
+    NOMES="$NOMES $NOME"; IPS=""; LIM_DE[$NOME]=""
     for X in $RESTO; do
       [ "$X" = pendente ] && continue
+      case "$X" in limite=*)
+        L=${X#limite=}
+        echo "$L" | grep -qE '^[1-9][0-9]{0,4}$' || { echo "ERRO: limite inválido em $NOME: $X"; ERRO=1; }
+        LIM_DE[$NOME]=$L; continue;;
+      esac
       echo "$X" | grep -qE '^([0-9]{1,3}\.){3}[0-9]{1,3}(/(3[0-2]|[12][0-9]|[89]))?$' || { echo "ERRO: IP ou CIDR inválido em $NOME: $X (CIDR de /8 a /32)"; ERRO=1; continue; }
       IPS="$IPS $X"
     done
     IPS_DE[$NOME]="$IPS"
-    echo "$NOME:${IPS:- (sem IP: o Kong recusa até o IP entrar na lista)}"
+    echo "$NOME:${IPS:- (sem IP: o Kong recusa até o IP entrar na lista)}  limite/min: ${LIM_DE[$NOME]:-120 (o da rota)}"
   done < <(tr -d '\r' < $F | grep -vE '^[[:space:]]*(#|$)')
   [ $ERRO = 0 ] || { echo "ABORTA: corrija a lista"; exit 1; }
   [ -n "$NOMES" ] || { echo "ABORTA: lista sem consumidores"; exit 1; }
@@ -749,6 +882,27 @@ EOF
       kubectl delete kongplugin d05-ip-$N -n $NS --ignore-not-found >/dev/null
       PLUG=""
     fi
+    # limite próprio do ator (limite=NNN na lista): plugin ligado ao consumidor, que no Kong tem precedência
+    # sobre o d05-rate-limit da rota (Consumer antes de Route, F-059); sem limite=, vale o da rota (120)
+    if [ -n "${LIM_DE[$N]}" ]; then
+      kubectl apply -f - <<EOF
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: d05-rate-$N
+  namespace: $NS
+  labels: {decisao: d-05, d05-consumidor: "$N"}
+plugin: rate-limiting
+config:
+  minute: ${LIM_DE[$N]}
+  limit_by: consumer
+  policy: local
+EOF
+      PLUG="${PLUG:+$PLUG,}d05-rate-$N"
+      echo "$N: limite próprio de ${LIM_DE[$N]}/min"
+    else
+      kubectl delete kongplugin d05-rate-$N -n $NS --ignore-not-found >/dev/null
+    fi
     kubectl apply -f - <<EOF
 apiVersion: configuration.konghq.com/v1
 kind: KongConsumer
@@ -766,7 +920,7 @@ EOF
     ( umask 077
       KK=$(kubectl get secret $S -n $NS -o jsonpath='{.data.key}' | base64 -d)
       KV=$(kubectl get secret vllm-nemo-api-key -n $NS -o jsonpath='{.data.VLLM_API_KEY}' | base64 -d)
-      printf 'CONSUMIDOR=%s\nMODELO=mistralai/Mistral-Nemo-Instruct-2407\nKONG_IP=%s\nBASE_URL=https://%s/vllm/v1\nCHAVE_KONG=%s\nCHAVE_VLLM=%s\n' "$N" "$KIP" "$KIP" "$KK" "$KV" > d05-chave-$N.env )
+      printf 'CONSUMIDOR=%s\nMODELO=mistralai/Mistral-Nemo-Instruct-2407\nMODELO_EMBEDDINGS=BAAI/bge-m3\nKONG_IP=%s\nBASE_URL=https://%s/vllm/v1\nCHAVE_KONG=%s\nCHAVE_VLLM=%s\n' "$N" "$KIP" "$KIP" "$KK" "$KV" > d05-chave-$N.env )
     chown "$DONO" d05-chave-$N.env
   done
   for N in $(kubectl get kongconsumer -n $NS -l decisao=d-05 -o jsonpath='{.items[*].metadata.name}'); do
@@ -774,7 +928,7 @@ EOF
     echo "$N saiu da lista: consumidor, chave, lista de IPs e arquivo apagados (revogado)"
     kubectl delete kongconsumer $N -n $NS
     kubectl delete secret kong-cred-$N -n $NS --ignore-not-found
-    kubectl delete kongplugin d05-ip-$N -n $NS --ignore-not-found
+    kubectl delete kongplugin d05-ip-$N d05-rate-$N -n $NS --ignore-not-found
     rm -f d05-chave-$N.env
   done
 
@@ -813,6 +967,23 @@ EOF
 
 **Pronto se:** a seção 1 sem `ERRO`, a seção 4 sem eventos de falha, a seção 5 com o mesmo código para
 todos os atores (403 ou 200), e a seção 6 com um arquivo por ator.
+
+**Rodada de 2026-11-12, `nib-dth` (expectativa escrita antes).** Entra o consumidor `nib-dth` com `192.168.41.0/24`,
+a faixa dos nós do cluster dth, pedida pela infraestrutura: o *pod* do NIB sai pelo IP do nó, por NAT do Calico.
+- Seção 1: 6 atores; `nib-dth: 192.168.41.0/24`.
+- Seção 2: `nib-dth: chave nova` e as outras 5 `mantida`; só `d05-ip-nib-dth` é criado, e os outros `KongPlugin` ficam `unchanged`.
+- Seção 4: `nib-dth` `PROGRAMMED True`.
+- Seção 5: `403 IP address not allowed: 10.244.179.64` para os 6, inclusive `nib-dth`.
+- Seção 6: 6 arquivos `.env`, agora com `MODELO_EMBEDDINGS=BAAI/bge-m3`. Os arquivos dos outros atores são regravados com a mesma chave.
+
+**Limite próprio (`limite=300` na linha do `nib-dth`):**
+- seção 1: `nib-dth: 192.168.41.0/24  limite/min: 300`; os outros com `120 (o da rota)`;
+- seção 2: `kongplugin/d05-rate-nib-dth created` e `nib-dth: limite próprio de 300/min`; os outros atores não ganham `d05-rate-*`;
+- seção 4: `d05-rate-nib-dth` listado.
+
+De 01 não dá para ver o limite: o `ip-restriction` responde `403` antes de o `rate-limiting` rodar. O limite é confirmado na 1ª chamada do NIB com `curl -i`: os cabeçalhos devem trazer `X-RateLimit-Limit-Minute: 300`, não `120`. A precedência do plugin do consumidor sobre o da rota vem da doc [F-059] e ainda não foi testada aqui.
+
+O teste que vale é o 1º chamado de dentro do *pod* do NIB. `200` confirma a faixa. `403 IP address not allowed: <ip>` mostra o IP que chega ao Kong: se não for `192.168.41.x`, há outro NAT no caminho e a lista tem de mudar.
 
 **Entregar as chaves.** Copie os arquivos para a estação:
 `scp "${u}@192.168.50.151:/home/utec/vllm-estudo/d05-chave-*.env" "$env:USERPROFILE\.vllm-estudo\"`.

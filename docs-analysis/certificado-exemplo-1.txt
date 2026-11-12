@@ -1,0 +1,37 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vault
+  namespace: certvault
+  uid: 3036fee8-15ef-4584-b398-de0a9ab3dce2
+  resourceVersion: "234390341"
+  generation: 2
+  creationTimestamp: "2026-09-28T21:16:57Z"
+  annotations:
+    konghq.com/preserve-host: "true"
+    konghq.com/strip-path: "false"
+    kubectl.kubernetes.io/last-applied-configuration: >
+      {"apiVersion":"networking.k8s.io/v1","kind":"Ingress","metadata":{"annotations":{"konghq.com/preserve-host":"true","konghq.com/strip-path":"false"},"name":"vault","namespace":"certvault"},"spec":{"ingressClassName":"kong","rules":[{"host":"certvault.abdi.com.br","http":{"paths":[{"backend":{"service":{"name":"vault","port":{"number":8200}}},"path":"/","pathType":"Prefix"}]}}],"tls":[{"hosts":["certvault.abdi.com.br"],"secretName":"certvault-tls"}]}}
+  selfLink: /apis/networking.k8s.io/v1/namespaces/certvault/ingresses/vault
+status:
+  loadBalancer:
+    ingress:
+    - ip: 192.168.1.114
+spec:
+  ingressClassName: kong
+  tls:
+  - hosts:
+    - certvault.abdi.com.br
+    secretName: certvault-tls
+  rules:
+  - host: certvault.abdi.com.br
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: vault
+            port:
+              number: 8200
+ 
