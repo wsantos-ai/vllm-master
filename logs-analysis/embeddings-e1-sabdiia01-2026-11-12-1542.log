@@ -1,0 +1,121 @@
+== sabdiia01  2026-11-12T15:42:14-03:00  E1: TEI em CPU com bge-m3 em sabdiia02 (PD-39)
+### 0. nó sabdiia02 e restos de execução anterior
+Allocated resources:
+  (Total limits may be over 100 percent, i.e., overcommitted.)
+  Resource           Requests      Limits
+  --------           --------      ------
+  cpu                9135m (32%)   16200m (57%)
+  memory             33342Mi (7%)  66798Mi (15%)
+  ephemeral-storage  0 (0%)        0 (0%)
+  hugepages-1Gi      0 (0%)        0 (0%)
+  hugepages-2Mi      0 (0%)        0 (0%)
+  nvidia.com/gpu     1             1
+### 1. pesos do bge-m3 em sabdiia02   15:42:14
+pod/d05-emb-pesos created
+15:42:15 Pending
+15:42:45 Succeeded
+-rw-r--r-- 1 root root        123 Nov 12 18:33 config_sentence_transformers.json
+-rw-r--r-- 1 root root 2271064424 Nov 12 18:34 model.safetensors
+-rw-r--r-- 1 root root        349 Nov 12 18:33 modules.json
+drwxr-xr-x 2 root root       4096 Nov 12 18:34 onnx
+-rw-r--r-- 1 root root 2271145830 Nov 12 18:34 pytorch_model.bin
+-rw-r--r-- 1 root root         54 Nov 12 18:33 sentence_bert_config.json
+-rw-r--r-- 1 root root    5069051 Nov 12 18:34 sentencepiece.bpe.model
+-rw-r--r-- 1 root root        964 Nov 12 18:33 special_tokens_map.json
+-rw-r--r-- 1 root root   17098108 Nov 12 18:34 tokenizer.json
+-rw-r--r-- 1 root root        444 Nov 12 18:33 tokenizer_config.json
+
+/hf-cache/hub/models--BAAI--bge-m3/snapshots/5617a9f61b028005a4858fdac845db406aefb181/1_Pooling:
+total 8
+drwxr-xr-x 2 root root   25 Nov 12 18:33 .
+drwxr-xr-x 4 root root 4096 Nov 12 18:34 ..
+-rw-r--r-- 1 root root  191 Nov 12 18:33 config.json
+
+/hf-cache/hub/models--BAAI--bge-m3/snapshots/5617a9f61b028005a4858fdac845db406aefb181/onnx:
+total 2236124
+drwxr-xr-x 2 root root       4096 Nov 12 18:34 .
+drwxr-xr-x 4 root root       4096 Nov 12 18:34 ..
+-rw-r--r-- 1 root root      65552 Nov 12 18:33 Constant_7_attr__value
+-rw-r--r-- 1 root root        698 Nov 12 18:33 config.json
+-rw-r--r-- 1 root root     724923 Nov 12 18:34 model.onnx
+-rw-r--r-- 1 root root 2266820608 Nov 12 18:34 model.onnx_data
+-rw-r--r-- 1 root root    5069051 Nov 12 18:34 sentencepiece.bpe.model
+-rw-r--r-- 1 root root        964 Nov 12 18:33 special_tokens_map.json
+-rw-r--r-- 1 root root   17082821 Nov 12 18:34 tokenizer.json
+-rw-r--r-- 1 root root       1173 Nov 12 18:33 tokenizer_config.json
+6.4G	/hf-cache/hub/models--BAAI--bge-m3
+pod "d05-emb-pesos" deleted from vllms namespace
+### 2. pod de teste do TEI (ghcr.io/huggingface/text-embeddings-inference:cpu-1.9)   15:42:45
+pod/d05-emb-teste created
+15:42:45 Pending ready=false espera=ContainerCreating fim=/
+15:43:05 Running ready=true espera= fim=/
+pronto: sim  (20 s)
+### 3. log do TEI
+[2m2026-11-12T18:42:50.215497Z[0m [32m INFO[0m [2mtext_embeddings_router[0m[2m:[0m [2mrouter/src/main.rs[0m[2m:[0m[2m216:[0m Args { model_id: "/hf-c****/***/******--****--***-**/********
+[2m2026-11-12T18:42:51.788476Z[0m [32m INFO[0m [2mtext_embeddings_router[0m[2m:[0m [2mrouter/src/lib.rs[0m[2m:[0m[2m234:[0m Maximum number of tokens per request: 8192
+[2m2026-11-12T18:42:51.788574Z[0m [32m INFO[0m [2mtext_embeddings_core::tokenization[0m[2m:[0m [2mcore/src/tokenization.rs[0m[2m:[0m[2m38:[0m Starting 4 tokenization workers
+[2m2026-11-12T18:42:51.788779Z[0m [32m INFO[0m [2mtext_embeddings_router[0m[2m:[0m [2mrouter/src/lib.rs[0m[2m:[0m[2m284:[0m Starting model backend
+[2m2026-11-12T18:42:53.450397Z[0m [32m INFO[0m [2mtext_embeddings_router[0m[2m:[0m [2mrouter/src/lib.rs[0m[2m:[0m[2m302:[0m Warming up model
+<nil>                  Scheduled        Successfully assigned vllms/d05-emb-teste to sabdiia02
+2026-11-12T18:35:00Z   AddedInterface   Add eth0 [10.244.182.150/32] from k8s-pod-network
+2026-11-12T18:35:01Z   Pulling          Pulling image "ghcr.io/huggingface/text-embeddings-inference:cpu-1.9"
+2026-11-12T18:35:25Z   Pulled           Successfully pulled image "ghcr.io/huggingface/text-embeddings-inference:cpu-1.9" in 23.812s (23.812s including waiting). Image size: 239316921 bytes.
+2026-11-12T18:35:25Z   Created          Container created
+2026-11-12T18:35:25Z   Started          Container started
+2026-11-12T18:35:42Z   Killing          Stopping container tei
+<nil>                  Scheduled        Successfully assigned vllms/d05-emb-teste to sabdiia02
+2026-11-12T18:42:49Z   AddedInterface   Add eth0 [10.244.182.181/32] from k8s-pod-network
+2026-11-12T18:42:50Z   Pulled           Container image "ghcr.io/huggingface/text-embeddings-inference:cpu-1.9" already present on machine and can be accessed by the pod
+2026-11-12T18:42:50Z   Created          Container created
+2026-11-12T18:42:50Z   Started          Container started
+### 4. teste pelo port-forward   15:43:05
+GET /health -> HTTP 000
+Traceback (most recent call last):
+  File "/usr/lib64/python3.9/urllib/request.py", line 1346, in do_open
+    h.request(req.get_method(), req.selector, req.data, headers,
+  File "/usr/lib64/python3.9/http/client.py", line 1285, in request
+    self._send_request(method, url, body, headers, encode_chunked)
+  File "/usr/lib64/python3.9/http/client.py", line 1331, in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+  File "/usr/lib64/python3.9/http/client.py", line 1280, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/usr/lib64/python3.9/http/client.py", line 1040, in _send_output
+    self.send(msg)
+  File "/usr/lib64/python3.9/http/client.py", line 980, in send
+    self.connect()
+  File "/usr/lib64/python3.9/http/client.py", line 946, in connect
+    self.sock = self._create_connection(
+  File "/usr/lib64/python3.9/socket.py", line 856, in create_connection
+    raise err
+  File "/usr/lib64/python3.9/socket.py", line 844, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<stdin>", line 12, in <module>
+  File "<stdin>", line 6, in emb
+  File "/usr/lib64/python3.9/urllib/request.py", line 214, in urlopen
+    return opener.open(url, data, timeout)
+  File "/usr/lib64/python3.9/urllib/request.py", line 517, in open
+    response = self._open(req, data)
+  File "/usr/lib64/python3.9/urllib/request.py", line 534, in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+  File "/usr/lib64/python3.9/urllib/request.py", line 494, in _call_chain
+    result = func(*args)
+  File "/usr/lib64/python3.9/urllib/request.py", line 1375, in http_open
+    return self.do_open(http.client.HTTPConnection, req)
+  File "/usr/lib64/python3.9/urllib/request.py", line 1349, in do_open
+    raise URLError(err)
+urllib.error.URLError: <urlopen error [Errno 111] Connection refused>
+### 5. memória e CPU do pod (se houver metrics-server)
+NAME            CPU(cores)   MEMORY(bytes)   
+d05-emb-teste   6121m        10783Mi         
+### 6. limpeza: apaga o pod de teste (os pesos ficam em sabdiia02)
+pod "d05-emb-teste" deleted from vllms namespace
+NAME                           READY   STATUS    RESTARTS         AGE     IP               NODE        NOMINATED NODE   READINESS GATES
+vllm-server-58699c67bf-4sn8m   1/1     Running   16 (4d17h ago)   4d18h   10.244.182.161   sabdiia02   <none>           <none>
+vllm-server-58699c67bf-w9bsm   1/1     Running   0                4d17h   10.244.50.168    sabdiia03   <none>           <none>
+vllm-server-58699c67bf-xrpct   1/1     Running   0                4d18h   10.244.179.112   sabdiia01   <none>           <none>
+== fim 2026-11-12T15:43:44-03:00

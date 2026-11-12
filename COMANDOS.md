@@ -772,6 +772,10 @@ Servidor `sabdiia01`, bash. Bloco M de [runbooks/observabilidade-d05.md](runbook
 
 Servidor `sabdiia01`, bash. M-confere de [runbooks/observabilidade-d05.md](runbooks/observabilidade-d05.md): contadores `alertmanager_notification*` com `integration="email"` pelo Prometheus. `alertmanager_notifications_total` conta mensagens aceitas pelo servidor de e-mail; `notification_requests_failed_total`, tentativas recusadas. `[executado: 2026-11-10]` ([log](logs-analysis/d05-m-confere-sabdiia01-2026-11-10-1845.log): 3 aceitas, 0 falhas)
 
+### O TEI roda nesta CPU, e quão rápido? (PD-39) `[executado]`
+
+Servidor `sabdiia01`, bash. E1 de [runbooks/embeddings-cpu.md](runbooks/embeddings-cpu.md). O *pod* de teste do TEI tem `readinessProbe`: sem ela, `ready=true` não quer dizer que o servidor já escuta (§9). O teste vai pelo `kubectl port-forward pod/d05-emb-teste 18080:8080`, mandando `POST /v1/embeddings` com `urllib` do `python3` e medindo a dimensão, o tempo e o `usage`. Resultado em AC-42.
+
 ### Ver o Kong Manager (painel do administrador; só leitura)
 
 O painel (`kong-gateway-manager`, *NodePort* 32492/32616) abre, mas vem sem dados: o `kconfig.js` dele tem
