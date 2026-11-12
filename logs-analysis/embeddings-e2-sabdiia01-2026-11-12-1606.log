@@ -1,0 +1,72 @@
+== sabdiia01  2026-11-12T16:06:01-03:00  E2: embeddings (bge-m3, TEI cpu-1.9) e rota no Kong (PD-39)
+IP do Kong: 192.168.50.161
+### 0. cópia antes e restos do E1
+-rw-r--r-- 1 root root 5954 Nov 12 16:06 d05-vllms-antes-e2-2026-11-12-1606.yaml
+### 1. aplicar   16:06:01
+deployment.apps/embeddings-bge-m3 created (server dry run)
+service/embeddings-bge-m3 created (server dry run)
+networkpolicy.networking.k8s.io/embeddings-so-kong created (server dry run)
+ingress.networking.k8s.io/embeddings-bge-m3 created (server dry run)
+deployment.apps/embeddings-bge-m3 created
+service/embeddings-bge-m3 created
+networkpolicy.networking.k8s.io/embeddings-so-kong created
+ingress.networking.k8s.io/embeddings-bge-m3 created
+ingress.networking.k8s.io/embeddings-bge-m3 annotated
+### 2. arranque   16:06:02
+Waiting for deployment "embeddings-bge-m3" rollout to finish: 0 of 1 updated replicas are available...
+deployment "embeddings-bge-m3" successfully rolled out
+NAME                                 READY   STATUS    RESTARTS   AGE   IP               NODE        NOMINATED NODE   READINESS GATES
+embeddings-bge-m3-69d45887b5-rlnlf   1/1     Running   0          70s   10.244.182.173   sabdiia02   <none>           <none>
+### 3. log do TEI e imagem
+2026-11-12T19:06:06.821455Z  INFO text_embeddings_router: router/src/main.rs:216: Args { model_id: "/hf-c****/***/******--****--***-**/*********/*************************************181", revision: None, tokenization_workers: Some(4), dtype: None, served_model_name: Some("BAAI/bge-m3"), pooling: Non
+2026-11-12T19:06:08.225634Z  INFO text_embeddings_router: router/src/lib.rs:234: Maximum number of tokens per request: 8192
+2026-11-12T19:06:08.225695Z  INFO text_embeddings_core::tokenization: core/src/tokenization.rs:38: Starting 4 tokenization workers
+2026-11-12T19:06:08.225830Z  INFO text_embeddings_router: router/src/lib.rs:284: Starting model backend
+2026-11-12T19:06:09.637077Z  INFO text_embeddings_router: router/src/lib.rs:302: Warming up model
+2026-11-12T19:07:05.512015Z  WARN text_embeddings_router: router/src/lib.rs:316: Backend does not support a batch size > 8
+2026-11-12T19:07:05.512059Z  WARN text_embeddings_router: router/src/lib.rs:317: forcing `max_batch_requests=8`
+2026-11-12T19:07:05.515977Z  INFO text_embeddings_router::http::server: router/src/http/server.rs:1878: Starting HTTP server: 0.0.0.0:8080
+2026-11-12T19:07:05.515988Z  INFO text_embeddings_router::http::server: router/src/http/server.rs:1879: Ready
+imageID: ghcr.io/huggingface/text-embeddings-inference@sha256:2538ea1c9640d3763b15af668039d24172d063b42337b0c27796fc2be180c78d
+### 4. rota no Kong   16:07:12
+NAME                CLASS   HOSTS   ADDRESS          PORTS   AGE
+embeddings-bge-m3   kong    *       192.168.50.161   80      90s
+plugins: d05-key-auth,d05-rate-limit,d05-prometheus
+19m         Normal    Pulled              pod/d05-emb-teste                         Container image "ghcr.io/huggingface/text-embeddings-inference:cpu-1.9" already present on machine and can be accessed by the pod
+91s         Normal    SuccessfulCreate    replicaset/embeddings-bge-m3-69d45887b5   Created pod: embeddings-bge-m3-69d45887b5-rlnlf
+91s         Normal    ScalingReplicaSet   deployment/embeddings-bge-m3              Scaled up replica set embeddings-bge-m3-69d45887b5 from 0 to 1
+87s         Normal    AddedInterface      pod/embeddings-bge-m3-69d45887b5-rlnlf    Add eth0 [10.244.182.173/32] from k8s-pod-network
+87s         Normal    Pulled              pod/embeddings-bge-m3-69d45887b5-rlnlf    Container image "ghcr.io/huggingface/text-embeddings-inference:cpu-1.9" already present on machine and can be accessed by the pod
+87s         Normal    Created             pod/embeddings-bge-m3-69d45887b5-rlnlf    Container created
+87s         Normal    Started             pod/embeddings-bge-m3-69d45887b5-rlnlf    Container started
+31s         Warning   Unhealthy           pod/embeddings-bge-m3-69d45887b5-rlnlf    Startup probe failed: dial tcp 10.244.182.173:8080: connect: connection refused
+### 5. pelo Kong, de 01 (esperado: 401 sem chave; 403 IP com chave)   16:07:33
+sem chave: 401
+com a chave de estacao: {
+  "message":"IP address not allowed: 10.244.179.64",
+  "request_id":"5806ca00b1851c10f2fe38761e6f3a1a"
+} HTTP 403
+### 6. direto no pod, sem Kong (esperado: 401 sem Authorization; 200 com ela)   16:07:33
+sem Authorization: 401
+com Authorization: HTTP 200 0.114618s
+dim 1024 {'prompt_tokens': 9, 'total_tokens': 9}
+### 7. estado final
+NAME                                READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/embeddings-bge-m3   1/1     1            1           93s
+deployment.apps/vllm-server         3/3     3            3           6d1h
+
+NAME                        TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+service/embeddings-bge-m3   ClusterIP   10.100.154.197   <none>        8080/TCP   93s
+service/vllm-server         ClusterIP   10.106.142.203   <none>        8000/TCP   4d18h
+
+NAME                                                  POD-SELECTOR      AGE
+networkpolicy.networking.k8s.io/d05-vllm-metricas     app=vllm-server   2d
+networkpolicy.networking.k8s.io/embeddings-so-kong    app=embeddings    93s
+networkpolicy.networking.k8s.io/vllm-server-so-kong   app=vllm-server   4d18h
+
+NAME                                          CLASS   HOSTS   ADDRESS          PORTS   AGE
+ingress.networking.k8s.io/embeddings-bge-m3   kong    *       192.168.50.161   80      93s
+ingress.networking.k8s.io/vllm-server         kong    *       192.168.50.161   80      4d18h
+NAME                                 CPU(cores)   MEMORY(bytes)   
+embeddings-bge-m3-69d45887b5-rlnlf   28m          10782Mi         
+== fim 2026-11-12T16:07:35-03:00

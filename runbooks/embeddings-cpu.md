@@ -20,9 +20,11 @@ no ambiente em 2026-11-10. O E1 não muda nada do chat: não cria `Service`, rot
 |---|---|
 | E1 | baixa o `bge-m3` em `sabdiia02`, sobe um *pod* de teste do TEI, mede dimensão, latência e coerência; apaga o *pod* |
 | E1-desfazer | apaga o *pod* (se sobrou) e os pesos de `sabdiia02` |
+| E2 | serviço permanente: `Deployment`, `Service`, `NetworkPolicy` e rota `POST /vllm/v1/embeddings` no Kong ([manifesto](../configs/d05-embeddings.yaml)) |
+| E2-cliente | teste pelo Kong de uma máquina liberada (notebook) |
+| E2-desfazer | tira o serviço e a rota (os pesos ficam) |
 
-O E1 mostrou que o TEI roda nesta CPU (AC-42). Próximo: `Deployment`, `Service`, `NetworkPolicy` e rota
-`/vllm/v1/embeddings` no Kong com as mesmas chaves e IPs do chat (E2, a escrever).
+O E1 mostrou que o TEI roda nesta CPU (AC-42); o E2 o põe no ar.
 
 ## E1 — Viabilidade do TEI em CPU com `bge-m3` (servidor `sabdiia01`, bash com `kubectl`)
 
@@ -250,3 +252,189 @@ Em `sabdiia02`, como `root` (libera ~7 GB):
 rm -rf /var/lib/vllm-estudo/hf-cache/hub/models--BAAI--bge-m3 && df -h /var/lib/vllm-estudo
 ```
 
+## Enviar o manifesto (notebook, PowerShell)
+
+```powershell
+$u = Read-Host "Usuário com que você entra no sabdiia01"
+scp "C:\www\vllm-master\configs\d05-embeddings.yaml" "${u}@192.168.50.151:/home/utec/vllm-estudo/"
+```
+
+## E2 — Serviço de *embeddings* e rota no Kong (servidor `sabdiia01`, bash com `kubectl`)
+
+Aplica [configs/d05-embeddings.yaml](../configs/d05-embeddings.yaml):
+- `Deployment` `embeddings-bge-m3`: 1 réplica em `sabdiia02`, com a configuração medida no E1 mais `--hostname 0.0.0.0`, a chave do TEI e os pesos montados só para leitura;
+- `Service` `ClusterIP`;
+- `NetworkPolicy` `embeddings-so-kong`;
+- `Ingress` `embeddings-bge-m3`: `POST /vllm/v1/embeddings`, HTTPS, com `d05-key-auth`, `d05-rate-limit` e `d05-prometheus`, se este último existir.
+
+Todos os recursos são novos e levam `decisao=d-05`; nada do chat muda. Cópia antes: os `Ingress`, `Service` e `NetworkPolicy` de `vllms` vão para `d05-vllms-antes-e2-<data>.yaml`.
+
+Os testes feitos de 01 não seguem o caminho dos clientes, porque 01 não está na lista de IPs de ninguém: ele chega ao Kong com o IP de túnel (AC-33). Por isso o bloco confere duas coisas separadas:
+- pelo Kong, de 01: que a rota existe e que a chave e a lista de IPs valem nela;
+- direto no *pod*, por *port-forward* (sem Kong): a chave do TEI e a resposta.
+
+O caminho completo é testado no E2-cliente.
+
+**Expectativa (escrita antes):**
+
+- seção 1: `--dry-run=server` sem erro; os 4 objetos `created`;
+- seção 2: `rollout` completo em até ~2 min (no E1, o aquecimento levou 54 s); `Ready` 1/1;
+- seção 3: log do TEI com `Ready` e **sem** `Invalid hostname`; `imageID` com o *digest* da `cpu-1.9`;
+- seção 4: `Ingress` com o IP do Kong; plugins `d05-key-auth,d05-rate-limit,d05-prometheus`;
+- seção 5, pelo Kong, de 01: sem chave → `401`; com a chave de `estacao` → `403 IP address not allowed`, sinal de que a lista vale na rota nova. Um `200` aqui é falha: a lista de IPs não estaria valendo;
+- seção 6, direto no *pod*: sem `Authorization` → `401`, sinal de que a chave do TEI vale; com ela → `200`, dimensão 1024;
+- se o TEI cair por tentar gravar na pasta dos pesos, a seção 3 mostra o erro. No E1 a pasta era de leitura e escrita; agora está montada só para leitura. Nesse caso, tire o `readOnly: true` do manifesto e reaplique.
+
+```bash
+mkdir -p /home/utec/vllm-estudo && cd /home/utec/vllm-estudo
+{
+  echo "== $(hostname -s)  $(date -Is)  E2: embeddings (bge-m3, TEI cpu-1.9) e rota no Kong (PD-39)"
+  [ "$(hostname -s)" = sabdiia01 ] || { echo "ABORTA: rode em sabdiia01 (kubectl)"; exit 1; }
+  NS=vllms; MAN=d05-embeddings.yaml; TS=$(date +%F-%H%M)
+  [ -f $MAN ] || { echo "ABORTA: falta $MAN (envie pelo scp do runbook)"; exit 1; }
+  kubectl get secret vllm-nemo-api-key -n $NS >/dev/null || { echo "ABORTA: sem o Secret"; exit 1; }
+  KIP=$(kubectl get svc kong-gateway-proxy -n kong \
+    -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+  echo "IP do Kong: $KIP"; [ -n "$KIP" ] || { echo "ABORTA: sem IP do Kong"; exit 1; }
+  [ -f d05-chave-estacao.env ] || { echo "ABORTA: sem d05-chave-estacao.env (Bloco C)"; exit 1; }
+
+  echo "### 0. cópia antes e restos do E1"
+  kubectl get ingress,svc,networkpolicy -n $NS -o yaml > d05-vllms-antes-e2-$TS.yaml
+  ls -l d05-vllms-antes-e2-$TS.yaml
+  kubectl delete pod -n $NS d05-emb-teste d05-emb-pesos --ignore-not-found
+
+  echo "### 1. aplicar   $(date +%T)"
+  kubectl apply --dry-run=server -f $MAN || { echo "ABORTA: dry-run falhou"; exit 1; }
+  kubectl apply -f $MAN
+  PLUGS=d05-key-auth,d05-rate-limit
+  kubectl get kongplugin d05-prometheus -n $NS >/dev/null 2>&1 && PLUGS=$PLUGS,d05-prometheus
+  kubectl annotate ingress embeddings-bge-m3 -n $NS konghq.com/plugins=$PLUGS --overwrite
+
+  echo "### 2. arranque   $(date +%T)"
+  kubectl rollout status deploy/embeddings-bge-m3 -n $NS --timeout=600s
+  kubectl get pods -n $NS -l app=embeddings -o wide
+
+  echo "### 3. log do TEI e imagem"
+  P=$(kubectl get pods -n $NS -l app=embeddings -o jsonpath='{.items[0].metadata.name}')
+  kubectl logs -n $NS $P 2>&1 | sed 's/\x1b\[[0-9;]*m//g' | cut -c1-300 | tail -15
+  kubectl get pod -n $NS $P -o jsonpath='imageID: {.status.containerStatuses[0].imageID}{"\n"}'
+
+  echo "### 4. rota no Kong   $(date +%T)"
+  sleep 20
+  kubectl get ingress embeddings-bge-m3 -n $NS
+  kubectl get ingress embeddings-bge-m3 -n $NS \
+    -o jsonpath='plugins: {.metadata.annotations.konghq\.com/plugins}{"\n"}'
+  kubectl get events -n $NS --sort-by=.lastTimestamp | grep -iE 'embeddings|kong' | tail -8 \
+    | cut -c1-250
+
+  echo "### 5. pelo Kong, de 01 (esperado: 401 sem chave; 403 IP com chave)   $(date +%T)"
+  URL="https://$KIP/vllm/v1/embeddings"
+  printf '%s' '{"model":"BAAI/bge-m3","input":"Qual é a capital do Brasil?"}' > d05-emb-corpo.json
+  echo "sem chave: $(curl -sk -o /dev/null -w '%{http_code}' -X POST "$URL" \
+    -H 'Content-Type: application/json' --data @d05-emb-corpo.json)"
+  ( umask 077; . ./d05-chave-estacao.env
+    printf 'apikey: %s\nAuthorization: Bearer %s\n' "$CHAVE_KONG" "$CHAVE_VLLM" > d05-emb-h.txt )
+  R=$(curl -sk -w ' HTTP %{http_code}' -X POST "$URL" -H @d05-emb-h.txt \
+    -H 'Content-Type: application/json' --data @d05-emb-corpo.json)
+  echo "com a chave de estacao: $R" | cut -c1-200
+
+  echo "### 6. direto no pod, sem Kong (esperado: 401 sem Authorization; 200 com ela)   $(date +%T)"
+  kubectl port-forward -n $NS deploy/embeddings-bge-m3 18080:8080 >/dev/null 2>&1 & PF=$!
+  for i in $(seq 1 15); do
+    curl -s -o /dev/null http://127.0.0.1:18080/ && break; sleep 2
+  done
+  echo "sem Authorization: $(curl -s -o /dev/null -w '%{http_code}' -X POST \
+    http://127.0.0.1:18080/v1/embeddings -H 'Content-Type: application/json' \
+    --data @d05-emb-corpo.json)"
+  grep '^Authorization' d05-emb-h.txt > d05-emb-h2.txt
+  curl -s -o d05-emb-resp.json -w 'com Authorization: HTTP %{http_code} %{time_total}s\n' -X POST \
+    http://127.0.0.1:18080/v1/embeddings -H @d05-emb-h2.txt \
+    -H 'Content-Type: application/json' --data @d05-emb-corpo.json
+  python3 -c "import json; d = json.load(open('d05-emb-resp.json'))
+print('dim', len(d['data'][0]['embedding']), d.get('usage'))" 2>&1 | tail -1
+  kill $PF 2>/dev/null
+  rm -f d05-emb-h.txt d05-emb-h2.txt d05-emb-corpo.json d05-emb-resp.json
+
+  echo "### 7. estado final"
+  kubectl get deploy,svc,networkpolicy,ingress -n $NS -l decisao=d-05 | cut -c1-150
+  kubectl top pod -n $NS -l app=embeddings 2>&1 | tail -2
+  echo "== fim $(date -Is)"
+} 2>&1 | tee embeddings-e2-$(hostname -s)-$(date +%F-%H%M).log
+```
+
+**Resultado (2026-11-12 16:06, [log](../logs-analysis/embeddings-e2-sabdiia01-2026-11-12-1606.log)): tudo como esperado.** Os 4 objetos `created` (o *dry-run* também);
+*pod* `1/1` em `sabdiia02` 70 s depois, aquecimento de 56 s (19:06:09 → 19:07:05 UTC) e uma falha da `startupProbe`
+no meio dele, como previsto; log sem `Invalid hostname` e pesos montados só leitura sem erro; imagem
+`sha256:2538ea1c9640d3763b15af668039d24172d063b42337b0c27796fc2be180c78d`. Rota com `d05-key-auth,d05-rate-limit,d05-prometheus`.
+Pelo Kong, de 01: `401` sem chave e `403 IP address not allowed: 10.244.179.64` com a chave de `estacao` (a lista
+por consumidor vale na rota nova). Direto no *pod*: `401` sem `Authorization`, `200` com ela em 0,115 s, dimensão
+1024. Em repouso: 28m de CPU e 10.782 Mi. Falta o E2-cliente (caminho real, do notebook).
+
+**Pronto se:**
+- seções 2 e 3: *pod* `Ready` e log sem `Invalid hostname`;
+- seção 5: `401` e `403`;
+- seção 6: `401` e `200`, com `dim 1024`.
+
+Depois, rode o E2-cliente.
+
+### E2-cliente — Teste pelo Kong (notebook, Git Bash, pela VPN)
+
+Este é o caminho real: notebook (`wsantos`, `172.16.254.0/24`) → Kong → TEI. As chaves vêm do arquivo do ator e não aparecem na tela. O `base_url` é o mesmo do chat. Esperado: `HTTP 200` e 2 vetores.
+
+O bloco grava a resposta em `~` (a pasta do usuário): o Git Bash pode abrir em `/`, que é `C:\Program Files\Git`,
+sem permissão de escrita, e foi isso que derrubou a 1ª tentativa (`FileNotFoundError: 'emb-resp.json'`, 2026-11-12):
+o `curl -s` não conseguiu gravar e calou o erro. Agora `-sS` mostra erros do `curl`, e o `\r` de um `.env` editado
+no Windows é retirado antes de ler. A 2ª tentativa chegou ao TEI e levou `HTTP 400` `Failed to parse the request body
+as JSON: input[0]: invalid unicode code point`: o terminal do Windows mandou o "é" colado fora de UTF-8 `[inferência]`.
+Os acentos agora vão como escapes JSON (`\u00e9`), que só usam ASCII. Aplicação de verdade (SDK) manda UTF-8.
+
+```bash
+set -a; . <(tr -d '\r' < ~/.vllm-estudo/d05-chave-wsantos.env); set +a
+echo "BASE_URL=$BASE_URL  chave Kong: ${#CHAVE_KONG} caracteres  chave vLLM: ${#CHAVE_VLLM} caracteres"
+F=~/emb-resp.json; rm -f "$F"
+curl -sSk "$BASE_URL/embeddings" \
+  -H "apikey: $CHAVE_KONG" \
+  -H "Authorization: Bearer $CHAVE_VLLM" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "BAAI/bge-m3", "input": ["Qual \u00e9 a capital do Brasil?", "Bras\u00edlia \u00e9 a capital."]}' \
+  -o "$F" -w 'HTTP %{http_code}  total %{time_total}s\n'
+python -c "import json, sys; d = json.load(open(sys.argv[1], encoding='utf-8'))
+print(len(d['data']), 'vetores, dim', len(d['data'][0]['embedding']), d.get('usage'))
+" "$F" 2>&1 || head -c 300 "$F"
+```
+
+**Resultado (2026-11-12, [saída colada](../logs-analysis/embeddings-e2-cliente-wsantosdell-2026-11-12.txt)): `HTTP 200` em 0,21 s, 2 vetores de 1024, 16 *tokens*.** O caminho
+real funciona: notebook → Kong (chave e IP do `wsantos`) → TEI (chave do vLLM).
+
+No SDK da OpenAI: `client.embeddings.create(model="BAAI/bge-m3", input=[...])`, com o mesmo `base_url` e as mesmas chaves do chat: `apikey` em `default_headers` e a chave do vLLM como `api_key`.
+
+### E2-app — Teste pela aplicação (notebook, Git Bash, em `C:\www\vllm-app`)
+
+`test/teste-embeddings.js` usa o AI SDK (`embed`, `embedMany`, `cosineSimilarity`), como a aplicação. Ele testa:
+- segurança: sem a chave do Kong → `401`; sem a do vLLM → `401` do TEI;
+- uma pergunta: dimensão 1024 e norma 1;
+- recuperação: 4 perguntas contra 6 trechos;
+- texto longo;
+- limite de lote: o TEI aceita até 32 textos por chamada, e o AI SDK manda até 2.048 numa só, então a aplicação tem de dividir. O script mostra como, em `embedEmLotes`.
+
+O log vai para `logs-analysis/embeddings-cliente-<máquina>-<data>.log`.
+
+```bash
+NODE_TLS_REJECT_UNAUTHORIZED=0 node test/teste-embeddings.js
+```
+
+**Resultado (2026-11-12 16:41, [log](../logs-analysis/embeddings-cliente-wsantosdell-2026-11-12-1641.log)): 12/12 OK.**
+- Segurança: `401` do Kong (`No API key found in request`) e `401` do TEI.
+- Uma pergunta: 0,140 s pelo Kong, dimensão 1024, norma 1,0000.
+- Recuperação: as 4 perguntas acharam o trecho certo em 1º lugar, com folga. A similaridade do certo ficou entre 0,517 e 0,619; a do 2º colocado, entre 0,301 e 0,384.
+- Texto longo: 683 *tokens* em 1,741 s (392 *tokens*/s, como no E1).
+- Lotes: 32 textos passam (1,37 s). Com 33, o TEI responde `422 batch size 33 > maximum allowed batch size 32`. Com `embedEmLotes`, 40 textos passam em 1,77 s.
+
+### E2-desfazer (servidor `sabdiia01`, bash)
+
+Tira o serviço e a rota. Os pesos ficam em `sabdiia02`; para tirá-los, use o E1-desfazer. O chat não é afetado.
+
+```bash
+cd /home/utec/vllm-estudo && kubectl delete -f d05-embeddings.yaml --ignore-not-found \
+  2>&1 | tee embeddings-e2-desfazer-$(hostname -s)-$(date +%F-%H%M).log
+```

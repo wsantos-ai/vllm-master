@@ -776,6 +776,14 @@ Servidor `sabdiia01`, bash. M-confere de [runbooks/observabilidade-d05.md](runbo
 
 Servidor `sabdiia01`, bash. E1 de [runbooks/embeddings-cpu.md](runbooks/embeddings-cpu.md). O *pod* de teste do TEI tem `readinessProbe`: sem ela, `ready=true` não quer dizer que o servidor já escuta (§9). O teste vai pelo `kubectl port-forward pod/d05-emb-teste 18080:8080`, mandando `POST /v1/embeddings` com `urllib` do `python3` e medindo a dimensão, o tempo e o `usage`. Resultado em AC-42.
 
+### Os *embeddings* respondem pelo Kong? (PD-39) `[executado]`
+
+O teste de servidor fica no E2 de [runbooks/embeddings-cpu.md](runbooks/embeddings-cpu.md):
+- pelo Kong, de 01: `401` sem chave e `403` com chave, porque 01 está fora das listas;
+- direto no *pod*, por `kubectl port-forward deploy/embeddings-bge-m3`: `401` sem `Authorization` e `200` com ela.
+
+O teste de cliente é o E2-cliente: `curl` em `$BASE_URL/embeddings` com as mesmas chaves do chat. Pela aplicação: `NODE_TLS_REJECT_UNAUTHORIZED=0 node test/teste-embeddings.js` em `C:\www\vllm-app` (AI SDK; segurança, dimensão, recuperação, limite de 32 por chamada).
+
 ### Ver o Kong Manager (painel do administrador; só leitura)
 
 O painel (`kong-gateway-manager`, *NodePort* 32492/32616) abre, mas vem sem dados: o `kconfig.js` dele tem

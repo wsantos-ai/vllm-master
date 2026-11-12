@@ -1,0 +1,153 @@
+# Embeddings em CPU para a aplicação NIB (PD-39, AC-42). APLICADO em 2026-11-12 16:06 pelo Bloco E2 de
+#   runbooks/embeddings-cpu.md.
+#
+# Ambiente: §2 do ESTUDO-DE-CASO.md. Nós Dell R720 com 2 × Xeon E5-2690 (Sandy Bridge, sem AVX2), 32 threads e
+#   ~755 GiB por nó. Sem GPU: as 3 V100S são do chat (D-06).
+# Servidor: Text Embeddings Inference, imagem ghcr.io/huggingface/text-embeddings-inference:cpu-1.9 [F-056]. A tag
+#   cpu-1.9 acompanha as versões 1.9.x. Digest em uso no E2 de 2026-11-12:
+#   sha256:2538ea1c9640d3763b15af668039d24172d063b42337b0c27796fc2be180c78d.
+# Modelo: BAAI/bge-m3, revisão 5617a9f61b028005a4858fdac845db406aefb181, vetor de 1024, até 8192 tokens [F-057].
+#   Pesos só em sabdiia02, em /var/lib/vllm-estudo/hf-cache, baixados pelo Bloco E1 (com model.safetensors
+#   convertido do .bin). Por isso o pod fica preso a 02 e o Deployment usa Recreate.
+# Medido no E1 com estes recursos (AC-42): pronto em ~80 s (aquecimento de 54 s), 0,12 s por pergunta curta,
+#   ~400 tokens/s, 8 CPU e 10,8 Gi em uso. Enquanto indexa, ocupa as 8 CPU no nó da réplica do vLLM de 02;
+#   o efeito na latência do chat não foi medido.
+#
+# Exposição: igual ao chat (D-05). Service ClusterIP; Ingress do Kong publica SÓ POST /vllm/v1/embeddings, em HTTPS,
+#   no IP do proxy do Kong. Com isso o mesmo base_url (https://<IP do Kong>/vllm/v1) serve chat e embeddings no SDK
+#   da OpenAI. Duas camadas, com as MESMAS chaves do chat:
+#   1. Kong: key-auth (cabeçalho "apikey") e rate-limiting por ator (d05-key-auth, d05-rate-limit, do manifesto do
+#      chat); a lista de IPs vale porque o ip-restriction está ligado a cada KongConsumer (Bloco C), não à rota;
+#   2. TEI: --api-key lida do Secret vllm-nemo-api-key (env API_KEY), cabeçalho "Authorization: Bearer" [F-056].
+#   NetworkPolicy: só o namespace kong chega à porta 8080.
+# Os painéis "vLLM Route" e os alertas Kong* somam todas as rotas do Kong: depois do E2 o tráfego de embeddings
+#   entra neles (filtrar por rota fica para depois).
+#
+# Campos do TEI conferidos em 2026-11-12 na doc de cli_arguments (ramo main) [F-056]: --model-id (pasta local),
+#   --served-model-name, --hostname (env HOSTNAME: o Kubernetes põe ali o nome do pod, por isso o argumento
+#   explícito; AC-42), --port, --tokenization-workers, --api-key (env API_KEY). A porta só abre depois do
+#   aquecimento (log do E1), então as probes são TCP: não dependem de /health aceitar ou não a chave.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: embeddings-bge-m3
+  namespace: vllms
+  labels: {app: embeddings, decisao: d-05}
+spec:
+  replicas: 1
+  strategy: {type: Recreate}
+  selector:
+    matchLabels: {app: embeddings}
+  template:
+    metadata:
+      labels: {app: embeddings, decisao: d-05}
+    spec:
+      nodeSelector: {kubernetes.io/hostname: sabdiia02}
+      automountServiceAccountToken: false
+      containers:
+      - name: tei
+        image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9
+        args:
+        - --model-id
+        - /hf-cache/hub/models--BAAI--bge-m3/snapshots/5617a9f61b028005a4858fdac845db406aefb181
+        - --served-model-name
+        - BAAI/bge-m3
+        - --hostname
+        - 0.0.0.0
+        - --port
+        - "8080"
+        - --tokenization-workers
+        - "4"
+        env:
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef: {name: vllm-nemo-api-key, key: VLLM_API_KEY}
+        - {name: HF_HUB_OFFLINE, value: "1"}
+        - {name: OMP_NUM_THREADS, value: "8"}
+        - {name: MKL_NUM_THREADS, value: "8"}
+        - {name: RAYON_NUM_THREADS, value: "8"}
+        ports:
+        - {name: http, containerPort: 8080, protocol: TCP}
+        startupProbe:
+          tcpSocket: {port: 8080}
+          periodSeconds: 10
+          failureThreshold: 60
+        readinessProbe:
+          tcpSocket: {port: 8080}
+          periodSeconds: 10
+          failureThreshold: 3
+        livenessProbe:
+          tcpSocket: {port: 8080}
+          periodSeconds: 30
+          failureThreshold: 3
+        resources:
+          requests: {cpu: "4", memory: 12Gi}
+          limits: {cpu: "8", memory: 24Gi}
+        volumeMounts:
+        - {name: hf-cache, mountPath: /hf-cache, readOnly: true}
+      volumes:
+      - name: hf-cache
+        hostPath: {path: /var/lib/vllm-estudo/hf-cache, type: Directory}
+---
+# path: o Kong encaminha todo pedido da rota como /v1/embeddings. read-timeout 120 s: 32 textos de ~700 tokens
+# levam ~55 s a ~400 tokens/s [cálculo a partir de AC-42]. retries 0, como no chat.
+apiVersion: v1
+kind: Service
+metadata:
+  name: embeddings-bge-m3
+  namespace: vllms
+  labels: {app: embeddings, decisao: d-05}
+  annotations:
+    konghq.com/protocol: "http"
+    konghq.com/path: "/v1/embeddings"
+    konghq.com/connect-timeout: "5000"
+    konghq.com/read-timeout: "120000"
+    konghq.com/write-timeout: "60000"
+    konghq.com/retries: "0"
+spec:
+  type: ClusterIP
+  selector: {app: embeddings}
+  ports:
+  - {name: http, protocol: TCP, port: 8080, targetPort: 8080}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: embeddings-so-kong
+  namespace: vllms
+  labels: {decisao: d-05}
+spec:
+  podSelector:
+    matchLabels: {app: embeddings}
+  policyTypes: [Ingress]
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels: {kubernetes.io/metadata.name: kong}
+    ports:
+    - {protocol: TCP, port: 8080}
+---
+# A anotação konghq.com/plugins abaixo é a mínima; o Bloco E2 acrescenta d05-prometheus se existir (como o Bloco C
+# faz na rota do chat). O Bloco C não mexe nesta rota.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: embeddings-bge-m3
+  namespace: vllms
+  labels: {decisao: d-05}
+  annotations:
+    konghq.com/plugins: d05-key-auth,d05-rate-limit
+    konghq.com/strip-path: "true"
+    konghq.com/methods: "POST"
+    konghq.com/protocols: "https"
+spec:
+  ingressClassName: kong
+  rules:
+  - http:
+      paths:
+      - path: /vllm/v1/embeddings
+        pathType: Prefix
+        backend:
+          service:
+            name: embeddings-bge-m3
+            port: {number: 8080}

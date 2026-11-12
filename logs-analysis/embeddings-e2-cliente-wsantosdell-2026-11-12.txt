@@ -1,0 +1,7 @@
+# Saída colada pelo usuário (sem tee), 2026-11-12, notebook WSANTOSDELL, Git Bash, pela VPN.
+# E2-cliente de runbooks/embeddings-cpu.md, 3ª tentativa (acentos como escapes JSON), consumidor wsantos.
+# 1ª: FileNotFoundError (curl -s não gravou o arquivo, provável cwd sem escrita); 2ª: colado no PowerShell;
+# 2ª no Git Bash: HTTP 400 do TEI "Failed to parse the request body as JSON: input[0]: invalid unicode code point
+# at line 1 column 64" (acento fora de UTF-8 vindo do terminal), mas já depois do Kong e da chave do TEI.
+HTTP 200  total 0.209716s
+2 vetores, dim 1024 {'prompt_tokens': 16, 'total_tokens': 16}

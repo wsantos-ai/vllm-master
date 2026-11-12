@@ -1,0 +1,29 @@
+== wsantosDell  2026-11-12T19:41:38.608Z  teste de embeddings (BAAI/bge-m3) em https://192.168.50.161/vllm/v1/embeddings
+Node v22.22.2; NODE_TLS_REJECT_UNAUTHORIZED=0
+
+### A. segurança (fetch direto)
+  OK     sem a chave do Kong: HTTP 401 — { "message":"No API key found in request", "request_id":"eb52833f7374a37ad5a79c38acaf4620" }
+  OK     sem a chave do vLLM (TEI): HTTP 401
+
+### B. uma pergunta (embed)
+  OK     dimensão 1024
+  OK     norma 1.0000 — vetores normalizados: cosseno = produto escalar
+  tokens 9; tempo 0.140 s (inclui Kong e rede)
+
+### C. recuperação: o trecho certo fica em 1º?
+  6 trechos indexados em 0.909 s (154 tokens)
+  OK     "Em que cidade fica o governo federal?" — 1º: trecho 0 (0.590); 2º: trecho 4 (0.301)
+  OK     "Por que placas de vídeo deixam a IA mais rápida?" — 1º: trecho 1 (0.517); 2º: trecho 2 (0.384)
+  OK     "Como as plantas produzem o próprio alimento?" — 1º: trecho 3 (0.532); 2º: trecho 4 (0.356)
+  OK     "Qual o prazo para encerrar o contrato?" — 1º: trecho 5 (0.619); 2º: trecho 2 (0.318)
+
+### D. texto longo
+  OK     683 tokens em 1.741 s — 392 tokens/s
+
+### E. limite de lote (TEI: até 32 textos por chamada)
+  OK     32 textos numa chamada — 1.367 s
+  OK     33 textos numa chamada são recusados — 422 {"message":"batch size 33 > maximum allowed batch size 32","code":422,"type":"Validation"}
+  OK     40 textos com embedEmLotes (chamadas de 32) — 1.773 s, 680 tokens
+
+== 12/12 OK
+log: C:\www\vllm-master\logs-analysis\embeddings-cliente-wsantosdell-2026-11-12-1641.log
