@@ -289,6 +289,7 @@ Os logs de `kubectl logs` do deepseek começam em 09-27: o arranque foi perdido 
 | 2026-11-12 | Embeddings em CPU para o NIB (PD-39): o TEI `cpu-1.9` serve o `bge-m3` nos Xeon sem AVX2; 0,12 s por pergunta, ~400 *tokens*/s com 8 CPU. As 2 primeiras rodadas do E1 testaram durante o aquecimento (§9) | AC-42 |
 | 2026-11-12 | E2: *embeddings* no ar em `POST https://192.168.50.161/vllm/v1/embeddings`, com as mesmas chaves, listas de IP e limite do chat; chave do TEI e lista de IPs conferidas na rota nova | PD-39, AC-42 |
 | 2026-11-12 | G3: contexto de 8.192 para 32.768 *tokens*, com `--gpu-memory-utilization` 0,93 para caber; *KV cache* 34.528 *tokens*; 32 mil *tokens* levam 76 s para ser lidos | AC-43 |
+| 2026-11-16 | Bloco C: o `crp` passa a valer também da faixa da VPN `172.16.254.0/24`, como `wsantos`, `dev-1` e `nib-dth`; só a lista do `crp` mudou ([log](logs-analysis/d05-c-sabdiia01-2026-11-16-1809.log)) | D-05 |
 
 ## 4. Achados
 
@@ -513,6 +514,30 @@ para pelo menos 20 min. Antes de servir a usuários, configure o *reasoning pars
 
 **Validade.** `v0.19.1`, `sabdiia01`, 2026-10-02, duas tentativas, uma geração. Não medido: carga
 concorrente, entrada de imagem, qualidade das respostas em 4 bits, contexto perto de 8192 *tokens*.
+
+### AC-44 — Com o formato Mistral, o vLLM recusa uma mensagem `user` logo depois de `tool` (400); IDs de *tool call* longos ele trunca sozinho {#ac-44}
+
+**O que é.** Com `--tokenizer_mode mistral` (AC-29), o vLLM `v0.19.1` valida a conversa pelo `mistral_common`: depois
+de uma mensagem `tool`, só aceita outra `tool` ou a resposta `assistant`. A aplicação NIB, na 3ª chamada de um turno
+com ferramentas, mandou `tool → user` e recebeu `400` (o erro só aparece no log do vLLM, como exceção). O ID da
+*tool call* no formato `chatcmpl-tool-<16 hex>` não quebra: o vLLM o corta para os últimos 9 caracteres, com um aviso.
+
+**Evidência.** [diagnóstico 3](logs-analysis/d05-diag400c-sabdiia01-2026-11-12-1934.log), 2026-11-12 22:21:32 UTC, consumidor `nib-dth`:
+
+```
+192.168.41.5 ... "POST /vllm/v1/chat/completions HTTP/1.1" 400 113 ... kong_request_id: "b690a27aa80acc7e881c64640d2e396f
+WARNING 11-12 22:21:32 [mistral.py:113] Truncating tool_call_id: chatcmpl-tool-b60fb6b47b06f5ed to 47b06f5ed
+ValueError: Unexpected role 'user' after role 'tool'
+```
+
+**Regra prática.** Aplicação com agente sobre o Nemo: instruções extras da etapa (fim de orçamento, idioma) vão no
+`system` do início ou no conteúdo da última mensagem `tool`, nunca como `user` depois de `tool`; não inventar uma
+mensagem `assistant` para fechar a sequência. Para achar o motivo de um `400`, o corpo da resposta ou o log do vLLM
+(`ValueError: ...`); o `kong_request_id` do log do Kong localiza a chamada. O `max_model_len` efetivo sai do
+`GET /v1/models` de dentro da réplica (o Kong não publica esse caminho).
+
+**Validade.** `v0.19.1`, `--tokenizer_mode mistral --config_format mistral --load_format mistral`, 2026-11-12, um caso
+real. Não testado: o formato `auto` (modelo de conversa da Hugging Face) com a mesma sequência.
 
 ### AC-43 — Com `--max-model-len 32768` o Nemo precisa de `--gpu-memory-utilization 0.93`; um *prompt* de 32 mil *tokens* leva 76 s para ser lido numa V100S {#ac-43}
 
@@ -2144,6 +2169,8 @@ Alavancas **candidatas**, a medir contra a linha de base de AC-05:
 | 2026-11-10 | Blocos O1 e O2 de [observabilidade-d05.md](runbooks/observabilidade-d05.md): a conferência espera o *job* aparecer (até 5 min) em vez de `sleep 120`. O O1 de 15:59 ([log](logs-analysis/d05-o1-sabdiia01-2026-11-10-1559.log)) deu "vLLM fora do Prometheus" com o *job* já criado | o operador recarrega a configuração a cada objeto: o 1º `ServiceMonitor` entrou antes de 2 min, o 2º 2 min 14 s depois do `apply` ([O1-diag](logs-analysis/d05-o1-diag-sabdiia01-2026-11-10-1618.log)); tempo fixo, sem conferir a condição |
 | 2026-11-10 | Bloco M de [observabilidade-d05.md](runbooks/observabilidade-d05.md): tira o `\r` de `credenciais-email.txt` (`sed -i 's/\r$//'`) antes de ler. O M de 18:11 ([log](logs-analysis/d05-m-sabdiia01-2026-11-10-1811.log)) abortou em "host/porta diferentes dos values", sem mudar nada no *cluster* | o arquivo veio do Windows com CRLF; no `bash`, `MAIL_PORT="587"` seguido de `\r` vira `587\r`, e a comparação com os *values* falha |
 | 2026-11-12 | E1 de [embeddings-cpu.md](runbooks/embeddings-cpu.md): o *pod* de teste do TEI ganha `readinessProbe` em `/health`, e o teste espera o `/health` responder 200 pelo *port-forward*. A 1ª rodada ([log](logs-analysis/embeddings-e1-sabdiia01-2026-11-12-1533.log)) testou durante o aquecimento, levou `Connection refused` e apagou o *pod*: resultado inconclusivo | Sem *probe*, `ready=true` só diz que o contêiner arrancou, não que o servidor escuta; o bloco tomou um pelo outro |
+| 2026-11-12 | Diagnóstico do `400` do NIB: os filtros de hora saem do bloco; usa-se só o `--since-time` (que aceita UTC) e se mostra a 1ª linha para conferir o formato. As duas primeiras versões ([1](logs-analysis/d05-diag400-sabdiia01-2026-11-12-1929.log), [2](logs-analysis/d05-diag400b-sabdiia01-2026-11-12-1932.log)) acharam zero linhas | O `kubectl logs --timestamps` prefixa a hora no fuso do nó (`-03:00`), enquanto o vLLM escreve em UTC; o `grep` procurava `T22:2…` e a mesma hora estava como `T19:2…` |
+| 2026-11-16 | Bloco D3 (chamada `curl` para os atores): o corpo vai pela entrada padrão (`--data-binary @-` com *heredoc*), não por `-d "..."`. Com `-d`, o `wsantos` recebeu `{"detail":"There was an error parsing the body"}` pelo Git Bash | no Git Bash do Windows, o argumento chega ao `curl.exe` em cp1252: o `é` da pergunta virou o byte `0xE9`, que não é UTF-8 (reproduzido com servidor local gravando os bytes); o bloco só tinha sido pensado para Linux |
 
 ---
 
@@ -2151,6 +2178,12 @@ Alavancas **candidatas**, a medir contra a linha de base de AC-05:
 
 | Arquivo em `logs-analysis/` | Prova |
 |---|---|
+| [d05-chave-print-sabdiia01-2026-11-16-1831.log](logs-analysis/d05-chave-print-sabdiia01-2026-11-16-1831.log) | A chave do Kong usada no `curl` do dev-1 (`403 IP address not allowed: 172.16.254.3`, print do usuário) é a do `crp`; listas no Kong: `d05-ip-crp` `["172.16.30.201","172.16.254.0/24"]`, `d05-ip-dev-1` `["172.16.254.0/24"]`. O `403` só se explica se o teste foi antes do Bloco C das 18:09 `[hipótese: hora do print não registrada]` |
+| [d05-c-sabdiia01-2026-11-16-1809.log](logs-analysis/d05-c-sabdiia01-2026-11-16-1809.log) | Bloco C com a faixa da VPN `172.16.254.0/24` no `crp`, além de `172.16.30.201` (lista `fe9b4991…`, a do repositório): só `d05-ip-crp` `configured`, os outros atores `unchanged`, chaves mantidas, 6 consumidores `PROGRAMMED True`; de 01, `403` para os 6 |
+| [d05-diag400c-sabdiia01-2026-11-12-1934.log](logs-analysis/d05-diag400c-sabdiia01-2026-11-12-1934.log) | Diagnóstico do `400` do NIB (3ª versão, sem filtro de hora): Kong `400` às 22:21:32 UTC de `192.168.41.5` (nó do dth), `ai-sdk-openai-compatible/3.0.70`, `kong_request_id b690a27a…`; vLLM em `sabdiia01`: `Truncating tool_call_id: chatcmpl-tool-b60fb6b47b06f5ed to 47b06f5ed` e `ValueError: Unexpected role 'user' after role 'tool'` (AC-44); hora do `--timestamps` no fuso do nó (`-03:00`) |
+| [d05-diag400b-sabdiia01-2026-11-12-1932.log](logs-analysis/d05-diag400b-sabdiia01-2026-11-12-1932.log) | Diagnóstico do `400` (2ª versão): 0 linhas no Kong e nos 3 vLLM: o filtro procurava a hora em UTC e o `--timestamps` vem em `-03:00` (§9) |
+| [d05-diag400-sabdiia01-2026-11-12-1929.log](logs-analysis/d05-diag400-sabdiia01-2026-11-12-1929.log) | Diagnóstico do `400` (1ª versão): `max_model_len` 32768 nas 3 réplicas pelo `GET /v1/models` de dentro do *pod*; nenhuma linha de erro, pelo mesmo filtro de hora (§9) |
+| [d05-c-sabdiia01-2026-11-12-1920.log](logs-analysis/d05-c-sabdiia01-2026-11-12-1920.log) | Bloco C com `172.16.254.28` temporário no `nib-dth` (máquina da equipe na VPN, ingestão de *embeddings*; lista `db3102ed…`): só `d05-ip-nib-dth` `configured`, `d05-rate-nib-dth` e os outros atores `unchanged`, `nib-dth` `PROGRAMMED True`; de 01, `403` para os 6 |
 | [d05-g3-sabdiia01-2026-11-12-1833.log](logs-analysis/d05-g3-sabdiia01-2026-11-12-1833.log) | G3: `--max-model-len 8192 → 32768` e `--gpu-memory-utilization 0.90 → 0.93`, só o `Deployment`, uma réplica por vez em 8 min, sem reinício; 3 réplicas com 5,27 GiB / 34.528 *tokens* / 1,05x; direto numa réplica, 7.211 *tokens* em 9,1 s, 19.811 em 41,0 s, 32.411 em 75,7 s, 43.211 → `400` com a mensagem de contexto máximo (AC-43) |
 | [d05-c-sabdiia01-2026-11-12-1754.log](logs-analysis/d05-c-sabdiia01-2026-11-12-1754.log) | Bloco C com `limite=300` no `nib-dth` (lista `040196e7…`, a do repositório): `kongplugin/d05-rate-nib-dth created`, `kongconsumer/nib-dth configured`, os outros 5 atores sem mudança, 6 `PROGRAMMED True`; de 01, `403` para os 6. Falta ver `X-RateLimit-Limit-Minute: 300` numa chamada do NIB (precedência do plugin do consumidor, F-059) |
 | [d05-c-sabdiia01-2026-11-12-1750.log](logs-analysis/d05-c-sabdiia01-2026-11-12-1750.log) | Bloco C com o `nib-dth` (`192.168.41.0/24`, cluster dth): 6 consumidores `PROGRAMMED True`, chaves mantidas (a do `nib-dth` já existia: criada ~17:29 por uma rodada sem log trazido), `d05-ip-nib-dth`; de 01, `403 IP address not allowed: 10.244.179.64` para os 6; `.env` com `MODELO_EMBEDDINGS`. O `limite=300` não entrou: o `sha256` da lista no servidor (`13d3537d…`) é o da versão anterior à linha `limite=300`, que não foi reenviada |

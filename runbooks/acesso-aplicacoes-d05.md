@@ -1118,6 +1118,48 @@ ambiente do **servidor** Next.js, nunca em variável exposta ao navegador. O Nod
 autoassinado (PD-34). Não mande `chat_template_kwargs` ao Nemo (AC-29). Se a equipe usar Linux ou macOS, os
 blocos D1 e D2 precisam de uma versão em bash.
 
+## Bloco D3 — Chamada `curl` para enviar aos atores (máquina de cada ator; 2026-11-16)
+
+Uma chamada só, igual para todos: lê o `d05-chave-<nome>.env` do ator, então ninguém cola chave. Escrita depois
+de o dev-1 testar com a chave de outro ator e sem o `Authorization: Bearer` (2026-11-16, Evidências). Rode na
+pasta onde está o arquivo de chave, com **um** arquivo `d05-chave-*.env` nela. Bash `[executado]` em 2026-11-16
+pelo `wsantos` no Git Bash do notebook (resposta: Brasília); PowerShell `[não executado]`.
+
+**Linux, macOS ou Git Bash no Windows (bash):**
+
+```bash
+F=$(ls d05-chave-*.env) && . "./$F" && echo "consumidor: $CONSUMIDOR" && \
+curl -sk "$BASE_URL/chat/completions" \
+  -H "apikey: $CHAVE_KONG" \
+  -H "Authorization: Bearer $CHAVE_VLLM" \
+  -H "Content-Type: application/json" \
+  --data-binary @- <<EOF; echo
+{"model":"$MODELO","max_tokens":50,"temperature":0,
+ "messages":[{"role":"user","content":"Qual é a capital do Brasil?"}]}
+EOF
+```
+
+O corpo vai pela entrada padrão, não por `-d "..."`: no Git Bash, o argumento chega ao `curl.exe` em cp1252, o `é`
+vira o byte `0xE9` e o vLLM responde `{"detail":"There was an error parsing the body"}` (notebook `wsantos`,
+2026-11-16; reproduzido com um servidor local que grava os bytes recebidos).
+
+**Windows (PowerShell; `curl.exe`, não o *alias* `curl`):**
+
+```powershell
+$c = Get-Content .\d05-chave-*.env -Raw | ConvertFrom-StringData; "consumidor: $($c.CONSUMIDOR)"
+$j = '{"model":"' + $c.MODELO + '","max_tokens":50,"temperature":0,' +
+  '"messages":[{"role":"user","content":"Qual é a capital do Brasil?"}]}'
+[IO.File]::WriteAllText("$PWD\d05-corpo.json", $j)
+curl.exe -sk "$($c.BASE_URL)/chat/completions" -H "apikey: $($c.CHAVE_KONG)" `
+  -H "Authorization: Bearer $($c.CHAVE_VLLM)" -H "Content-Type: application/json" `
+  --data-binary "@d05-corpo.json"
+```
+
+Esperado: JSON com `choices[0].message.content` dizendo Brasília. Erros já vistos: `403 IP address not allowed:
+<ip>` (o IP de saída não está na lista **do consumidor da chave usada**; mande o IP a quem coordena) e `426 Please
+use HTTPS protocol` (URL com `http://`). `-k` porque o certificado do Kong é autoassinado (PD-34). Nunca mande
+print com a chave: quem recebe a chave pode usá-la.
+
 ## Bloco L — Desmonta: guarda os logs e apaga tudo do estudo (servidor `sabdiia01`, bash)
 
 Só quando o ambiente for desmontado, ou se o G1 falhar e for preciso recomeçar. Apaga as réplicas, a rota,

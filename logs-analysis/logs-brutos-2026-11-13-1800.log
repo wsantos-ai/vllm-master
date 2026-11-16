@@ -1,0 +1,94 @@
+== sabdiia01  2026-11-13T18:00:40-03:00  logs brutos do Kong e do vLLM, últimas 12h
+### 1. Kong: POST em /vllm (1ª hora: kubectl, -03:00; entre colchetes: Kong, UTC)
+263
+-- por IP de origem e código HTTP
+    151 172.16.254.7 200
+     94 192.168.41.6 200
+      9 192.168.41.5 200
+      6 10.244.179.64 403
+      2 2026/11/13 ,
+      1 172.16.254.7 403
+-- respostas diferentes de 200 (as 30 últimas)
+2026-11-13T15:16:04.961121830-03:00 2026/11/13 18:16:04 [warn] 1406#0: *1047564 [kong] handler.lua:38 IP address not allowed: 172.16.254.7, client: 172.16.254.7, server: kong, request: "POST /vllm/v1/
+2026-11-13T15:16:04.961770512-03:00 172.16.254.7 - - [13/Nov/2026:18:16:04 +0000] "POST /vllm/v1/embeddings HTTP/1.1" 403 105 "-" "curl/8.21.0" kong_request_id: "0780d27cc734d0213f41034ef3325c1d"
+2026-11-13T15:52:29.006153439-03:00 10.244.179.64 - - [13/Nov/2026:18:52:29 +0000] "POST /vllm/v1/chat/completions HTTP/2.0" 403 106 "-" "curl/7.76.1" kong_request_id: "1ad8840a246fa02fcc55465d82e3116
+2026-11-13T15:52:29.038097586-03:00 10.244.179.64 - - [13/Nov/2026:18:52:29 +0000] "POST /vllm/v1/chat/completions HTTP/2.0" 403 106 "-" "curl/7.76.1" kong_request_id: "1db7583e1b873f60709cc336db2e8f2
+2026-11-13T15:52:29.066785725-03:00 10.244.179.64 - - [13/Nov/2026:18:52:29 +0000] "POST /vllm/v1/chat/completions HTTP/2.0" 403 106 "-" "curl/7.76.1" kong_request_id: "b2f96014889f4000a026980f11a1526
+2026-11-13T15:52:29.096504793-03:00 10.244.179.64 - - [13/Nov/2026:18:52:29 +0000] "POST /vllm/v1/chat/completions HTTP/2.0" 403 106 "-" "curl/7.76.1" kong_request_id: "dfe3c0175851fd131a78d374d95ff04
+2026-11-13T15:52:29.125705954-03:00 10.244.179.64 - - [13/Nov/2026:18:52:29 +0000] "POST /vllm/v1/chat/completions HTTP/2.0" 403 106 "-" "curl/7.76.1" kong_request_id: "b0886d5a9f7e1e60337fba2dbaa2dd5
+2026-11-13T15:52:29.154597856-03:00 10.244.179.64 - - [13/Nov/2026:18:52:29 +0000] "POST /vllm/v1/chat/completions HTTP/2.0" 403 106 "-" "curl/7.76.1" kong_request_id: "ddebdb39e2ac8c36392d5571d073013
+2026-11-13T16:40:54.198662574-03:00 2026/11/13 19:40:54 [warn] 1406#0: *1051486 an upstream response is buffered to a temporary file /kong_prefix/proxy_temp/0/07/0000000070 while reading upstream, cli
+### 2. vLLM, por réplica (sem GET /metrics e /health)
+-- vllm-server-8bc76db4-6rnk2 em sabdiia01: 135 linhas
+   POST por código:
+     32 "POST /v1/chat/completions HTTP/1.1" 200 OK
+   avisos e erros (os 15 últimos, sem o truncamento de tool_call_id):
+2026-11-13T10:12:59.404661142-03:00 (APIServer pid=1) WARNING 11-13 13:12:59 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-8a424ef102076063 to 102076063
+2026-11-13T10:15:27.507890719-03:00 (APIServer pid=1) WARNING 11-13 13:15:27 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-89176b3792404918 to 792404918
+2026-11-13T10:37:23.912210930-03:00 (APIServer pid=1) WARNING 11-13 13:37:23 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-88135ad57c250a49 to 57c250a49
+2026-11-13T10:55:01.036994443-03:00 (APIServer pid=1) WARNING 11-13 13:55:01 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-96096966c5eb4ca0 to 6c5eb4ca0
+2026-11-13T11:45:53.283430888-03:00 (APIServer pid=1) WARNING 11-13 14:45:53 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-8eabd6683d27ed9c to 83d27ed9c
+2026-11-13T12:29:38.218980173-03:00 (APIServer pid=1) WARNING 11-13 15:29:38 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-8c3bfea644323a9f to 644323a9f
+2026-11-13T12:29:38.219014663-03:00 (APIServer pid=1) WARNING 11-13 15:29:38 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-a8b1b54739fc5e86 to 739fc5e86
+2026-11-13T12:42:55.258962646-03:00 (APIServer pid=1) WARNING 11-13 15:42:55 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-8527efe56a96ec69 to 56a96ec69
+2026-11-13T15:01:22.395946980-03:00 (APIServer pid=1) WARNING 11-13 18:01:22 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-b36cece8b60dfd4a to 8b60dfd4a
+2026-11-13T16:09:56.044496602-03:00 (APIServer pid=1) WARNING 11-13 19:09:56 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-a781b46fcab9e52f to fcab9e52f
+2026-11-13T16:38:11.223868839-03:00 (APIServer pid=1) WARNING 11-13 19:38:11 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-bb0322336776648c to 36776648c
+2026-11-13T16:38:11.223939922-03:00 (APIServer pid=1) WARNING 11-13 19:38:11 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-8f189911f0bfdc18 to 1f0bfdc18
+2026-11-13T16:43:47.782003963-03:00 (APIServer pid=1) WARNING 11-13 19:43:47 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-b991cff5a64faa9c to 5a64faa9c
+2026-11-13T17:20:35.074388819-03:00 (APIServer pid=1) WARNING 11-13 20:20:35 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-b5fa0e27dbdb1018 to 7dbdb1018
+2026-11-13T17:20:35.074460273-03:00 (APIServer pid=1) WARNING 11-13 20:20:35 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-aa59e3f2ff1734fd to 2ff1734fd
+   motor: Running/Waiting mais frequentes
+     59 Running: 0 reqs, Waiting: 0 reqs
+     12 Running: 1 reqs, Waiting: 0 reqs
+-- vllm-server-8bc76db4-pphdw em sabdiia02: 141 linhas
+   POST por código:
+     34 "POST /v1/chat/completions HTTP/1.1" 200 OK
+   avisos e erros (os 15 últimos, sem o truncamento de tool_call_id):
+2026-11-13T12:08:52.259326241-03:00 (APIServer pid=1) WARNING 11-13 15:08:52 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-b0788b13df9b8b38 to 3df9b8b38
+2026-11-13T12:29:24.331728132-03:00 (APIServer pid=1) WARNING 11-13 15:29:24 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-8c3bfea644323a9f to 644323a9f
+2026-11-13T15:43:36.036416404-03:00 (APIServer pid=1) WARNING 11-13 18:43:36 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-8b0885fef62976e1 to ef62976e1
+2026-11-13T15:43:36.036584461-03:00 (APIServer pid=1) WARNING 11-13 18:43:36 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-86a448f7887ee881 to 7887ee881
+2026-11-13T15:45:08.541831028-03:00 (APIServer pid=1) WARNING 11-13 18:45:08 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-b18bd443df3e96ef to 3df3e96ef
+2026-11-13T15:45:08.542143976-03:00 (APIServer pid=1) WARNING 11-13 18:45:08 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-97d70c12dbefa55b to 2dbefa55b
+2026-11-13T16:10:10.878105204-03:00 (APIServer pid=1) WARNING 11-13 19:10:10 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-a781b46fcab9e52f to fcab9e52f
+2026-11-13T16:10:10.878219634-03:00 (APIServer pid=1) WARNING 11-13 19:10:10 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-b33a64fc4a6651d2 to c4a6651d2
+2026-11-13T16:36:44.635101823-03:00 (APIServer pid=1) WARNING 11-13 19:36:44 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-8b1b5051e398be29 to 1e398be29
+2026-11-13T16:43:59.242917956-03:00 (APIServer pid=1) WARNING 11-13 19:43:59 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-b991cff5a64faa9c to 5a64faa9c
+2026-11-13T16:43:59.243045713-03:00 (APIServer pid=1) WARNING 11-13 19:43:59 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-bc37322a5684bf78 to a5684bf78
+2026-11-13T16:59:07.422890357-03:00 (APIServer pid=1) WARNING 11-13 19:59:07 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-a3db448d93c20da1 to d93c20da1
+2026-11-13T17:20:24.427914166-03:00 (APIServer pid=1) WARNING 11-13 20:20:24 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-b5fa0e27dbdb1018 to 7dbdb1018
+2026-11-13T17:58:14.098448405-03:00 (APIServer pid=1) WARNING 11-13 20:58:14 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-a5fb0e0504f891df to 504f891df
+2026-11-13T17:58:14.098574908-03:00 (APIServer pid=1) WARNING 11-13 20:58:14 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-8321876c13f9d17c to c13f9d17c
+   motor: Running/Waiting mais frequentes
+     59 Running: 0 reqs, Waiting: 0 reqs
+     15 Running: 1 reqs, Waiting: 0 reqs
+      1 Running: 0 reqs, Waiting: 1 reqs
+-- vllm-server-8bc76db4-vdtjf em sabdiia03: 159 linhas
+   POST por código:
+     34 "POST /v1/chat/completions HTTP/1.1" 200 OK
+   avisos e erros (os 15 últimos, sem o truncamento de tool_call_id):
+2026-11-13T11:46:05.303407933-03:00 (APIServer pid=1) WARNING 11-13 14:46:05 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-8559136562a0fff7 to 562a0fff7
+2026-11-13T12:08:38.254251512-03:00 (APIServer pid=1) WARNING 11-13 15:08:38 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-b133bccfcb4016f2 to fcb4016f2
+2026-11-13T12:43:07.242173568-03:00 (APIServer pid=1) WARNING 11-13 15:43:07 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-8527efe56a96ec69 to 56a96ec69
+2026-11-13T12:43:07.242423060-03:00 (APIServer pid=1) WARNING 11-13 15:43:07 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-a3904bcc32bfba0b to c32bfba0b
+2026-11-13T15:01:33.280949214-03:00 (APIServer pid=1) WARNING 11-13 18:01:33 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-b36cece8b60dfd4a to 8b60dfd4a
+2026-11-13T15:01:33.281109647-03:00 (APIServer pid=1) WARNING 11-13 18:01:33 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-9e8ca8b51b3377cf to 51b3377cf
+2026-11-13T15:43:24.932590493-03:00 (APIServer pid=1) WARNING 11-13 18:43:24 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-8b0885fef62976e1 to ef62976e1
+2026-11-13T15:44:54.279927337-03:00 (APIServer pid=1) WARNING 11-13 18:44:54 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-b18bd443df3e96ef to 3df3e96ef
+2026-11-13T15:45:21.652188336-03:00 (APIServer pid=1) WARNING 11-13 18:45:21 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-b18bd443df3e96ef to 3df3e96ef
+2026-11-13T15:45:21.652447465-03:00 (APIServer pid=1) WARNING 11-13 18:45:21 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-97d70c12dbefa55b to 2dbefa55b
+2026-11-13T15:45:21.652599129-03:00 (APIServer pid=1) WARNING 11-13 18:45:21 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-9290932be11f5ae0 to be11f5ae0
+2026-11-13T16:36:57.499822528-03:00 (APIServer pid=1) WARNING 11-13 19:36:57 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-8b1b5051e398be29 to 1e398be29
+2026-11-13T16:36:57.499998409-03:00 (APIServer pid=1) WARNING 11-13 19:36:57 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-9c36abcbe5f99fea to be5f99fea
+2026-11-13T16:37:59.968270295-03:00 (APIServer pid=1) WARNING 11-13 19:37:59 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-bb0322336776648c to 36776648c
+2026-11-13T17:58:01.416218530-03:00 (APIServer pid=1) WARNING 11-13 20:58:01 [mistral.py:99] Truncating tool call ID: chatcmpl-tool-a5fb0e0504f891df to 504f891df
+   motor: Running/Waiting mais frequentes
+     59 Running: 0 reqs, Waiting: 0 reqs
+     12 Running: 1 reqs, Waiting: 0 reqs
+      2 Running: 0 reqs, Waiting: 1 reqs
+### 3. pacote
+-rw-r--r-- 1 root root 20253 Nov 13 18:00 logs-brutos-2026-11-13-1800.tgz
+no notebook (PowerShell):
+  scp utec@192.168.50.151:/home/utec/vllm-estudo/logs-brutos-2026-11-13-1800.tgz C:\www\vllm-master\logs-analysis\
+== fim 2026-11-13T18:00:42-03:00

@@ -1,0 +1,81 @@
+== sabdiia01  2026-11-13T18:19:31-03:00  D-05 C: consumidores do Kong a partir de d05-consumidores.txt
+9c98dcb26f158600189566403cafb97732790ca555999ac4cfe5b8dd5ffbd883  d05-consumidores.txt
+proxy do Kong: kong-gateway-proxy  IP 192.168.50.161  externalTrafficPolicy Local
+### 1. a lista
+estacao: 172.16.30.6  limite/min: 120 (o da rota)
+wsantos: 172.16.254.0/24  limite/min: 120 (o da rota)
+dev-1: 10.180.2.245  limite/min: 120 (o da rota)
+dev-2: (sem IP: o Kong recusa até o IP entrar na lista)  limite/min: 120 (o da rota)
+crp: 172.16.30.201  limite/min: 120 (o da rota)
+nib-dth: 192.168.41.0/24 172.16.254.0/24  limite/min: 300
+lista de IPs: uma por consumidor (a chave de um ator só vale dos IPs dele)
+### 2. chaves, listas de IPs e consumidores (chaves fora do log)   18:19:31
+estacao: chave já existe, mantida
+kongplugin.configuration.konghq.com/d05-ip-estacao unchanged
+kongconsumer.configuration.konghq.com/estacao unchanged
+estacao: IPs liberados:  172.16.30.6
+wsantos: chave já existe, mantida
+kongplugin.configuration.konghq.com/d05-ip-wsantos unchanged
+kongconsumer.configuration.konghq.com/wsantos unchanged
+wsantos: IPs liberados:  172.16.254.0/24
+dev-1: chave já existe, mantida
+kongplugin.configuration.konghq.com/d05-ip-dev-1 configured
+kongconsumer.configuration.konghq.com/dev-1 unchanged
+dev-1: IPs liberados:  10.180.2.245
+dev-2: chave já existe, mantida
+kongplugin.configuration.konghq.com/d05-ip-dev-2 unchanged
+kongconsumer.configuration.konghq.com/dev-2 unchanged
+dev-2: IPs liberados: 127.0.0.1
+crp: chave já existe, mantida
+kongplugin.configuration.konghq.com/d05-ip-crp unchanged
+kongconsumer.configuration.konghq.com/crp unchanged
+crp: IPs liberados:  172.16.30.201
+nib-dth: chave já existe, mantida
+kongplugin.configuration.konghq.com/d05-ip-nib-dth unchanged
+kongplugin.configuration.konghq.com/d05-rate-nib-dth unchanged
+nib-dth: limite próprio de 300/min
+kongconsumer.configuration.konghq.com/nib-dth unchanged
+nib-dth: IPs liberados:  192.168.41.0/24 172.16.254.0/24
+### 3. a rota: chave e limite (a lista de IPs fica em cada consumidor)   18:19:39
+ingress.networking.k8s.io/vllm-server annotated
+### 4. o Kong aceitou?   18:19:39
+NAME                                            USERNAME   AGE     PROGRAMMED
+kongconsumer.configuration.konghq.com/crp       crp        5d19h   True
+kongconsumer.configuration.konghq.com/dev-1     dev-1      5d19h   True
+kongconsumer.configuration.konghq.com/dev-2     dev-2      5d19h   True
+kongconsumer.configuration.konghq.com/estacao   estacao    5d19h   True
+kongconsumer.configuration.konghq.com/nib-dth   nib-dth    24h     True
+kongconsumer.configuration.konghq.com/wsantos   wsantos    5d19h   True
+
+NAME                                                   PLUGIN-TYPE      AGE     PROGRAMMED
+kongplugin.configuration.konghq.com/d05-ip-crp         ip-restriction   5d19h   
+kongplugin.configuration.konghq.com/d05-ip-dev-1       ip-restriction   5d19h   
+kongplugin.configuration.konghq.com/d05-ip-dev-2       ip-restriction   5d19h   
+kongplugin.configuration.konghq.com/d05-ip-estacao     ip-restriction   5d19h   
+kongplugin.configuration.konghq.com/d05-ip-nib-dth     ip-restriction   24h     
+kongplugin.configuration.konghq.com/d05-ip-wsantos     ip-restriction   5d19h   
+kongplugin.configuration.konghq.com/d05-key-auth       key-auth         5d20h   
+kongplugin.configuration.konghq.com/d05-prometheus     prometheus       3d1h    
+kongplugin.configuration.konghq.com/d05-rate-limit     rate-limiting    5d20h   
+kongplugin.configuration.konghq.com/d05-rate-nib-dth   rate-limiting    24h     
+
+NAME                                          CLASS   HOSTS   ADDRESS          PORTS   AGE
+ingress.networking.k8s.io/embeddings-bge-m3   kong    *       192.168.50.161   80      26h
+ingress.networking.k8s.io/vllm-server         kong    *       192.168.50.161   80      5d20h
+plugins na rota: d05-key-auth,d05-rate-limit,d05-prometheus
+No resources found in vllms namespace.
+### 5. de 01 com a chave de cada ator (01 fora da lista: 403 se a lista vale, 200 se não)   18:19:59
+estacao -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"bb5f0656d3c03d5c6a9ab17125fef63b" }
+wsantos -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"e9a8b60a607d6035ede2ce58dde8db34" }
+dev-1 -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"f1fceb38dca604682bf9807d3016b31b" }
+dev-2 -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"ade14d57544fdb2a7f374d3d27ee526e" }
+crp -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"6f81a07e50b3c47f632c5e79bbd26343" }
+nib-dth -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"e752c4482943ee1b75aae314f93c0051" }
+### 6. arquivos de chave (entregar cada um só ao seu ator)
+-rw------- 1 utec root 272 Nov 13 18:19 d05-chave-crp.env
+-rw------- 1 utec root 274 Nov 13 18:19 d05-chave-dev-1.env
+-rw------- 1 utec root 274 Nov 13 18:19 d05-chave-dev-2.env
+-rw------- 1 utec root 276 Nov 13 18:19 d05-chave-estacao.env
+-rw------- 1 utec root 276 Nov 13 18:19 d05-chave-nib-dth.env
+-rw------- 1 utec root 276 Nov 13 18:19 d05-chave-wsantos.env
+== fim 2026-11-13T18:20:00-03:00

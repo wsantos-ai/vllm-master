@@ -1,0 +1,15 @@
+== sabdiia01  2026-11-12T19:29:12-03:00  diagnóstico do 400 do nib-dth (22:21:31 UTC)
+### 1. max_model_len efetivo (GET /v1/models de dentro de cada réplica)
+-- vllm-server-8bc76db4-6rnk2
+[('mistralai/Mistral-Nemo-Instruct-2407', 32768)]
+-- vllm-server-8bc76db4-pphdw
+[('mistralai/Mistral-Nemo-Instruct-2407', 32768)]
+-- vllm-server-8bc76db4-vdtjf
+[('mistralai/Mistral-Nemo-Instruct-2407', 32768)]
+### 2. vLLM entre 22:20 e 22:24 UTC: erros, 400 e o que vem junto
+-- vllm-server-8bc76db4-6rnk2
+-- vllm-server-8bc76db4-pphdw
+-- vllm-server-8bc76db4-vdtjf
+### 3. Kong: respostas 400 nesse intervalo
+pod do Kong: kong-gateway-5f88dd7bcd-mpmk8
+== fim 2026-11-12T19:29:14-03:00

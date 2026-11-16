@@ -1,0 +1,27 @@
+== sabdiia01  2026-11-12T19:34:14-03:00  diagnóstico do 400 (3): desde 22:19 UTC, sem filtro de hora
+### 1. Kong (kong-gateway-5f88dd7bcd-mpmk8): formato da hora e respostas diferentes de 200 em /vllm
+linhas desde 2026-11-12T22:19:00Z: 453
+2026-11-12T19:19:01.804676268-03:00 10.244.50.156 - - [12/Nov/2026:22:19:01 +0000] "GET /status HTTP/2.0" 200 1190 "-" "kong-ingress-controller/3.5.14"
+2026-11-12T19:20:51.661119354-03:00 10.244.179.64 - - [12/Nov/2026:22:20:51 +0000] "POST /vllm/v1/chat/completions HTTP/2.0" 403 106 "-" "curl/7.76.1" kong_request_id: "df5dc25665e50a664a0d0028e5ef0432"
+2026-11-12T19:20:51.691554801-03:00 10.244.179.64 - - [12/Nov/2026:22:20:51 +0000] "POST /vllm/v1/chat/completions HTTP/2.0" 403 106 "-" "curl/7.76.1" kong_request_id: "579d9674821cf467e10221169f639f21"
+2026-11-12T19:20:51.721014019-03:00 10.244.179.64 - - [12/Nov/2026:22:20:51 +0000] "POST /vllm/v1/chat/completions HTTP/2.0" 403 106 "-" "curl/7.76.1" kong_request_id: "3f0f3010e0ca0d07c11420084344cd0e"
+2026-11-12T19:20:51.749743336-03:00 10.244.179.64 - - [12/Nov/2026:22:20:51 +0000] "POST /vllm/v1/chat/completions HTTP/2.0" 403 106 "-" "curl/7.76.1" kong_request_id: "2686bd0befc2a55261909d613050f02a"
+2026-11-12T19:20:51.779004325-03:00 10.244.179.64 - - [12/Nov/2026:22:20:51 +0000] "POST /vllm/v1/chat/completions HTTP/2.0" 403 106 "-" "curl/7.76.1" kong_request_id: "54246b3a6ca0be1ae5c62b7e642c7e3b"
+2026-11-12T19:20:51.808394211-03:00 10.244.179.64 - - [12/Nov/2026:22:20:51 +0000] "POST /vllm/v1/chat/completions HTTP/2.0" 403 106 "-" "curl/7.76.1" kong_request_id: "4f3da860fed45a1aa14493782d1a5222"
+2026-11-12T19:21:32.527338048-03:00 192.168.41.5 - - [12/Nov/2026:22:21:32 +0000] "POST /vllm/v1/chat/completions HTTP/1.1" 400 113 "-" "ai-sdk-openai-compatible/3.0.70 ai-sdk-provider-utils/5.0.61 node.js/24" kong_request_id: "b690a27aa80acc7e881c64640d2e396f
+2026-11-12T19:31:49.744896569-03:00 172.16.30.6 - - [12/Nov/2026:22:31:49 +0000] "GET /vllm/v1/models HTTP/2.0" 404 243 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36" kong_request_id: "2a27
+### 2. vLLM: formato da hora, respostas 4xx/5xx e erros
+-- vllm-server-8bc76db4-6rnk2: 295 linhas
+2026-11-12T19:19:03.420330081-03:00 (APIServer pid=1) INFO:     10.244.50.166:37670 - "GET /metrics HTTP/1.1" 200 OK
+2026-11-12T19:21:32.523662976-03:00 (APIServer pid=1) WARNING 11-12 22:21:32 [mistral.py:113] Truncating tool_call_id: chatcmpl-tool-b60fb6b47b06f5ed to 47b06f5ed
+2026-11-12T19:21:32.524903089-03:00 (APIServer pid=1) INFO:     10.244.50.179:44614 - "POST /v1/chat/completions HTTP/1.1" 400 Bad Request
+2026-11-12T19:21:32.527679091-03:00 (APIServer pid=1) ERROR:    Exception in ASGI application
+2026-11-12T19:21:32.527711750-03:00 (APIServer pid=1) Traceback (most recent call last):
+2026-11-12T19:21:32.527790934-03:00 (APIServer pid=1) Traceback (most recent call last):
+2026-11-12T19:21:32.528058416-03:00 (APIServer pid=1)     raise ValueError(str(e)) from e
+2026-11-12T19:21:32.528060615-03:00 (APIServer pid=1) ValueError: Unexpected role 'user' after role 'tool'
+-- vllm-server-8bc76db4-pphdw: 187 linhas
+2026-11-12T19:19:02.737758608-03:00 (APIServer pid=1) INFO:     192.168.50.152:58750 - "GET /health HTTP/1.1" 200 OK
+-- vllm-server-8bc76db4-vdtjf: 186 linhas
+2026-11-12T19:19:06.837904814-03:00 (APIServer pid=1) INFO:     192.168.50.150:42752 - "GET /health HTTP/1.1" 200 OK
+== fim 2026-11-12T19:34:15-03:00

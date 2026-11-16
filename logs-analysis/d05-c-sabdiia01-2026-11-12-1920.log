@@ -1,0 +1,90 @@
+== sabdiia01  2026-11-12T19:20:23-03:00  D-05 C: consumidores do Kong a partir de d05-consumidores.txt
+db3102ed37b87e959588d0f8d62d95081022f64f9a48cf29ae487f9242b1af66  d05-consumidores.txt
+proxy do Kong: kong-gateway-proxy  IP 192.168.50.161  externalTrafficPolicy Local
+### 1. a lista
+estacao: 172.16.30.6  limite/min: 120 (o da rota)
+wsantos: 172.16.254.0/24  limite/min: 120 (o da rota)
+dev-1: (sem IP: o Kong recusa até o IP entrar na lista)  limite/min: 120 (o da rota)
+dev-2: (sem IP: o Kong recusa até o IP entrar na lista)  limite/min: 120 (o da rota)
+crp: 172.16.30.201  limite/min: 120 (o da rota)
+nib-dth: 192.168.41.0/24 172.16.254.28  limite/min: 300
+lista de IPs: uma por consumidor (a chave de um ator só vale dos IPs dele)
+### 2. chaves, listas de IPs e consumidores (chaves fora do log)   19:20:23
+estacao: chave já existe, mantida
+kongplugin.configuration.konghq.com/d05-ip-estacao unchanged
+kongconsumer.configuration.konghq.com/estacao unchanged
+estacao: IPs liberados:  172.16.30.6
+wsantos: chave já existe, mantida
+kongplugin.configuration.konghq.com/d05-ip-wsantos unchanged
+kongconsumer.configuration.konghq.com/wsantos unchanged
+wsantos: IPs liberados:  172.16.254.0/24
+dev-1: chave já existe, mantida
+kongplugin.configuration.konghq.com/d05-ip-dev-1 unchanged
+kongconsumer.configuration.konghq.com/dev-1 unchanged
+dev-1: IPs liberados: 127.0.0.1
+dev-2: chave já existe, mantida
+kongplugin.configuration.konghq.com/d05-ip-dev-2 unchanged
+kongconsumer.configuration.konghq.com/dev-2 unchanged
+dev-2: IPs liberados: 127.0.0.1
+crp: chave já existe, mantida
+kongplugin.configuration.konghq.com/d05-ip-crp unchanged
+kongconsumer.configuration.konghq.com/crp unchanged
+crp: IPs liberados:  172.16.30.201
+nib-dth: chave já existe, mantida
+kongplugin.configuration.konghq.com/d05-ip-nib-dth configured
+kongplugin.configuration.konghq.com/d05-rate-nib-dth unchanged
+nib-dth: limite próprio de 300/min
+kongconsumer.configuration.konghq.com/nib-dth unchanged
+nib-dth: IPs liberados:  192.168.41.0/24 172.16.254.28
+### 3. a rota: chave e limite (a lista de IPs fica em cada consumidor)   19:20:30
+ingress.networking.k8s.io/vllm-server annotated
+### 4. o Kong aceitou?   19:20:31
+NAME                                            USERNAME   AGE     PROGRAMMED
+kongconsumer.configuration.konghq.com/crp       crp        4d20h   True
+kongconsumer.configuration.konghq.com/dev-1     dev-1      4d20h   True
+kongconsumer.configuration.konghq.com/dev-2     dev-2      4d20h   True
+kongconsumer.configuration.konghq.com/estacao   estacao    4d20h   True
+kongconsumer.configuration.konghq.com/nib-dth   nib-dth    111m    True
+kongconsumer.configuration.konghq.com/wsantos   wsantos    4d20h   True
+
+NAME                                                   PLUGIN-TYPE      AGE     PROGRAMMED
+kongplugin.configuration.konghq.com/d05-ip-crp         ip-restriction   4d20h   
+kongplugin.configuration.konghq.com/d05-ip-dev-1       ip-restriction   4d20h   
+kongplugin.configuration.konghq.com/d05-ip-dev-2       ip-restriction   4d20h   
+kongplugin.configuration.konghq.com/d05-ip-estacao     ip-restriction   4d20h   
+kongplugin.configuration.konghq.com/d05-ip-nib-dth     ip-restriction   111m    
+kongplugin.configuration.konghq.com/d05-ip-wsantos     ip-restriction   4d20h   
+kongplugin.configuration.konghq.com/d05-key-auth       key-auth         4d21h   
+kongplugin.configuration.konghq.com/d05-prometheus     prometheus       2d2h    
+kongplugin.configuration.konghq.com/d05-rate-limit     rate-limiting    4d21h   
+kongplugin.configuration.konghq.com/d05-rate-nib-dth   rate-limiting    86m     
+
+NAME                                          CLASS   HOSTS   ADDRESS          PORTS   AGE
+ingress.networking.k8s.io/embeddings-bge-m3   kong    *       192.168.50.161   80      3h14m
+ingress.networking.k8s.io/vllm-server         kong    *       192.168.50.161   80      4d21h
+plugins na rota: d05-key-auth,d05-rate-limit,d05-prometheus
+44m         Normal    SuccessfulDelete    replicaset/vllm-server-58699c67bf   Deleted pod: vllm-server-58699c67bf-xrpct
+44m         Normal    Killing             pod/vllm-server-58699c67bf-xrpct    Stopping container vllm
+44m         Normal    ScalingReplicaSet   deployment/vllm-server              Scaled down replica set vllm-server-58699c67bf from 2 to 1
+44m         Normal    ScalingReplicaSet   deployment/vllm-server              Scaled up replica set vllm-server-8bc76db4 from 1 to 2
+44m         Normal    AddedInterface      pod/vllm-server-8bc76db4-6rnk2      Add eth0 [10.244.179.89/32] from k8s-pod-network
+42m         Normal    SuccessfulDelete    replicaset/vllm-server-58699c67bf   Deleted pod: vllm-server-58699c67bf-w9bsm
+42m         Normal    ScalingReplicaSet   deployment/vllm-server              Scaled up replica set vllm-server-8bc76db4 from 2 to 3
+42m         Normal    ScalingReplicaSet   deployment/vllm-server              Scaled down replica set vllm-server-58699c67bf from 1 to 0
+42m         Normal    Killing             pod/vllm-server-58699c67bf-w9bsm    Stopping container vllm
+42m         Normal    AddedInterface      pod/vllm-server-8bc76db4-vdtjf      Add eth0 [10.244.50.191/32] from k8s-pod-network
+### 5. de 01 com a chave de cada ator (01 fora da lista: 403 se a lista vale, 200 se não)   19:20:51
+estacao -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"df5dc25665e50a664a0d0028e5ef0432" }
+wsantos -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"579d9674821cf467e10221169f639f21" }
+dev-1 -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"3f0f3010e0ca0d07c11420084344cd0e" }
+dev-2 -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"2686bd0befc2a55261909d613050f02a" }
+crp -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"54246b3a6ca0be1ae5c62b7e642c7e3b" }
+nib-dth -> HTTP 403 | { "message":"IP address not allowed: 10.244.179.64", "request_id":"4f3da860fed45a1aa14493782d1a5222" }
+### 6. arquivos de chave (entregar cada um só ao seu ator)
+-rw------- 1 utec root 272 Nov 12 19:20 d05-chave-crp.env
+-rw------- 1 utec root 274 Nov 12 19:20 d05-chave-dev-1.env
+-rw------- 1 utec root 274 Nov 12 19:20 d05-chave-dev-2.env
+-rw------- 1 utec root 276 Nov 12 19:20 d05-chave-estacao.env
+-rw------- 1 utec root 276 Nov 12 19:20 d05-chave-nib-dth.env
+-rw------- 1 utec root 276 Nov 12 19:20 d05-chave-wsantos.env
+== fim 2026-11-12T19:20:51-03:00

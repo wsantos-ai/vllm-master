@@ -467,6 +467,13 @@ kubectl get kongconsumer -n vllms -l decisao=d-05
 kubectl get kongplugin d05-ip-restriction -n vllms -o jsonpath='{.config.allow}{"
 "}'
 
+# de quem é uma chave do Kong? (só os 8 primeiros caracteres na linha de comando; rodar em 01)   [não executado]
+read -p "8 primeiros caracteres da chave: " P
+cd /home/utec/vllm-estudo && grep -l "^CHAVE_KONG=$P" d05-chave-*.env
+# listas de IPs de todos os consumidores, como o Kong as tem                  [executado 2026-11-16]
+J='{range .items[?(@.plugin=="ip-restriction")]}{.metadata.name}{" "}{.config.allow}{"\n"}{end}'
+kubectl get kongplugin -n vllms -o jsonpath="$J"
+
 # trocar a chave de um ator (ex.: dev-1): apaga o Secret dele e roda o Bloco C, que cria outra   [não executado]
 # (ALTERA: a chave antiga para de valer na hora; entregue o novo d05-chave-dev-1.env)
 kubectl delete secret kong-cred-dev-1 -n vllms
@@ -490,6 +497,10 @@ Test-NetConnection $ip -Port 443 | Select-Object ComputerName, RemotePort, Sourc
 
 O teste do SSE pelo Kong (primeiro *byte* contra total, `curl.exe -N -w "%{time_starttransfer} %{time_total}"`)
 está na seção 2 do Bloco E1 do runbook, que monta os arquivos de cabeçalho.
+
+A chamada `curl` que vai para os atores (bash e PowerShell, lendo o `d05-chave-<nome>.env` do próprio ator, com
+`apikey` e `Authorization: Bearer`) é o Bloco D3 do mesmo runbook. Bash `[executado 2026-11-16]` no Git Bash;
+PowerShell `[não executado]`.
 
 ### Chamar o vLLM pelo Kong a partir do notebook (consumidor `wsantos`)
 

@@ -1,0 +1,8 @@
+== sabdiia01  2026-11-12T19:32:45-03:00  diagnóstico do 400 (2): janela 21:40-22:40 UTC
+### 1. Kong (kong-gateway-5f88dd7bcd-mpmk8): linhas na janela e respostas diferentes de 200
+linhas na janela: 0
+### 2. vLLM: linhas na janela, primeiras linhas e respostas diferentes de 200
+-- vllm-server-8bc76db4-6rnk2: 0 linhas
+-- vllm-server-8bc76db4-pphdw: 0 linhas
+-- vllm-server-8bc76db4-vdtjf: 0 linhas
+== fim 2026-11-12T19:32:46-03:00

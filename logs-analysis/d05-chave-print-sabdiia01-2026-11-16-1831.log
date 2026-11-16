@@ -1,0 +1,10 @@
+== sabdiia01  2026-11-16T18:31:44-03:00  D-05: de quem é a chave do print do dev-1 (35568f8a...)
+### 1. arquivo de chave que começa com 35568f8a
+d05-chave-crp.env
+### 2. listas de IPs no Kong
+d05-ip-crp ["172.16.30.201","172.16.254.0/24"]
+d05-ip-dev-1 ["172.16.254.0/24"]
+d05-ip-dev-2 ["127.0.0.1"]
+d05-ip-estacao ["172.16.30.6"]
+d05-ip-nib-dth ["192.168.41.0/24","172.16.254.0/24"]
+d05-ip-wsantos ["172.16.254.0/24"]

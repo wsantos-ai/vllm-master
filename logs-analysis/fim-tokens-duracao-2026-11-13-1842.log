@@ -1,0 +1,16 @@
+== sabdiia01  2026-11-13T18:42:22-03:00  fim das requisições, tokens gerados e duração
+-- pod/vllm-server-8bc76db4-6rnk2 em sabdiia01
+   fim por motivo: {'stop': 52, 'length': 2}
+   request_generation_tokens (54 req), quantas passam de: 20: 49, 50: 19, 100: 4, 200: 3, 500: 2, 1000: 2
+   request_prompt_tokens (54 req), quantas passam de: 500: 54, 1000: 35, 2000: 34, 5000: 33, 10000: 5, 20000: 1
+   e2e_request_latency_seconds (54 req), quantas passam de: 15: 6, 20: 5, 30: 5, 40: 5, 50: 3, 60: 3
+-- pod/vllm-server-8bc76db4-pphdw em sabdiia02
+   fim por motivo: {'stop': 52}
+   request_generation_tokens (52 req), quantas passam de: 50: 21, 100: 6, 200: 3, 500: 2, 1000: 2, 2000: 1
+   request_prompt_tokens (52 req), quantas passam de: 200: 52, 500: 52, 1000: 23, 2000: 23, 5000: 21, 10000: 2
+   e2e_request_latency_seconds (52 req), quantas passam de: 20: 2, 30: 2, 40: 2, 50: 2, 60: 2, 120: 1
+-- pod/vllm-server-8bc76db4-vdtjf em sabdiia03
+   fim por motivo: {'stop': 52}
+   request_generation_tokens (52 req), quantas passam de: 10: 52, 20: 50, 50: 17, 100: 7, 200: 1, 500: 1
+   request_prompt_tokens (52 req), quantas passam de: 200: 52, 500: 52, 1000: 37, 2000: 36, 5000: 36, 10000: 2
+   e2e_request_latency_seconds (52 req), quantas passam de: 10: 18, 15: 5, 20: 2, 30: 1, 40: 1, 50: 1

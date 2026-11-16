@@ -10,22 +10,39 @@
 # Ao mudar: copie para sabdiia01 (Bloco E0, seção 5) e rode o Bloco C. Chaves já criadas não mudam.
 # Linha apagada = consumidor e chave apagados no próximo Bloco C (revogação).
 # IPs não são segredo; chaves nunca entram neste arquivo.
+# Cada ator tem acima uma linha "# responsável:" (quem procurar por causa daquela chave), sempre em linha
+# própria: texto depois do IP, na linha do ator, o Bloco C lê como IP e aborta.
 
 estacao        172.16.30.6
+# responsável: Wellington (2026-11-16)
 # wsantos: notebook do usuário: sem IP fixo; a VPN dá um endereço por DHCP em 172.16.254.0/24 (2026-11-07, adaptador
 # "Ethernet 2"). A faixa inteira libera qualquer máquina da VPN que tenha esta chave. Troque por /32 se a
 # infraestrutura reservar um IP fixo na VPN.
 wsantos       172.16.254.0/24
-dev-1          pendente
+# responsável: Alex (2026-11-16)
+# dev-1: dev novo (2026-11-13). A máquina tem "tun0" 10.180.2.245, mas o Kong a vê pela VPN da empresa: o 1º teste
+# deu 403 com "IP address not allowed: 172.16.254.2" (2026-11-13). Como na VPN o IP muda a cada conexão (nib-dth:
+# .28, .5, .7), a faixa inteira, como a do wsantos: qualquer máquina da VPN com esta chave passa. Troque por /32 se
+# a infraestrutura reservar um IP fixo na VPN para esta máquina.
+dev-1          172.16.254.0/24
 dev-2          pendente
+# responsável: Eneas (2026-11-16)
 # crp: máquina DSABDICRP01, 172.16.30.201 por DHCP ("Ethernet0", gateway 172.16.30.252; testar-rede.ps1 de
 # 2026-11-09). Só o /32: a faixa 172.16.30.0/24 liberaria toda a rede da estação com esta chave. Se o DHCP trocar o
 # IP, o Kong responde 403: peça à infraestrutura uma reserva de DHCP para esta máquina.
-crp            172.16.30.201
+# 172.16.254.0/24 (2026-11-16, pedido do usuário): a faixa da VPN, para o crp chamar também de uma máquina na VPN
+# (o IP muda a cada conexão, ver dev-1). Qualquer máquina da VPN com a chave do crp passa, como em wsantos e dev-1.
+crp            172.16.30.201 172.16.254.0/24
+# responsável: a aplicação NIB, sem pessoa nomeada (2026-11-16)
 # nib-dth: aplicação NIB em homologação no cluster dth (namespace dth). Pedido da infraestrutura em 2026-11-12: o pod
 # sai pelo IP do nó, por NAT do Calico (nó atual k8s-node02, 192.168.41.6), e muda de nó a cada deploy, então a faixa
-# dos nós. Confirmado pela infraestrutura (2026-11-12): 192.168.41.0/24 só tem nós do dth. A confirmar: que não há
-# outro NAT até o Kong (o 403 do 1º teste de dentro do pod mostra o IP que chega). Chave entregue em 2026-11-12.
+# dos nós. Confirmado pela infraestrutura (2026-11-12): 192.168.41.0/24 só tem nós do dth. Sem outro NAT até o
+# Kong: o log do Kong registra a aplicação como 192.168.41.5 e .6 (logs-brutos de 2026-11-13). Chave entregue em 2026-11-12.
 # limite=300: pedido da equipe do NIB por mais de 120/min; valor do usuário (2026-11-12). Capacidade: ~640/min nas
 # 3 réplicas, divididas com os outros atores (AC-31).
-nib-dth        192.168.41.0/24  limite=300
+# 172.16.254.28 (TEMPORÁRIO, pedido da equipe do NIB em 2026-11-12): máquina da equipe na VPN que roda a ingestão
+# dos documentos (POST /vllm/v1/embeddings, bge-m3, abaixo de 300 req/min). Sai quando a equipe avisar o fim da
+# ingestão: apagar o IP desta linha e rodar o Bloco C. Trocado pela faixa da VPN 172.16.254.0/24 em 2026-11-12
+# (a equipe: o IP da VPN muda a cada conexão, .28 e depois .5). Enquanto valer, qualquer máquina na VPN com a chave
+# do nib-dth passa; a mesma faixa já vale para o wsantos.
+nib-dth        192.168.41.0/24 172.16.254.0/24  limite=300
